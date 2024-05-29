@@ -47,6 +47,7 @@ option(ENABLE_SANITIZERS "Build with ASAN and UBSAN" OFF)
 string(APPEND CMAKE_C_FLAGS " -fno-omit-frame-pointer -g")
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -g")
 string(APPEND CMAKE_LINKER_FLAGS " -fno-omit-frame-pointer -g")
+add_definitions(-DBLAKE3_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512 -DBLAKE3_USE_NEON=0)
 
 hunter_add_package(fmt)
 find_package(fmt CONFIG REQUIRED)
@@ -129,6 +130,10 @@ add_definitions(
 ##############################################################
 #  static libs
 file(GLOB_RECURSE LIB_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref/blake2b-ref.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE3-c/blake3.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE3-c/blake3_dispatch.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE3-c/blake3_portable.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/app_mode.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/base58.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/bech32.c
@@ -136,15 +141,19 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/hexutils.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/zxmacros.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/zxformat.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/segwit_addr.c
         ####
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_helper.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/zxblake3.c
         )
 
 add_library(app_lib STATIC ${LIB_SRC})
 
 target_include_directories(app_lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE3-c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common

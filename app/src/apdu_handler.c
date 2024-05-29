@@ -35,7 +35,7 @@ static bool tx_initialized = false;
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
 
-    if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
+    if ((rx - offset) != sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
 
@@ -129,6 +129,34 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
     *flags |= IO_ASYNCH_REPLY;
 }
 
+__Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    ZEMU_LOGF(50, "handleMultisig %d\n", rx);
+    // if (!process_chunk(tx, rx)) {
+    //     THROW(APDU_CODE_OK);
+    // }
+    const uint8_t isMultisig = (G_io_apdu_buffer[OFFSET_INS] == GET_MULTISIG_VESTING);
+    const uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
+    extractHDPath(25, OFFSET_DATA);
+    tx_initialize();
+    tx_reset();
+    tx_append(&(G_io_apdu_buffer[OFFSET_DATA +20]), rx - OFFSET_DATA-20);
+
+    zxerr_t zxerr = app_fill_MultisigAddress();
+    if (zxerr != zxerr_ok) {
+        *tx = 0;
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    if (requireConfirmation) {
+        view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
+        view_review_show(REVIEW_ADDRESS);
+        *flags |= IO_ASYNCH_REPLY;
+        return;
+    }
+    *tx = action_addrResponseLen;
+    THROW(APDU_CODE_OK);
+}
+
 __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile uint32_t *tx) {
     G_io_apdu_buffer[0] = 0;
 
@@ -145,6 +173,7 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
     G_io_apdu_buffer[5] = (LEDGER_PATCH_VERSION >> 8) & 0xFF;
     G_io_apdu_buffer[6] = (LEDGER_PATCH_VERSION >> 0) & 0xFF;
 
+    //  TODO always false = 0 ---> FIX
     G_io_apdu_buffer[7] = !IS_UX_ALLOWED;
 
     G_io_apdu_buffer[8] = (TARGET_ID >> 24) & 0xFF;
@@ -188,6 +217,12 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 case INS_SIGN: {
                     CHECK_PIN_VALIDATED()
                     handleSign(flags, tx, rx);
+                    break;
+                }
+
+                case GET_MULTISIG_VESTING: {
+                    CHECK_PIN_VALIDATED()
+                    handleMultisig(flags, tx, rx);
                     break;
                 }
 

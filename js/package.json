@@ -1,28 +1,28 @@
 {
-  "name": "@zondax/ledger-template",
+  "name": "@zondax/ledger-spacemesh",
   "author": "Zondax AG",
   "license": "Apache-2.0",
   "version": "0.0.1",
-  "description": "Node API for the Template App (Ledger Nano S/X/S+)",
+  "description": "Node API for the Spacemesh App (Ledger Nano S/X/S+)",
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "types": "./dist/index.d.ts",
-  "homepage": "https://github.com/zondax/ledger-template",
+  "homepage": "https://github.com/zondax/ledger-spacemesh",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zondax/ledger-template.git"
+    "url": "git+https://github.com/zondax/ledger-spacemesh.git"
   },
   "keywords": [
     "Zondax",
     "Ledger",
     "Javascript",
-    "Template"
+    "Spacemesh"
   ],
   "scripts": {
     "build": "tsc"
   },
   "bugs": {
-    "url": "https://github.com/zondax/ledger-template/issues"
+    "url": "https://github.com/zondax/ledger-spacemesh/issues"
   },
   "dependencies": {
     "@zondax/ledger-js": "^0.9.1"

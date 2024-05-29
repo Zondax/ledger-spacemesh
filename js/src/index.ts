@@ -16,28 +16,30 @@
 import type Transport from '@ledgerhq/hw-transport'
 import BaseApp, { BIP32Path, INSGeneric, processErrorResponse, processResponse } from '@zondax/ledger-js'
 
-import { ResponseAddress } from './types'
+import { Account, ResponseAddress, SpaceMeshIns } from "./types";
 import { P1_VALUES, PUBKEYLEN } from './consts'
 
 import { ResponseSign } from './types'
 
-export class TemplateApp extends BaseApp {
+export class SpaceMeshApp extends BaseApp {
   static _INS = {
     GET_VERSION: 0x00 as number,
     GET_ADDR: 0x01 as number,
     SIGN: 0x02 as number,
+    GET_MULTISIG_VESTING: 0x03 as number,
+    GET_ADDR_VAULT: 0x04 as number,
   }
 
   static _params = {
-    cla: 0x80,
-    ins: { ...TemplateApp._INS } as INSGeneric,
+    cla: 0x45,
+    ins: { ...SpaceMeshApp._INS } as INSGeneric,
     p1Values: { ONLY_RETRIEVE: 0x00 as 0, SHOW_ADDRESS_IN_DEVICE: 0x01 as 1 },
     chunkSize: 250,
     requiredPathLengths: [5],
   }
 
   constructor(transport: Transport) {
-    super(transport, TemplateApp._params)
+    super(transport, SpaceMeshApp._params)
     if (!this.transport) {
       throw new Error('Transport has not been defined')
     }
@@ -64,6 +66,30 @@ export class TemplateApp extends BaseApp {
     }
   }
 
+  async getAddressAndPubKeyMultisig(path: string, internalIndex: number, account: Account): Promise<ResponseAddress>{
+    const serializedPath = this.serializePath(path);
+    const serializedPathWithIndex = Buffer.concat([serializedPath, Buffer.from([internalIndex])]);
+    
+    const accountsOrdered = checkAccountsSanity(internalIndex, account);
+    const serializedAccount = serializeAccount(accountsOrdered);
+    const payload = Buffer.concat([serializedPathWithIndex, serializedAccount]);
+
+    try {
+      const responseBuffer = await this.transport.send(this.CLA, this.INS.GET_MULTISIG_VESTING, this.P1_VALUES.ONLY_RETRIEVE, 0, payload)
+
+      const response = processResponse(responseBuffer)
+      const pubkey = response.readBytes(PUBKEYLEN)
+      const address = response.readBytes(response.length()).toString()
+
+      return {
+        pubkey,
+        address,
+      } as ResponseAddress   
+    } catch (e) {
+      throw processErrorResponse(e)
+    }
+  }
+
   async sign(path: BIP32Path, blob: Buffer): Promise<ResponseSign> {
     const chunks = this.prepareChunks(path, blob);
     // TODO: if P2 is needed, use `sendGenericChunk`
@@ -81,4 +107,43 @@ export class TemplateApp extends BaseApp {
       throw processErrorResponse(e)
     }
   }
+}
+
+
+function checkAccountsSanity(internalIndex: number, account: Account): Account {
+  const indices = new Set<number>()
+  indices.add(internalIndex)
+  for (const pubkey of account.pubkeys) {
+    if (indices.has(pubkey.index)) {
+      throw new Error(`Duplicate index ${pubkey.index} found in pubkeys array`)
+    }
+    indices.add(pubkey.index)
+  }
+  
+  for (let i = 0; i < account.pubkeys.length; i++) {
+    if (!indices.has(i)) {
+      throw new Error(`Missing index ${i} in pubkeys array`)
+    }
+  }
+  
+  return account
+}
+
+function serializeAccount(account: Account): Buffer {
+  // TODO: make 33 a defined const
+  const sizePubkey: number = 33
+  let buff = Buffer.alloc(sizePubkey*account.pubkeys.length + 2)
+
+  buff.writeUInt8(account.approvers, 0)
+  buff.writeUInt8(account.participants, 1)
+
+  let indexOffset: number = 2;
+  for (const pubkey of account.pubkeys) {
+    buff.writeUInt8(pubkey.index, indexOffset);
+    pubkey.pubkey.copy(buff, indexOffset + 1);
+    console.log("serializeAccount", indexOffset, pubkey)
+    indexOffset += sizePubkey;
+  }
+
+  return buff
 }

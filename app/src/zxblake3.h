@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -13,25 +13,21 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ********************************************************************************/
-
 #pragma once
+
+#include "blake3.h"
+#include "parser_common.h"
+#include "zxerror.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <sigutils.h>
-#include <stdbool.h>
+parser_error_t zxblake3_hash(const uint8_t *in, uint16_t inLen, uint8_t *out, uint16_t outLen);
 
-#include "coin.h"
-#include "zxerror.h"
-
-extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
-
-zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrResponseLen);
-zxerr_t crypto_fillMultisigAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrResponseLen);
-
-zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
+parser_error_t zxblake3_hash_init();
+parser_error_t zxblake3_hash_update(const uint8_t *in, uint16_t inLen);
+parser_error_t zxblake3_hash_finalize(uint8_t *out, uint16_t outLen);
 
 #ifdef __cplusplus
 }

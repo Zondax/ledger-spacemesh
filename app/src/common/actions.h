@@ -40,6 +40,21 @@ __Z_INLINE zxerr_t app_fill_address() {
     return zxerr_ok;
 }
 
+
+__Z_INLINE zxerr_t app_fill_MultisigAddress() {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
+    action_addrResponseLen = 0;
+    const zxerr_t err = crypto_fillMultisigAddress(message, messageLength, &action_addrResponseLen);
+
+    if (err != zxerr_ok || action_addrResponseLen == 0) {
+        THROW(APDU_CODE_EXECUTION_ERROR);
+    }
+
+    return zxerr_ok;
+}
+
 __Z_INLINE void app_sign() {
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();

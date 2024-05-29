@@ -15,8 +15,9 @@
  ******************************************************************************* */
 
 import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
-import { TemplateApp } from '@zondax/ledger-template'
+import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models, txBlobExample } from './common'
+import { Account, Pubkey } from "../../js/src/types";
 
 // @ts-expect-error
 import ed25519 from 'ed25519-supercop'
@@ -51,7 +52,7 @@ describe('Standard', function () {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
-      const app = new TemplateApp(sim.getTransport())
+      const app = new SpaceMeshApp(sim.getTransport())
       try {
         const resp = await app.getVersion()
         console.log(resp)
@@ -72,16 +73,70 @@ describe('Standard', function () {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
-      const app = new TemplateApp(sim.getTransport())
+      const app = new SpaceMeshApp(sim.getTransport())
 
-      try {
-        const resp = await app.getAddressAndPubKey(PATH, false)
+      //Define HDPATH
+      const resp = await app.getAddressAndPubKey(PATH)
 
-        console.log(resp)
-        // expect(resp.pubkey).toEqual(expected_pk)
-        // expect(resp.address).toEqual(expected_address)
-      } catch {
-        console.log("getAddress error")
+      console.log(resp)
+
+      // expect(resp.returnCode).toEqual(0x9000)
+      // expect(resp.errorMessage).toEqual('No errors')
+
+      const expected_address = 'sm1qqqqqqyjdl0e9t6s3cxx3pqgtmxh998w5l74v5syjt6w5'
+      const expected_pk = '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+
+      expect(resp.pubkey?.toString('hex')).toEqual(expected_pk)
+      expect(resp.address).toEqual(expected_address)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.only.each(models)('get multisig address', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new SpaceMeshApp(sim.getTransport())
+
+      const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8';
+      const pubKey2 = '8ed90420802c83b41e4a7fa94ce5f05792ea8bff3d7a63572e5c73454eaef51d';
+      const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f6652105c91e2c4';
+        
+      const testCases = [
+          {
+              account: {
+                  pubkeys: [addressToBuffer(pubKey0, 0)],
+                  approvers: 2,
+                  participants: 2
+              },
+              expected_address: 'sm1qqqqqq9yec9x0q84s8eqvsz9z82cfft0el4w2psknxxfl',
+              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          },
+          {
+              account: {
+                  pubkeys: [
+                      addressToBuffer(pubKey0, 0),
+                      addressToBuffer(pubKey3, 3),
+                      addressToBuffer(pubKey2, 2)
+                  ],
+                  approvers: 2,
+                  participants: 4
+              },
+              expected_address: 'sm1qqqqqq8wmne37awzvphppdhms9564g9f73rel3c7cvxkl',
+              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          }
+      ];
+
+      for (const testCase of testCases) {
+          const { account, expected_address, expected_pk } = testCase;
+
+          const resp = await app.getAddressAndPubKeyMultisig(PATH, 1, account);
+          console.log(resp);
+          // expect(resp.returnCode).toEqual(0x9000);
+          // expect(resp.errorMessage).toEqual('No errors');
+          expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
+          expect(resp.address).toEqual(expected_address);
       }
 
     } finally {
@@ -89,51 +144,11 @@ describe('Standard', function () {
     }
   })
 
-  // test.concurrent.each(models)('show address', async function (m) {
-  //   const sim = new Zemu(m.path)
-  //   try {
-  //     await sim.start({...defaultOptions, model: m.name,
-  //                      approveKeyword: m.name === 'stax' ? 'QR' : '',
-  //                      approveAction: ButtonKind.ApproveTapButton,})
-  //     const app = new TemplateApp(sim.getTransport())
+  function addressToBuffer(stringPubKey: string, index: number): Pubkey {
+    const bufferPubKey = Buffer.from(stringPubKey, 'hex');
+    return { index, pubkey: bufferPubKey };
+}
 
-  //     const respRequest = app.getAddressAndPubKey(accountId, true)
-  //     // Wait until we are not in the main menu
-  //     await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-  //     await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-show_address`)
-
-  //     const resp = await respRequest
-  //     console.log(resp)
-
-  //     expect(resp.return_code).toEqual(0x9000)
-  //     expect(resp.error_message).toEqual('No errors')
-  //   } finally {
-  //     await sim.close()
-  //   }
-  // })
-
-  // test.concurrent.each(models)('show address - reject', async function (m) {
-  //   const sim = new Zemu(m.path)
-  //   try {
-  //     await sim.start({...defaultOptions, model: m.name,
-  //                      rejectKeyword: m.name === 'stax' ? 'QR' : ''})
-  //     const app = new TemplateApp(sim.getTransport())
-
-  //     const respRequest = app.getAddressAndPubKey(accountId, true)
-  //     // Wait until we are not in the main menu
-  //     await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-
-  //     await sim.compareSnapshotsAndReject('.', `${m.prefix.toLowerCase()}-show_address_reject`, 'REJECT')
-
-  //     const resp = await respRequest
-  //     console.log(resp)
-
-  //     expect(resp.return_code).toEqual(0x6986)
-  //     expect(resp.error_message).toEqual('Transaction rejected')
-  //   } finally {
-  //     await sim.close()
-  //   }
-  // })
 
   // #{TODO} --> Add Zemu tests for different transactions. Include expert mode if needed
   // test.concurrent.each(models)('sign tx0 normal', async function (m) {
@@ -195,6 +210,34 @@ describe('Standard', function () {
   //     const prehash = Buffer.concat([Buffer.from('TX'), txBlob]);
   //     const valid = ed25519.verify(signatureResponse.signature, prehash, pubKey)
   //     expect(valid).toEqual(true)
+  //   } finally {
+  //     await sim.close()
+  //   }
+  // })
+
+  // test.concurrent.each(models)('show address - reject', async function (m) {
+  //   const sim = new Zemu(m.path)
+  //   try {
+  //     await sim.start({
+  //       ...defaultOptions,
+  //       model: m.name,
+  //       rejectKeyword: m.name === 'stax' ? 'Public key' : '',
+  //     })
+  //     const app = new PolkadotGenericApp(sim.getTransport(), 'dot')
+
+  //     const respRequest = app.getAddress(PATH, DOT_SS58_PREFIX, true)
+  //     expect(respRequest).rejects.toMatchObject({
+  //       returnCode: 0x6986,
+  //       errorMessage: 'Transaction rejected'
+  //     })
+  //     // Wait until we are not in the main menu
+  //     await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+  //     try {
+  //       await sim.compareSnapshotsAndReject('.', `${m.prefix.toLowerCase()}-show_address_reject`);
+  //     } catch {
+
+  //     }
+
   //   } finally {
   //     await sim.close()
   //   }
