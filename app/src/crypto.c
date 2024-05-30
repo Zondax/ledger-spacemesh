@@ -134,7 +134,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
     return zxerr_ok;
 }
 
-zxerr_t crypto_fillMultisigAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrResponseLen) {
+zxerr_t crypto_fillMultisigAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen) {
     const bool mainnet = (hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT);
     const uint8_t outAddressLen = mainnet ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);

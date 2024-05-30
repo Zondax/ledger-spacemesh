@@ -67,17 +67,17 @@ export class SpaceMeshApp extends BaseApp {
   }
 
   async getAddressAndPubKeyMultisig(path: string, internalIndex: number, account: Account): Promise<ResponseAddress>{
-    const serializedPath = this.serializePath(path);
-    const serializedPathWithIndex = Buffer.concat([serializedPath, Buffer.from([internalIndex])]);
-    
     const accountsOrdered = checkAccountsSanity(internalIndex, account);
     const serializedAccount = serializeAccount(accountsOrdered);
-    const payload = Buffer.concat([serializedPathWithIndex, serializedAccount]);
+    const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
+
+    const chunks = this.prepareChunks(path, payload);
 
     try {
-      const responseBuffer = await this.transport.send(this.CLA, this.INS.GET_MULTISIG_VESTING, this.P1_VALUES.ONLY_RETRIEVE, 0, payload)
-
-      const response = processResponse(responseBuffer)
+      let response = await this.signSendChunk(this.INS.GET_MULTISIG_VESTING, 1, chunks.length, chunks[0])
+      for (let i = 1; i < chunks.length; i += 1) {
+        response = await this.signSendChunk(this.INS.GET_MULTISIG_VESTING, 1 + i, chunks.length, chunks[i])
+      }
       const pubkey = response.readBytes(PUBKEYLEN)
       const address = response.readBytes(response.length()).toString()
 

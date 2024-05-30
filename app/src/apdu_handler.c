@@ -31,6 +31,9 @@
 #include "zxmacros.h"
 
 static bool tx_initialized = false;
+static bool requireConfirmation = false;
+static bool isMultisig = false;
+
 
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
@@ -61,6 +64,8 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             tx_initialize();
             tx_reset();
             extractHDPath(rx, OFFSET_DATA);
+            isMultisig = (G_io_apdu_buffer[OFFSET_INS] == GET_MULTISIG_VESTING);
+            requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
             tx_initialized = true;
             return false;
         case P1_ADD:
@@ -93,7 +98,7 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
 __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     extractHDPath(rx, OFFSET_DATA);
 
-    const uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
+    requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
     zxerr_t zxerr = app_fill_address();
     if (zxerr != zxerr_ok) {
         *tx = 0;
@@ -131,15 +136,17 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
 __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     ZEMU_LOGF(50, "handleMultisig %d\n", rx);
-    // if (!process_chunk(tx, rx)) {
-    //     THROW(APDU_CODE_OK);
-    // }
-    const uint8_t isMultisig = (G_io_apdu_buffer[OFFSET_INS] == GET_MULTISIG_VESTING);
-    const uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
-    extractHDPath(25, OFFSET_DATA);
-    tx_initialize();
-    tx_reset();
-    tx_append(&(G_io_apdu_buffer[OFFSET_DATA +20]), rx - OFFSET_DATA-20);
+    if (!process_chunk(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
+
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
+    if (message == NULL || messageLength < OFFSET_P1) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    ZEMU_LOGF(50, "isMultisig %d; requireConfirmation: %d\n", isMultisig, requireConfirmation);
 
     zxerr_t zxerr = app_fill_MultisigAddress();
     if (zxerr != zxerr_ok) {
@@ -173,8 +180,7 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
     G_io_apdu_buffer[5] = (LEDGER_PATCH_VERSION >> 8) & 0xFF;
     G_io_apdu_buffer[6] = (LEDGER_PATCH_VERSION >> 0) & 0xFF;
 
-    //  TODO always false = 0 ---> FIX
-    G_io_apdu_buffer[7] = !IS_UX_ALLOWED;
+    G_io_apdu_buffer[7] = 0;
 
     G_io_apdu_buffer[8] = (TARGET_ID >> 24) & 0xFF;
     G_io_apdu_buffer[9] = (TARGET_ID >> 16) & 0xFF;
