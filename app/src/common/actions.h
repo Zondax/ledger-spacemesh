@@ -23,6 +23,7 @@
 #include "crypto.h"
 #include "tx.h"
 #include "zxerror.h"
+#include "crypto_helper.h"
 
 extern uint16_t action_addrResponseLen;
 
@@ -46,7 +47,20 @@ __Z_INLINE zxerr_t app_fill_MultisigAddress(uint8_t accountId) {
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();
     action_addrResponseLen = 0;
-    const zxerr_t err = crypto_fillMultisigAddress(message, messageLength, &action_addrResponseLen, accountId);
+    zxerr_t err = zxerr_ok;
+    switch (accountId) {
+        case MULTISIG: 
+        case VESTING: {
+            err = crypto_fillMultisigAddress(message, messageLength, &action_addrResponseLen, accountId);
+            break;
+        }
+        case VAULT: {
+            err = crypto_fillVaultAddress(message, messageLength, &action_addrResponseLen);
+            break;
+        }
+        default:
+            THROW(APDU_CODE_DATA_INVALID); 
+    }
 
     if (err != zxerr_ok || action_addrResponseLen == 0) {
         THROW(APDU_CODE_EXECUTION_ERROR);

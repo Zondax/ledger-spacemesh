@@ -36,3 +36,12 @@ export interface Account {
   approvers: number;
   id: AccountType;
 }
+
+export interface VaultAccount {
+  owner: Account;
+  totalAmount: bigint;
+  initialUnlockAmount: bigint;
+  vestingStart: number;
+  vestingEnd: number;
+  id: AccountType;
+}

@@ -34,6 +34,8 @@ uint32_t hdPath[HDPATH_LEN_DEFAULT];
 // #{TODO} --> Check pubkey and sign methods
 
 bool checkAccountsSanity(uint8_t *indexes, uint8_t auxAccoutsQty);
+uint32_t load32(const uint8_t *src);
+uint64_t load64(const uint8_t *src);
 
 zxerr_t crypto_extractPublicKey(uint8_t *pubKey, uint16_t pubKeyLen) {
     if (pubKey == NULL || pubKeyLen < PK_LEN_25519) {
@@ -191,12 +193,105 @@ zxerr_t crypto_fillMultisigAddress(const uint8_t *buffer, const uint16_t bufferL
     multisigAccount.approvers = buffer[BUFF_APPROVERS_INDEX];
     multisigAccount.participants = buffer[BUFF_PARTICIPANTS_INDEX];
     multisigAccount.id = accontId;
-    ZEMU_LOGF(100, "approvers: %d; participants: %d\n", multisigAccount.approvers, multisigAccount.participants); 
+    ZEMU_LOGF(100, "approvers: %d; participants: %d\n", multisigAccount.approvers, multisigAccount.participants);
+
+    //TODO: check participats * num pubkey * 33 <= bufferlen 
 
     uint8_t address[64] = {0};
     uint8_t addrOffset = 0;
     const char *hrp = mainnet ? "sm" : "stest";
     err = crypto_encodeAccountPubkey(address, sizeof(address), &multisigAccount, &addrOffset, mainnet);
+    if (err != zxerr_ok) {
+        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+        return err;
+    }
+    err = bech32EncodeFromBytes((char*)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address + addrOffset, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32);
+    if (err != zxerr_ok) {
+        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+        return err;
+    }
+
+    *addrResponseLen = PUB_KEY_LENGTH + outAddressLen;
+    return zxerr_ok;
+}
+
+zxerr_t crypto_fillVaultAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen) {
+    const bool mainnet = (hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT);
+    const uint8_t outAddressLen = mainnet ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    if (IO_APDU_BUFFER_SIZE < PUB_KEY_LENGTH + outAddressLen) {
+        return zxerr_unknown;
+    }
+
+    // TODO: 28 = 24 to nums of vault + 4 of num at init
+    ZEMU_LOGF(50, "bufferLen: %d %d\n", bufferLen, (bufferLen - 28) % PUB_KEY_LENGTH )
+    if ((bufferLen - 27) % BUFF_ACCOUNT_INFO_LENGTH != 0) {
+        return zxerr_invalid_crypto_settings;
+    }
+
+    uint8_t auxAccoutsQty = (bufferLen - 24) / PUB_KEY_LENGTH;
+    if (auxAccoutsQty >= MAX_MULTISIG_PUB_KEY) {
+        return zxerr_invalid_crypto_settings;
+    }
+
+    uint8_t pubkeyIndexes[MAX_MULTISIG_PUB_KEY] = {0};
+    uint16_t offsetIndex = BUFF_FIRST_ACCOUNT_INDEX;
+    for (int i = 0; i < auxAccoutsQty; i++) {
+        pubkeyIndexes[i] = buffer[offsetIndex];
+        offsetIndex += BUFF_ACCOUNT_INFO_LENGTH;
+    }
+    uint8_t internalPubkeyIndex = buffer[BUFF_INTERNAL_PUBKEY_INDEX];
+    pubkeyIndexes[auxAccoutsQty] = internalPubkeyIndex;
+    uint8_t accoutQty = auxAccoutsQty + 1;
+
+    for (int i = 0; i < MAX_MULTISIG_PUB_KEY; i++) {
+        ZEMU_LOGF(50, "Index: %d\n", pubkeyIndexes[i])
+    }
+
+    if (!checkAccountsSanity(pubkeyIndexes, accoutQty)) {
+        return zxerr_invalid_crypto_settings;
+    }
+
+    account_t multisigAccount;
+    zxerr_t err = crypto_extractPublicKey(G_io_apdu_buffer, PUB_KEY_LENGTH);
+    if (err != zxerr_ok) {
+        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+        return err;
+    }
+
+    uint16_t offset = BUFF_START_ACCOUNT_PUBKEY_INFO;
+    for (int i = 0; i < accoutQty; i++) {
+        if (internalPubkeyIndex == pubkeyIndexes[i]) {
+            MEMCPY(multisigAccount.keys[pubkeyIndexes[i]], G_io_apdu_buffer, PUB_KEY_LENGTH);
+        } else {
+            MEMCPY(multisigAccount.keys[pubkeyIndexes[i]], buffer + offset, PUB_KEY_LENGTH);
+            offset += BUFF_ACCOUNT_INFO_LENGTH;
+        }
+    }
+
+    for (int i = 0; i < accoutQty; i++) {
+        char print[100] = {0};
+        array_to_hexstr(print,sizeof(print),multisigAccount.keys[i],32);
+        ZEMU_LOGF(100, "multisigAccount[%d] %s\n", i, print);      
+    }
+
+    multisigAccount.approvers = buffer[BUFF_APPROVERS_INDEX];
+    multisigAccount.participants = buffer[BUFF_PARTICIPANTS_INDEX];
+    multisigAccount.id = VESTING;
+    ZEMU_LOGF(100, "approvers: %d; participants: %d\n", multisigAccount.approvers, multisigAccount.participants); 
+
+    vault_account_t vaultAccount;
+    vaultAccount.owner = multisigAccount;
+    vaultAccount.totalAmount = load64(buffer + bufferLen - 24);
+    vaultAccount.initialUnlockAmount = load64(buffer + bufferLen - 16);
+    vaultAccount.vestingStart = load32(buffer + bufferLen - 8);
+    vaultAccount.vestingEnd = load32(buffer + bufferLen - 4);
+    vaultAccount.id = VAULT;
+
+    uint8_t address[64] = {0};
+    uint8_t addrOffset = 0;
+    const char *hrp = mainnet ? "sm" : "stest";
+    err = crypto_encodeVaultPubkey(address, sizeof(address), &vaultAccount, &addrOffset, mainnet);
     if (err != zxerr_ok) {
         MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
         return err;
@@ -221,4 +316,16 @@ bool checkAccountsSanity(uint8_t *indexes, uint8_t auxAccoutsQty) {
         exist[index] = true;
     }
     return true;
+}
+
+uint32_t load32(const uint8_t *src) {
+    uint32_t w;
+    MEMCPY(&w, src, sizeof w);
+    return w;
+}
+
+uint64_t load64(const uint8_t *src) {
+    uint64_t w;
+    MEMCPY(&w, src, sizeof w);
+    return w;
 }

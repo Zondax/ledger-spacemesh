@@ -133,7 +133,7 @@ describe('Standard', function () {
       for (const testCase of testCases) {
           const { account, expected_address, expected_pk } = testCase;
 
-          const resp = await app.getAddressAndPubKeyMultisig(PATH, 1, account);
+          const resp = await app.getInfoMultisigVestingAccount(PATH, 1, account);
           console.log(resp);
           // expect(resp.returnCode).toEqual(0x9000);
           // expect(resp.errorMessage).toEqual('No errors');
@@ -146,7 +146,7 @@ describe('Standard', function () {
     }
   })
 
-  test.only.each(models)('get vesting address', async function (m) {
+  test.concurrent.each(models)('get vesting address', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -158,7 +158,7 @@ describe('Standard', function () {
         
       const testCases = [
           {
-              account: {
+            account: {
                   pubkeys: [addressToBuffer(pubKey0, 0)],
                   approvers: 2,
                   participants: 2,
@@ -186,7 +186,74 @@ describe('Standard', function () {
       for (const testCase of testCases) {
           const { account, expected_address, expected_pk } = testCase;
 
-          const resp = await app.getAddressAndPubKeyMultisig(PATH, 1, account);
+          const resp = await app.getInfoMultisigVestingAccount(PATH, 1, account);
+          console.log(resp);
+          // expect(resp.returnCode).toEqual(0x9000);
+          // expect(resp.errorMessage).toEqual('No errors');
+          expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
+          expect(resp.address).toEqual(expected_address);
+      }
+
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.only.each(models)('get vault address', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new SpaceMeshApp(sim.getTransport())
+
+      const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8';
+      const pubKey2 = '8ed90420802c83b41e4a7fa94ce5f05792ea8bff3d7a63572e5c73454eaef51d';
+      const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f6652105c91e2c4';
+        
+      const testCases = [
+          {
+            vaultAccount: {
+              owner: {
+                  pubkeys: [addressToBuffer(pubKey0, 0)],
+                  approvers: 2,
+                  participants: 2,
+                  id: AccountType.Vesting
+              },
+              totalAmount: BigInt(1000),
+              initialUnlockAmount: BigInt(987),
+              vestingStart: 567,
+              vestingEnd: 99999,
+              id: AccountType.Vault
+            },
+            expected_address: 'sm1qqqqqqqrsssxatqkcxflze4eh8c4rngxsmudk7qqapryj',
+            expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          },
+          {
+            vaultAccount: { 
+              owner: {
+                  pubkeys: [
+                      addressToBuffer(pubKey0, 0),
+                      addressToBuffer(pubKey3, 3),
+                      addressToBuffer(pubKey2, 2)
+                  ],
+                  approvers: 2,
+                  participants: 4,
+                  id: AccountType.Vesting
+                },
+                totalAmount: BigInt(1000),
+                initialUnlockAmount: BigInt(987),
+                vestingStart: 567,
+                vestingEnd: 44,
+                id: AccountType.Vault
+              },
+              expected_address: 'sm1qqqqqqz26rdxe5szj29fjafxm0yyg2mhazq96kg2kds04',
+              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          }
+      ];
+
+      for (const testCase of testCases) {
+          const { vaultAccount, expected_address, expected_pk } = testCase;
+
+          const resp = await app.getInfoVaultAccount(PATH, 1, vaultAccount);
           console.log(resp);
           // expect(resp.returnCode).toEqual(0x9000);
           // expect(resp.errorMessage).toEqual('No errors');

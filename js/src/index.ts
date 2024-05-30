@@ -16,7 +16,7 @@
 import type Transport from '@ledgerhq/hw-transport'
 import BaseApp, { BIP32Path, INSGeneric, processErrorResponse, processResponse } from '@zondax/ledger-js'
 
-import { Account, ResponseAddress, AccountType } from "./types";
+import { Account, VaultAccount, ResponseAddress, AccountType } from "./types";
 import { P1_VALUES, PUBKEYLEN } from './consts'
 
 import { ResponseSign } from './types'
@@ -67,9 +67,9 @@ export class SpaceMeshApp extends BaseApp {
     }
   }
 
-  async getAddressAndPubKeyMultisig(path: string, internalIndex: number, account: Account): Promise<ResponseAddress>{
-    const accountsOrdered = checkAccountsSanity(internalIndex, account);
-    const serializedAccount = serializeAccount(accountsOrdered);
+  async getInfoMultisigVestingAccount(path: string, internalIndex: number, account: Account): Promise<ResponseAddress>{
+    this.checkAccountsSanity(internalIndex, account);
+    const serializedAccount = this.serializeAccount(account);
     const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
 
     const chunks = this.prepareChunks(path, payload);
@@ -78,6 +78,30 @@ export class SpaceMeshApp extends BaseApp {
       let response = await this.signSendChunk(this.getInstruction(account.id), 1, chunks.length, chunks[0])
       for (let i = 1; i < chunks.length; i += 1) {
         response = await this.signSendChunk(this.getInstruction(account.id), 1 + i, chunks.length, chunks[i])
+      }
+      const pubkey = response.readBytes(PUBKEYLEN)
+      const address = response.readBytes(response.length()).toString()
+
+      return {
+        pubkey,
+        address,
+      } as ResponseAddress   
+    } catch (e) {
+      throw processErrorResponse(e)
+    }
+  }
+
+  async getInfoVaultAccount(path: string, internalIndex: number, vaultAccount: VaultAccount): Promise<ResponseAddress>{
+    this.checkAccountsSanity(internalIndex, vaultAccount.owner);
+    const serializedAccount = this.serializeVaultAccount(vaultAccount);
+    const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
+
+    const chunks = this.prepareChunks(path, payload);
+
+    try {
+      let response = await this.signSendChunk(this.getInstruction(vaultAccount.id), 1, chunks.length, chunks[0])
+      for (let i = 1; i < chunks.length; i += 1) {
+        response = await this.signSendChunk(this.getInstruction(vaultAccount.id), 1 + i, chunks.length, chunks[i])
       }
       const pubkey = response.readBytes(PUBKEYLEN)
       const address = response.readBytes(response.length()).toString()
@@ -108,8 +132,8 @@ export class SpaceMeshApp extends BaseApp {
       throw processErrorResponse(e)
     }
   }
-  
-  getInstruction(id: AccountType): number {
+
+  private getInstruction(id: AccountType): number {
     switch (id) {
       case AccountType.Wallet:
         return this.INS.GET_ADDR;
@@ -121,44 +145,53 @@ export class SpaceMeshApp extends BaseApp {
         return this.INS.GET_VAULT_ADDR;
     }
   }
-}
 
-
-function checkAccountsSanity(internalIndex: number, account: Account): Account {
-  const indices = new Set<number>()
-  indices.add(internalIndex)
-  for (const pubkey of account.pubkeys) {
-    if (indices.has(pubkey.index)) {
-      throw new Error(`Duplicate index ${pubkey.index} found in pubkeys array`)
+  private checkAccountsSanity(internalIndex: number, account: Account) {
+    const indices = new Set<number>()
+    indices.add(internalIndex)
+    for (const pubkey of account.pubkeys) {
+      if (indices.has(pubkey.index)) {
+        throw new Error(`Duplicate index ${pubkey.index} found in pubkeys array`)
+      }
+      indices.add(pubkey.index)
     }
-    indices.add(pubkey.index)
+    
+    for (let i = 0; i < account.pubkeys.length; i++) {
+      if (!indices.has(i)) {
+        throw new Error(`Missing index ${i} in pubkeys array`)
+      }
+    }
+  }
+
+  private serializeVaultAccount(account: VaultAccount): Buffer {
+    const serializedOwnerAccount = this.serializeAccount(account.owner);
+    let buff = Buffer.alloc(24)
+
+    //TODO: check bigint < uint64 max
+    buff.writeBigUInt64LE(account.totalAmount,0)
+    buff.writeBigUInt64LE(account.initialUnlockAmount,8)
+    buff.writeUInt32LE(account.vestingStart,16)
+    buff.writeUInt32LE(account.vestingEnd,20)
+    const serializedAccount = Buffer.concat([serializedOwnerAccount, buff]);
+  
+    return serializedAccount
   }
   
-  for (let i = 0; i < account.pubkeys.length; i++) {
-    if (!indices.has(i)) {
-      throw new Error(`Missing index ${i} in pubkeys array`)
-    }
-  }
+  private serializeAccount(account: Account): Buffer {
+    // TODO: make 33 a defined const
+    const sizePubkey: number = 33
+    let buff = Buffer.alloc(sizePubkey*account.pubkeys.length + 2)
   
-  return account
-}
-
-function serializeAccount(account: Account): Buffer {
-  // TODO: make 33 a defined const
-  const sizePubkey: number = 33
-  let buff = Buffer.alloc(sizePubkey*account.pubkeys.length + 2)
-
-  buff.writeUInt8(account.approvers, 0)
-  buff.writeUInt8(account.participants, 1)
-
-  let indexOffset: number = 2;
-  for (const pubkey of account.pubkeys) {
-    buff.writeUInt8(pubkey.index, indexOffset);
-    pubkey.pubkey.copy(buff, indexOffset + 1);
-    console.log("serializeAccount", indexOffset, pubkey)
-    indexOffset += sizePubkey;
+    buff.writeUInt8(account.approvers, 0)
+    buff.writeUInt8(account.participants, 1)
+  
+    let indexOffset: number = 2;
+    for (const pubkey of account.pubkeys) {
+      buff.writeUInt8(pubkey.index, indexOffset);
+      pubkey.pubkey.copy(buff, indexOffset + 1);
+      indexOffset += sizePubkey;
+    }
+  
+    return buff
   }
-
-  return buff
 }
-

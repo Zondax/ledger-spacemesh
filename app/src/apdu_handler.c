@@ -239,6 +239,12 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
                 }
 
+                case GET_VAULT_ADDR: {
+                    CHECK_PIN_VALIDATED()
+                    accountId = VAULT;
+                    handleMultisig(flags, tx, rx);
+                    break;
+                }
 #if defined(APP_TESTING)
                 case INS_TEST: {
                     handleTest(flags, tx, rx);
