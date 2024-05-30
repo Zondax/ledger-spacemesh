@@ -29,11 +29,11 @@
 #include "view.h"
 #include "view_internal.h"
 #include "zxmacros.h"
+#include "crypto_helper.h"
 
 static bool tx_initialized = false;
 static bool requireConfirmation = false;
-static bool isMultisig = false;
-
+static uint8_t accountId = 0;
 
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
@@ -64,7 +64,6 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             tx_initialize();
             tx_reset();
             extractHDPath(rx, OFFSET_DATA);
-            isMultisig = (G_io_apdu_buffer[OFFSET_INS] == GET_MULTISIG_VESTING);
             requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
             tx_initialized = true;
             return false;
@@ -146,9 +145,9 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    ZEMU_LOGF(50, "isMultisig %d; requireConfirmation: %d\n", isMultisig, requireConfirmation);
+    ZEMU_LOGF(50, "accountId %d; requireConfirmation: %d\n", accountId, requireConfirmation);
 
-    zxerr_t zxerr = app_fill_MultisigAddress();
+    zxerr_t zxerr = app_fill_MultisigAddress(accountId);
     if (zxerr != zxerr_ok) {
         *tx = 0;
         THROW(APDU_CODE_DATA_INVALID);
@@ -226,8 +225,16 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
                 }
 
-                case GET_MULTISIG_VESTING: {
+                case GET_MULTISIG_ADDR: {
                     CHECK_PIN_VALIDATED()
+                    accountId = MULTISIG;
+                    handleMultisig(flags, tx, rx);
+                    break;
+                }
+
+                case GET_VESTING_ADDR: {
+                    CHECK_PIN_VALIDATED()
+                    accountId = VESTING;
                     handleMultisig(flags, tx, rx);
                     break;
                 }

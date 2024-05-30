@@ -16,7 +16,7 @@
 import type Transport from '@ledgerhq/hw-transport'
 import BaseApp, { BIP32Path, INSGeneric, processErrorResponse, processResponse } from '@zondax/ledger-js'
 
-import { Account, ResponseAddress, SpaceMeshIns } from "./types";
+import { Account, ResponseAddress, AccountType } from "./types";
 import { P1_VALUES, PUBKEYLEN } from './consts'
 
 import { ResponseSign } from './types'
@@ -26,8 +26,9 @@ export class SpaceMeshApp extends BaseApp {
     GET_VERSION: 0x00 as number,
     GET_ADDR: 0x01 as number,
     SIGN: 0x02 as number,
-    GET_MULTISIG_VESTING: 0x03 as number,
-    GET_ADDR_VAULT: 0x04 as number,
+    GET_MULTISIG_ADDR: 0x03 as number,
+    GET_VESTING_ADDR: 0x04 as number,
+    GET_VAULT_ADDR: 0x05 as number,
   }
 
   static _params = {
@@ -45,8 +46,8 @@ export class SpaceMeshApp extends BaseApp {
     }
   }
 
-  async getAddressAndPubKey(bip44Path: BIP32Path, showAddrInDevice = false): Promise<ResponseAddress> {
-    const bip44PathBuffer = this.serializePath(bip44Path)
+  async getAddressAndPubKey(path: string, showAddrInDevice = false): Promise<ResponseAddress> {
+    const bip44PathBuffer = this.serializePath(path)
     const p1 = showAddrInDevice ? P1_VALUES.SHOW_ADDRESS_IN_DEVICE : P1_VALUES.ONLY_RETRIEVE
 
     try {
@@ -74,9 +75,9 @@ export class SpaceMeshApp extends BaseApp {
     const chunks = this.prepareChunks(path, payload);
 
     try {
-      let response = await this.signSendChunk(this.INS.GET_MULTISIG_VESTING, 1, chunks.length, chunks[0])
+      let response = await this.signSendChunk(this.getInstruction(account.id), 1, chunks.length, chunks[0])
       for (let i = 1; i < chunks.length; i += 1) {
-        response = await this.signSendChunk(this.INS.GET_MULTISIG_VESTING, 1 + i, chunks.length, chunks[i])
+        response = await this.signSendChunk(this.getInstruction(account.id), 1 + i, chunks.length, chunks[i])
       }
       const pubkey = response.readBytes(PUBKEYLEN)
       const address = response.readBytes(response.length()).toString()
@@ -105,6 +106,19 @@ export class SpaceMeshApp extends BaseApp {
 
     } catch (e) {
       throw processErrorResponse(e)
+    }
+  }
+  
+  getInstruction(id: AccountType): number {
+    switch (id) {
+      case AccountType.Wallet:
+        return this.INS.GET_ADDR;
+      case AccountType.Multisig:
+        return this.INS.GET_MULTISIG_ADDR;
+      case AccountType.Vesting:
+        return this.INS.GET_VESTING_ADDR;
+      case AccountType.Vault:
+        return this.INS.GET_VAULT_ADDR;
     }
   }
 }
@@ -147,3 +161,4 @@ function serializeAccount(account: Account): Buffer {
 
   return buff
 }
+

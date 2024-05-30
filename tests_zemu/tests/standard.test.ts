@@ -17,7 +17,7 @@
 import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
 import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models, txBlobExample } from './common'
-import { Account, Pubkey } from "../../js/src/types";
+import { Pubkey, AccountType } from "../../js/src/types";
 
 // @ts-expect-error
 import ed25519 from 'ed25519-supercop'
@@ -93,7 +93,7 @@ describe('Standard', function () {
     }
   })
 
-  test.only.each(models)('get multisig address', async function (m) {
+  test.concurrent.each(models)('get multisig address', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -108,7 +108,8 @@ describe('Standard', function () {
               account: {
                   pubkeys: [addressToBuffer(pubKey0, 0)],
                   approvers: 2,
-                  participants: 2
+                  participants: 2,
+                  id: AccountType.Multisig
               },
               expected_address: 'sm1qqqqqq9yec9x0q84s8eqvsz9z82cfft0el4w2psknxxfl',
               expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
@@ -121,9 +122,63 @@ describe('Standard', function () {
                       addressToBuffer(pubKey2, 2)
                   ],
                   approvers: 2,
-                  participants: 4
+                  participants: 4,
+                  id: AccountType.Multisig
               },
               expected_address: 'sm1qqqqqq8wmne37awzvphppdhms9564g9f73rel3c7cvxkl',
+              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          }
+      ];
+
+      for (const testCase of testCases) {
+          const { account, expected_address, expected_pk } = testCase;
+
+          const resp = await app.getAddressAndPubKeyMultisig(PATH, 1, account);
+          console.log(resp);
+          // expect(resp.returnCode).toEqual(0x9000);
+          // expect(resp.errorMessage).toEqual('No errors');
+          expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
+          expect(resp.address).toEqual(expected_address);
+      }
+
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.only.each(models)('get vesting address', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new SpaceMeshApp(sim.getTransport())
+
+      const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8';
+      const pubKey2 = '8ed90420802c83b41e4a7fa94ce5f05792ea8bff3d7a63572e5c73454eaef51d';
+      const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f6652105c91e2c4';
+        
+      const testCases = [
+          {
+              account: {
+                  pubkeys: [addressToBuffer(pubKey0, 0)],
+                  approvers: 2,
+                  participants: 2,
+                  id: AccountType.Vesting
+              },
+              expected_address: 'sm1qqqqqq8987egzymqzujln6hpvd649zhf4p5mkdclnwtv0',
+              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          },
+          {
+              account: {
+                  pubkeys: [
+                      addressToBuffer(pubKey0, 0),
+                      addressToBuffer(pubKey3, 3),
+                      addressToBuffer(pubKey2, 2)
+                  ],
+                  approvers: 2,
+                  participants: 4,
+                  id: AccountType.Vesting
+              },
+              expected_address: 'sm1qqqqqq894p92556zmh22f8ywd2ehx0n06qj36pq47u9ey',
               expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
           }
       ];

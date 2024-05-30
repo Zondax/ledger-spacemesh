@@ -20,7 +20,6 @@
 #include <hexutils.h>
 #include "address_encoding.h"
 #include "parser_txdef.h"
-#include "crypto_helper.h"
 #include "bech32.h"
 
 using namespace std;

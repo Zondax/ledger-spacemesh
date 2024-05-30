@@ -44,7 +44,9 @@ extern "C" {
 
 #define MAX_SIGN_SIZE 256u
 #define BLAKE2B_DIGEST_SIZE 32u
-#define GET_MULTISIG_VESTING  0x03 //extra instruction
+#define GET_MULTISIG_ADDR  0x03 //extra instruction
+#define GET_VESTING_ADDR  0x04 //extra instruction
+#define GET_VAULT_ADDR  0x05 //extra instruction
 
 // TODO: CHECK decimals
 #define COIN_AMOUNT_DECIMAL_PLACES 6

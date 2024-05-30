@@ -42,11 +42,11 @@
   } while (0)
 
 zxerr_t updateScaleEncodedNumber(uint64_t num);
-size_t scaleEncodeUint64(uint64_t v, uint8_t* out);
-size_t scaleEncodeUint8(uint64_t v, uint8_t* out);
-size_t scaleEncodeUint16(uint64_t v, uint8_t* out);
-size_t scaleEncodeUint32(uint64_t v, uint8_t* out);
-size_t scaleEncodeBigUint(uint64_t v, uint8_t* out);
+uint16_t scaleEncodeUint64(uint64_t v, uint8_t* out);
+uint16_t scaleEncodeUint8(uint64_t v, uint8_t* out);
+uint16_t scaleEncodeUint16(uint64_t v, uint8_t* out);
+uint16_t scaleEncodeUint32(uint64_t v, uint8_t* out);
+uint16_t scaleEncodeBigUint(uint64_t v, uint8_t* out);
 
 zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const account_t *account, uint8_t *buffOffset, bool mainnet) {
     const uint8_t minAddressLen = mainnet ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
@@ -128,7 +128,7 @@ zxerr_t updateScaleEncodedNumber(uint64_t num) {
 }
 
 // Function implementations
-size_t scaleEncodeUint64(uint64_t v, uint8_t* out) {
+uint16_t scaleEncodeUint64(uint64_t v, uint8_t* out) {
     if (v <= MAX_UINT6) {
         return scaleEncodeUint8(v, out);
     } else if (v <= MAX_UINT14) {
@@ -140,20 +140,20 @@ size_t scaleEncodeUint64(uint64_t v, uint8_t* out) {
     }
 }
 
-size_t scaleEncodeUint8(uint64_t v, uint8_t* out) {
+uint16_t scaleEncodeUint8(uint64_t v, uint8_t* out) {
     v = v << 2;  // Adjusting the value inside the function
     out[0] = (uint8_t)v;
     return 1;
 }
 
-size_t scaleEncodeUint16(uint64_t v, uint8_t* out) {
+uint16_t scaleEncodeUint16(uint64_t v, uint8_t* out) {
     v = v << 2 | 0b01;  // Adjusting the value inside the function
     out[0] = (uint8_t)v;
     out[1] = (uint8_t)(v >> 8);
     return 2;
 }
 
-size_t scaleEncodeUint32(uint64_t v, uint8_t* out) {
+uint16_t scaleEncodeUint32(uint64_t v, uint8_t* out) {
     v = v << 2 | 0b10;  // Adjusting the value inside the function
     out[0] = (uint8_t)v;
     out[1] = (uint8_t)(v >> 8);
@@ -162,9 +162,9 @@ size_t scaleEncodeUint32(uint64_t v, uint8_t* out) {
     return 4;
 }
 
-size_t scaleEncodeBigUint(uint64_t v, uint8_t* out) {
+uint16_t scaleEncodeBigUint(uint64_t v, uint8_t* out) {
     int leading_zeros = __builtin_clzll(v);
-    size_t needed = 8 - leading_zeros / 8;
+    uint16_t needed = 8 - leading_zeros / 8;
     out[0] = (uint8_t)((needed - 4) << 2 | 0b11);
     for (int i = 1; i <= needed; ++i) {
         out[i] = (uint8_t)v;
