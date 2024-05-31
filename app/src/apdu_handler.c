@@ -145,8 +145,6 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    ZEMU_LOGF(50, "accountId %d; requireConfirmation: %d\n", accountId, requireConfirmation);
-
     zxerr_t zxerr = app_fill_MultisigAddress(accountId);
     if (zxerr != zxerr_ok) {
         *tx = 0;

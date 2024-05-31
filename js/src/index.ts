@@ -21,6 +21,10 @@ import { P1_VALUES, PUBKEYLEN } from './consts'
 
 import { ResponseSign } from './types'
 
+const maxUint64 = BigInt("0xFFFFFFFFFFFFFFFF");
+const maxUint32 = BigInt("0xFFFFFFFF");
+const maxUint8 = BigInt("0xFF");
+const sizeBufferPubkey: number = 33
 export class SpaceMeshApp extends BaseApp {
   static _INS = {
     GET_VERSION: 0x00 as number,
@@ -167,7 +171,12 @@ export class SpaceMeshApp extends BaseApp {
     const serializedOwnerAccount = this.serializeAccount(account.owner);
     let buff = Buffer.alloc(24)
 
-    //TODO: check bigint < uint64 max
+    if (account.totalAmount > maxUint64 || account.initialUnlockAmount > maxUint64) {
+      throw new Error(`Amount exceeds the maximum allowed value for uint64`);
+    }
+    if (account.vestingStart > maxUint32 || account.vestingEnd > maxUint32) {
+      throw new Error(`Vesting exceeds the maximum allowed value for uint32`);
+    }
     buff.writeBigUInt64LE(account.totalAmount,0)
     buff.writeBigUInt64LE(account.initialUnlockAmount,8)
     buff.writeUInt32LE(account.vestingStart,16)
@@ -178,10 +187,11 @@ export class SpaceMeshApp extends BaseApp {
   }
   
   private serializeAccount(account: Account): Buffer {
-    // TODO: make 33 a defined const
-    const sizePubkey: number = 33
-    let buff = Buffer.alloc(sizePubkey*account.pubkeys.length + 2)
+    let buff = Buffer.alloc(sizeBufferPubkey*account.pubkeys.length + 2)
   
+    if (account.approvers > maxUint8 || account.participants > maxUint8) {
+      throw new Error(`Approvers or participants exceed the maximum allowed value for uint8`);
+    }
     buff.writeUInt8(account.approvers, 0)
     buff.writeUInt8(account.participants, 1)
   
@@ -189,7 +199,7 @@ export class SpaceMeshApp extends BaseApp {
     for (const pubkey of account.pubkeys) {
       buff.writeUInt8(pubkey.index, indexOffset);
       pubkey.pubkey.copy(buff, indexOffset + 1);
-      indexOffset += sizePubkey;
+      indexOffset += sizeBufferPubkey;
     }
   
     return buff
