@@ -282,9 +282,9 @@ describe('Standard', function () {
       const responseAddr = await app.getAddressAndPubKey(PATH)
       const pubKey = responseAddr.pubkey
 
-      const test = Buffer.from("andyBenso")
+      const test = Buffer.from("sing-blind-test-for-spacemesh")
       let singInfo: EdSigner = {
-        prefix: Buffer.from(""),
+        prefix: Buffer.from("test"),
         domain: Domain.HARE,
         message: test
       };
