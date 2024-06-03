@@ -33,13 +33,9 @@
     }                          \
   } while (0)
 
-#define CHECK_ZX_OK(CALL)      \
-  do {                         \
-    zxerr_t __cx_err = CALL;  \
-    if (__cx_err != zxerr_ok) {   \
-      return __cx_err;    \
-    }                          \
-  } while (0)
+#define CHECK_ZX_OK(CALL) { \
+    zxerr_t err = CALL;  \
+    if (err!=zxerr_ok) return err;}
 
 zxerr_t updateScaleEncodedNumber(uint64_t num);
 uint16_t scaleEncodeUint64(uint64_t v, uint8_t* out);

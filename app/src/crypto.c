@@ -36,7 +36,7 @@ uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
 zxerr_t createIndexesArray(const uint8_t *buffer, const uint16_t pubkeysBuffSize, uint8_t *indexes, uint8_t *indexesQty);
 zxerr_t createAccount(const uint8_t *buffer, const uint8_t pubkeyQty, const uint8_t internalPubkeyIndex, const uint8_t *pubkeyIndexes, const uint8_t id, account_t *account) ;
-zxerr_t checkAccountsSanity(uint8_t *indexes, uint8_t auxPubkeyQty);
+zxerr_t checkAccountsSanity(const uint8_t *buffer, uint8_t *indexes, uint8_t pubkeyQty);
 uint32_t load32(const uint8_t *src);
 uint64_t load64(const uint8_t *src);
 void logAccount(account_t *account, uint8_t pubkeyQty);
@@ -140,7 +140,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
     return zxerr_ok;
 }
 
-zxerr_t crypto_fillMultisigAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen, uint8_t accontId) {
+zxerr_t crypto_fillMultisigAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen, uint8_t accountId) {
     if (buffer == NULL || addrResponseLen == NULL){ 
         return zxerr_invalid_crypto_settings;
     }
@@ -155,7 +155,7 @@ zxerr_t crypto_fillMultisigAddress(const uint8_t *buffer, const uint16_t bufferL
     uint8_t pubkeyIndexes[MAX_MULTISIG_PUB_KEY] = {0};
     uint8_t pubkeyQty;
     CHECK_ZXERR(createIndexesArray(buffer, pubkeysBuffSize, pubkeyIndexes, &pubkeyQty));
-    CHECK_ZXERR(checkAccountsSanity(pubkeyIndexes, pubkeyQty))
+    CHECK_ZXERR(checkAccountsSanity(buffer, pubkeyIndexes, pubkeyQty))
 
     zxerr_t error = crypto_extractPublicKey(G_io_apdu_buffer, PUB_KEY_LENGTH);
     if (error != zxerr_ok) {
@@ -165,7 +165,7 @@ zxerr_t crypto_fillMultisigAddress(const uint8_t *buffer, const uint16_t bufferL
 
     uint8_t internalPubkeyIndex = buffer[BUFF_INTERNAL_PUBKEY_INDEX];
     account_t account;
-    CHECK_ZXERR(createAccount(buffer,pubkeyQty,internalPubkeyIndex,pubkeyIndexes, accontId, &account));
+    CHECK_ZXERR(createAccount(buffer,pubkeyQty,internalPubkeyIndex,pubkeyIndexes, accountId, &account));
     logAccount(&account, pubkeyQty);
 
     uint8_t address[64] = {0};
@@ -202,7 +202,7 @@ zxerr_t crypto_fillVaultAddress(const uint8_t *buffer, const uint16_t bufferLen,
     uint8_t pubkeyIndexes[MAX_MULTISIG_PUB_KEY] = {0};
     uint8_t pubkeyQty;
     CHECK_ZXERR(createIndexesArray(buffer,pubkeysBuffSize,pubkeyIndexes,&pubkeyQty));
-    CHECK_ZXERR(checkAccountsSanity(pubkeyIndexes, pubkeyQty))
+    CHECK_ZXERR(checkAccountsSanity(buffer, pubkeyIndexes, pubkeyQty))
 
     zxerr_t error = crypto_extractPublicKey(G_io_apdu_buffer, PUB_KEY_LENGTH);
     if (error != zxerr_ok) {
@@ -284,15 +284,21 @@ zxerr_t createAccount(const uint8_t *buffer, const uint8_t pubkeyQty, const uint
     return zxerr_ok;
 }
 
-zxerr_t checkAccountsSanity(uint8_t *indexes, uint8_t auxPubkeyQty) {
+zxerr_t checkAccountsSanity(const uint8_t *buffer, uint8_t *indexes, uint8_t pubkeyQty) {
     bool exist[MAX_MULTISIG_PUB_KEY] = {false};
-    for (uint8_t i = 0; i < auxPubkeyQty; i++) {
+    for (uint8_t i = 0; i < pubkeyQty; i++) {
         uint8_t index = indexes[i];
-        if (index >= auxPubkeyQty || exist[index]) {
+        if (index >= pubkeyQty || exist[index]) {
             return zxerr_invalid_crypto_settings;
         }
         exist[index] = true;
     }
+    
+    uint8_t participants = buffer[BUFF_PARTICIPANTS_INDEX];
+    if (participants != pubkeyQty) {
+        return zxerr_invalid_crypto_settings;
+    }
+
     return zxerr_ok;
 }
 
@@ -318,4 +324,29 @@ void logAccount(account_t *account, uint8_t pubkeyQty) {
         ZEMU_LOGF(100, "pubkey [%d] = %s\n", i, print);      
     }
     ZEMU_LOGF(100, "approvers: %d; participants: %d\n", account->approvers, account->participants); 
+}
+
+// TODO: Move this function
+const char *parser_getApiErrorDescription(zxerr_t err) {
+    switch (err) {
+        case zxerr_unknown:
+            return "error unknown";
+        case zxerr_ok:
+            return "No error";
+        case zxerr_no_data:
+            return "No more data";
+        case zxerr_buffer_too_small:
+            return "Buffer too small";
+        case zxerr_out_of_bounds:
+            return "Out of bound";
+        case zxerr_encoding_failed:
+            return "Encoding failed";
+        case zxerr_invalid_crypto_settings:
+            return "Invalid crypto settings";
+        case zxerr_ledger_api_error:
+            return "Api error";
+
+        default:
+            return "Unrecognized error code";
+    }
 }

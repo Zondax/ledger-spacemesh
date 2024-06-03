@@ -95,8 +95,10 @@ export class SpaceMeshApp extends BaseApp {
     }
   }
 
-  async getInfoVaultAccount(path: string, internalIndex: number, vaultAccount: VaultAccount): Promise<ResponseAddress>{
-    this.checkAccountsSanity(internalIndex, vaultAccount.owner);
+  async getInfoVaultAccount(path: string, internalIndex: number, vaultAccount: VaultAccount, testMode: boolean): Promise<ResponseAddress>{
+    if (!testMode) {
+      this.checkAccountsSanity(internalIndex, vaultAccount.owner);
+    }
     const serializedAccount = this.serializeVaultAccount(vaultAccount);
     const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
 

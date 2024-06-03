@@ -63,11 +63,7 @@ __Z_INLINE zxerr_t app_fill_MultisigAddress(uint8_t accountId) {
             THROW(APDU_CODE_DATA_INVALID); 
     }
 
-    if (err != zxerr_ok || action_addrResponseLen == 0) {
-        THROW(APDU_CODE_EXECUTION_ERROR);
-    }
-
-    return zxerr_ok;
+    return err;
 }
 
 __Z_INLINE void app_sign() {

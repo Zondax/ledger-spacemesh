@@ -146,11 +146,14 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
     }
 
     zxerr_t zxerr = app_fill_MultisigAddress(accountId);
-    if (zxerr != zxerr_ok) {
-        *tx = 0;
-        THROW(APDU_CODE_DATA_INVALID);
-    }
 
+    if (zxerr != zxerr_ok) {
+        const char *error_msg = parser_getApiErrorDescription(zxerr);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx = error_msg_length;
+        THROW(APDU_CODE_DATA_INVALID);
+    }   
     if (requireConfirmation) {
         view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
         view_review_show(REVIEW_ADDRESS);
