@@ -24,6 +24,7 @@
 #include "tx.h"
 #include "zxerror.h"
 #include "crypto_helper.h"
+#include "zxformat.h"
 
 extern uint16_t action_addrResponseLen;
 
@@ -74,6 +75,11 @@ __Z_INLINE void app_sign() {
     const uint16_t messageLength = tx_get_buffer_length();
 
     const zxerr_t err = crypto_sign(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 3, message, messageLength);
+
+    // TODO: Remove this
+    char print[200] = {0};
+    array_to_hexstr(print,sizeof(print), G_io_apdu_buffer, 64);
+    ZEMU_LOGF(200, "app_sign result!!!!!!!!!! = %s\n", print);      
 
     if (err != zxerr_ok) {
         set_code(G_io_apdu_buffer, 0, APDU_CODE_SIGN_VERIFY_ERROR);

@@ -66,7 +66,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     // #{TODO} --> function to retrieve num Items
     // *num_items = _getNumItems();
     UNUSED(ctx);
-    *num_items = 1;
+    *num_items = 2;
     if (*num_items == 0) {
         return parser_unexpected_number_items;
     }

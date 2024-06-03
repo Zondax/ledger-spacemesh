@@ -45,3 +45,18 @@ export interface VaultAccount {
   vestingEnd: number;
   id: AccountType;
 }
+
+export enum Domain {
+	ATX = 0,
+	PROPOSAL = 1,
+	BALLOT   = 2,
+	HARE     = 3,
+	POET     = 4,
+	BEACON_FIRST_MSG    = 10,
+	BEACON_FOLLOWUP_MSG = 11
+}
+export interface EdSigner {
+  prefix: Buffer;
+  message: Buffer;
+  domain: Domain;
+}

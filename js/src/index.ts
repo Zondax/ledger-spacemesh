@@ -19,7 +19,7 @@ import BaseApp, { BIP32Path, INSGeneric, processErrorResponse, processResponse }
 import { Account, VaultAccount, ResponseAddress, AccountType } from "./types";
 import { P1_VALUES, PUBKEYLEN } from './consts'
 
-import { ResponseSign } from './types'
+import { ResponseSign, EdSigner } from './types'
 
 const maxUint64 = BigInt("0xFFFFFFFFFFFFFFFF");
 const maxUint32 = BigInt("0xFFFFFFFF");
@@ -119,8 +119,10 @@ export class SpaceMeshApp extends BaseApp {
     }
   }
 
-  async sign(path: BIP32Path, blob: Buffer): Promise<ResponseSign> {
-    const chunks = this.prepareChunks(path, blob);
+  async sign(path: BIP32Path, blob: EdSigner): Promise<ResponseSign> {
+
+    const payload = Buffer.concat([blob.prefix, Buffer.from([blob.domain]), blob.message]);
+    const chunks = this.prepareChunks(path, payload);
     // TODO: if P2 is needed, use `sendGenericChunk`
     try {
       let signatureResponse = await this.signSendChunk(this.INS.SIGN, 1, chunks.length, chunks[0])

@@ -17,7 +17,7 @@
 import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
 import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models, txBlobExample } from './common'
-import { Pubkey, AccountType } from "../../js/src/types";
+import { Pubkey, AccountType, EdSigner, Domain } from "../../js/src/types";
 
 // @ts-expect-error
 import ed25519 from 'ed25519-supercop'
@@ -199,7 +199,7 @@ describe('Standard', function () {
     }
   })
 
-  test.only.each(models)('get vault address', async function (m) {
+  test.concurrent.each(models)('get vault address', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -273,37 +273,43 @@ describe('Standard', function () {
 
 
   // #{TODO} --> Add Zemu tests for different transactions. Include expert mode if needed
-  // test.concurrent.each(models)('sign tx0 normal', async function (m) {
-  //   const sim = new Zemu(m.path)
-  //   try {
-  //     await sim.start({ ...defaultOptions, model: m.name })
-  //     const app = new TemplateApp(sim.getTransport())
+  test.only.each(models)('sign blind', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new SpaceMeshApp(sim.getTransport())
 
-  //     const txBlob = Buffer.from(txBlobExample)
-  //     const responseAddr = await app.getAddressAndPubKey(accountId)
-  //     const pubKey = responseAddr.publicKey
+      const responseAddr = await app.getAddressAndPubKey(PATH)
+      const pubKey = responseAddr.pubkey
 
-  //     // do not wait here.. we need to navigate
-  //     const signatureRequest = app.sign(accountId, txBlob)
+      const test = Buffer.from("andyBenso")
+      let singInfo: EdSigner = {
+        prefix: Buffer.from(""),
+        domain: Domain.HARE,
+        message: test
+      };
 
-  //     // Wait until we are not in the main menu
-  //     await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-  //     await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_asset_freeze`,50000)
+      // do not wait here.. we need to navigate
+      const signatureRequest = app.sign(PATH, singInfo)
 
-  //     const signatureResponse = await signatureRequest
-  //     console.log(signatureResponse)
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_blind`)
 
-  //     expect(signatureResponse.return_code).toEqual(0x9000)
-  //     expect(signatureResponse.error_message).toEqual('No errors')
+      const signatureResponse = await signatureRequest
+      console.log(signatureResponse)
 
-  //     // Now verify the signature
-  //     const prehash = Buffer.concat([Buffer.from('TX'), txBlob]);
-  //     const valid = ed25519.verify(signatureResponse.signature, prehash, pubKey)
-  //     expect(valid).toEqual(true)
-  //   } finally {
-  //     await sim.close()
-  //   }
-  // })
+      // expect(signatureResponse.return_code).toEqual(0x9000)
+      // expect(signatureResponse.error_message).toEqual('No errors')
+
+      // Now verify the signature
+      const payload = Buffer.concat([singInfo.prefix, Buffer.from([singInfo.domain]), singInfo.message]);
+      const valid = ed25519.verify(signatureResponse.signature, payload, pubKey)
+      expect(valid).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
 
   // test.concurrent.each(models)('sign tx1 normal', async function (m) {
   //   const sim = new Zemu(m.path)
