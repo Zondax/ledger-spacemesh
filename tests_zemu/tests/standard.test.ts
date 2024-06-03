@@ -273,7 +273,7 @@ describe('Standard', function () {
 
 
   // #{TODO} --> Add Zemu tests for different transactions. Include expert mode if needed
-  test.only.each(models)('sign blind', async function (m) {
+  test.concurrent.each(models)('sign blind', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
