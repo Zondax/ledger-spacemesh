@@ -17,7 +17,7 @@
 import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
 import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models, txBlobExample } from './common'
-import { Pubkey, AccountType, EdSigner, Domain } from '../../js/src/types';
+import { Pubkey, AccountType, EdSigner, Domain, VaultAccount } from '../../js/src/types';
 import { processErrorResponse, ResponseError } from '@zondax/ledger-js'
 
 // @ts-expect-error
@@ -103,43 +103,43 @@ describe('Standard', function () {
       const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8';
       const pubKey2 = '8ed90420802c83b41e4a7fa94ce5f05792ea8bff3d7a63572e5c73454eaef51d';
       const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f6652105c91e2c4';
-        
+
       const testCases = [
-          {
-              account: {
-                  pubkeys: [addressToBuffer(pubKey0, 0)],
-                  approvers: 2,
-                  participants: 2,
-                  id: AccountType.Multisig
-              },
-              expected_address: 'sm1qqqqqq9yec9x0q84s8eqvsz9z82cfft0el4w2psknxxfl',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+        {
+          account: {
+            pubkeys: [addressToBuffer(pubKey0, 0)],
+            approvers: 2,
+            participants: 2,
+            id: AccountType.Multisig
           },
-          {
-              account: {
-                  pubkeys: [
-                      addressToBuffer(pubKey0, 0),
-                      addressToBuffer(pubKey3, 3),
-                      addressToBuffer(pubKey2, 2)
-                  ],
-                  approvers: 2,
-                  participants: 4,
-                  id: AccountType.Multisig
-              },
-              expected_address: 'sm1qqqqqq8wmne37awzvphppdhms9564g9f73rel3c7cvxkl',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
-          }
+          expected_address: 'sm1qqqqqq9yec9x0q84s8eqvsz9z82cfft0el4w2psknxxfl',
+          expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+        },
+        {
+          account: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey3, 3),
+              addressToBuffer(pubKey2, 2)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Multisig
+          },
+          expected_address: 'sm1qqqqqq8wmne37awzvphppdhms9564g9f73rel3c7cvxkl',
+          expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+        }
       ];
 
       for (const testCase of testCases) {
-          const { account, expected_address, expected_pk } = testCase;
+        const { account, expected_address, expected_pk } = testCase;
 
-          const resp = await app.getInfoMultisigVestingAccount(PATH, 1, account);
-          console.log(resp);
-          // expect(resp.returnCode).toEqual(0x9000);
-          // expect(resp.errorMessage).toEqual('No errors');
-          expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
-          expect(resp.address).toEqual(expected_address);
+        const resp = await app.getInfoMultisigVestingAccount(PATH, 1, account);
+        console.log(resp);
+        // expect(resp.returnCode).toEqual(0x9000);
+        // expect(resp.errorMessage).toEqual('No errors');
+        expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
+        expect(resp.address).toEqual(expected_address);
       }
 
     } finally {
@@ -156,43 +156,43 @@ describe('Standard', function () {
       const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8';
       const pubKey2 = '8ed90420802c83b41e4a7fa94ce5f05792ea8bff3d7a63572e5c73454eaef51d';
       const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f6652105c91e2c4';
-        
+
       const testCases = [
-          {
-            account: {
-                  pubkeys: [addressToBuffer(pubKey0, 0)],
-                  approvers: 2,
-                  participants: 2,
-                  id: AccountType.Vesting
-              },
-              expected_address: 'sm1qqqqqq8987egzymqzujln6hpvd649zhf4p5mkdclnwtv0',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+        {
+          account: {
+            pubkeys: [addressToBuffer(pubKey0, 0)],
+            approvers: 2,
+            participants: 2,
+            id: AccountType.Vesting
           },
-          {
-              account: {
-                  pubkeys: [
-                      addressToBuffer(pubKey0, 0),
-                      addressToBuffer(pubKey3, 3),
-                      addressToBuffer(pubKey2, 2)
-                  ],
-                  approvers: 2,
-                  participants: 4,
-                  id: AccountType.Vesting
-              },
-              expected_address: 'sm1qqqqqq894p92556zmh22f8ywd2ehx0n06qj36pq47u9ey',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
-          }
+          expected_address: 'sm1qqqqqq8987egzymqzujln6hpvd649zhf4p5mkdclnwtv0',
+          expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+        },
+        {
+          account: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey3, 3),
+              addressToBuffer(pubKey2, 2)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting
+          },
+          expected_address: 'sm1qqqqqq894p92556zmh22f8ywd2ehx0n06qj36pq47u9ey',
+          expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+        }
       ];
 
       for (const testCase of testCases) {
-          const { account, expected_address, expected_pk } = testCase;
+        const { account, expected_address, expected_pk } = testCase;
 
-          const resp = await app.getInfoMultisigVestingAccount(PATH, 1, account);
-          console.log(resp);
-          // expect(resp.returnCode).toEqual(0x9000);
-          // expect(resp.errorMessage).toEqual('No errors');
-          expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
-          expect(resp.address).toEqual(expected_address);
+        const resp = await app.getInfoMultisigVestingAccount(PATH, 1, account);
+        console.log(resp);
+        // expect(resp.returnCode).toEqual(0x9000);
+        // expect(resp.errorMessage).toEqual('No errors');
+        expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
+        expect(resp.address).toEqual(expected_address);
       }
 
     } finally {
@@ -209,57 +209,57 @@ describe('Standard', function () {
       const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8';
       const pubKey2 = '8ed90420802c83b41e4a7fa94ce5f05792ea8bff3d7a63572e5c73454eaef51d';
       const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f6652105c91e2c4';
-        
+
       const testCases = [
-          {
-            vaultAccount: {
-              owner: {
-                  pubkeys: [addressToBuffer(pubKey0, 0)],
-                  approvers: 2,
-                  participants: 2,
-                  id: AccountType.Vesting
-              },
-              totalAmount: BigInt(1000),
-              initialUnlockAmount: BigInt(987),
-              vestingStart: 567,
-              vestingEnd: 99999,
-              id: AccountType.Vault
+        {
+          vaultAccount: {
+            owner: {
+              pubkeys: [addressToBuffer(pubKey0, 0)],
+              approvers: 2,
+              participants: 2,
+              id: AccountType.Vesting
             },
-            expected_address: 'sm1qqqqqqqrsssxatqkcxflze4eh8c4rngxsmudk7qqapryj',
-            expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+            totalAmount: BigInt(1000),
+            initialUnlockAmount: BigInt(987),
+            vestingStart: 567,
+            vestingEnd: 99999,
+            id: AccountType.Vault
           },
-          {
-            vaultAccount: { 
-              owner: {
-                  pubkeys: [
-                      addressToBuffer(pubKey0, 0),
-                      addressToBuffer(pubKey3, 3),
-                      addressToBuffer(pubKey2, 2)
-                  ],
-                  approvers: 2,
-                  participants: 4,
-                  id: AccountType.Vesting
-                },
-                totalAmount: BigInt(1000),
-                initialUnlockAmount: BigInt(987),
-                vestingStart: 567,
-                vestingEnd: 44,
-                id: AccountType.Vault
-              },
-              expected_address: 'sm1qqqqqqz26rdxe5szj29fjafxm0yyg2mhazq96kg2kds04',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
-          }
+          expected_address: 'sm1qqqqqqqrsssxatqkcxflze4eh8c4rngxsmudk7qqapryj',
+          expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+        },
+        {
+          vaultAccount: {
+            owner: {
+              pubkeys: [
+                addressToBuffer(pubKey0, 0),
+                addressToBuffer(pubKey3, 3),
+                addressToBuffer(pubKey2, 2)
+              ],
+              approvers: 2,
+              participants: 4,
+              id: AccountType.Vesting
+            },
+            totalAmount: BigInt(1000),
+            initialUnlockAmount: BigInt(987),
+            vestingStart: 567,
+            vestingEnd: 44,
+            id: AccountType.Vault
+          },
+          expected_address: 'sm1qqqqqqz26rdxe5szj29fjafxm0yyg2mhazq96kg2kds04',
+          expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+        }
       ];
 
       for (const testCase of testCases) {
-          const { vaultAccount, expected_address, expected_pk } = testCase;
+        const { vaultAccount, expected_address, expected_pk } = testCase;
 
-          const resp = await app.getInfoVaultAccount(PATH, 1, vaultAccount, false);
-          console.log(resp);
-          // expect(resp.returnCode).toEqual(0x9000);
-          // expect(resp.errorMessage).toEqual('No errors');
-          expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
-          expect(resp.address).toEqual(expected_address);
+        const resp = await app.getInfoVaultAccount(PATH, 1, vaultAccount, false);
+        console.log(resp);
+        // expect(resp.returnCode).toEqual(0x9000);
+        // expect(resp.errorMessage).toEqual('No errors');
+        expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
+        expect(resp.address).toEqual(expected_address);
       }
 
     } finally {
@@ -267,7 +267,140 @@ describe('Standard', function () {
     }
   })
 
-  test.only.each(models)('get vault address wrong data', async function (m) {
+  test.concurrent.each(models)('Invalid data in api', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new SpaceMeshApp(sim.getTransport())
+      const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8';
+      const pubKey2 = '8ed90420802c83b41e4a7fa94ce5f05792ea8bff3d7a63572e5c73454eaef51d';
+      const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f6652105c91e2c4';
+      const pubKeyWrong = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f';
+
+      const testCases = [
+        {
+          scenario: 'Duplicate index in pubkeys array',
+          owner: {
+            pubkeys: [addressToBuffer(pubKey0, 1)],
+            approvers: 2,
+            participants: 2,
+            id: AccountType.Vesting,
+          },
+        },
+        {
+          scenario: 'One index is equal to or greater than participants',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey3, 4),
+              addressToBuffer(pubKey2, 2)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+        },
+        {
+          scenario: 'First pubkey is missing',
+          vaultAccount: {
+            owner: {
+              pubkeys: [
+                addressToBuffer(pubKey3, 3),
+                addressToBuffer(pubKey2, 2)
+              ],
+              approvers: 2,
+              participants: 4,
+              id: AccountType.Vesting,
+            },
+          },
+        },
+        {
+          scenario: 'Last pubkey is missing',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey2, 2)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+        },
+        {
+          scenario: 'A pubkey is missing from the middle of the sequence',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey3, 3)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+        },
+        {
+          scenario: 'participants < approvers',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey2, 2),
+              addressToBuffer(pubKey3, 3)
+            ],
+            approvers: 5,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+        },
+        {
+          scenario: 'approvers == 0',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey2, 2),
+              addressToBuffer(pubKey3, 3)
+            ],
+            approvers: 0,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+        },
+        {
+          scenario: 'Corrupted pubkey',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKeyWrong, 0),
+              addressToBuffer(pubKey2, 2),
+              addressToBuffer(pubKey3, 3)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+        },
+      ];
+
+      for (const testCase of testCases) {
+        let errorOccurred = false;
+        const owner = testCase.owner ? testCase.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting };
+        const vaultAccount: VaultAccount = {
+          owner,
+          totalAmount: BigInt(1000),
+          initialUnlockAmount: BigInt(987),
+          vestingStart: 567,
+          vestingEnd: 99999,
+          id: AccountType.Vault,
+        };
+        console.log("testing: ", testCase.scenario)
+        await expect(app.getInfoVaultAccount(PATH, 1, vaultAccount, true))
+          .rejects
+          .toThrow(new ResponseError(0x6984, 'Data is invalid : Invalid crypto settings'));
+      }
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(models)('invalid data in js', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -276,153 +409,178 @@ describe('Standard', function () {
       const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8';
       const pubKey2 = '8ed90420802c83b41e4a7fa94ce5f05792ea8bff3d7a63572e5c73454eaef51d';
       const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f6652105c91e2c4';
-        
+
       const testCases = [
-          {
-            // pubkey index is equal to internal index
-            vaultAccount: {
-              owner: {
-                  pubkeys: [addressToBuffer(pubKey0, 1)],
-                  approvers: 2,
-                  participants: 2,
-                  id: AccountType.Vesting
-              },
-              totalAmount: BigInt(1000),
-              initialUnlockAmount: BigInt(987),
-              vestingStart: 567,
-              vestingEnd: 99999,
-              id: AccountType.Vault
+        {
+          scenario: 'Duplicate index in pubkeys array',
+          owner: {
+            pubkeys: [addressToBuffer(pubKey0, 1)],
+            approvers: 2,
+            participants: 2,
+            id: AccountType.Vesting,
+          },
+          expectedError: 'Duplicate index 1 found in pubkeys array',
+        },
+        {
+          scenario: 'One index is equal to or greater than participants',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey3, 4),
+              addressToBuffer(pubKey2, 2)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+          expectedError: 'Missing index 3 in pubkeys array',
+        },
+        {
+          scenario: 'First pubkey is missing',
+          vaultAccount: {
+            owner: {
+              pubkeys: [
+                addressToBuffer(pubKey3, 3),
+                addressToBuffer(pubKey2, 2)
+              ],
+              approvers: 2,
+              participants: 4,
+              id: AccountType.Vesting,
             },
-            expected_address: 'sm1qqqqqqqrsssxatqkcxflze4eh8c4rngxsmudk7qqapryj',
-            expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
           },
-          // one index is equal to or greater than participants
-          {
-            vaultAccount: { 
-              owner: {
-                  pubkeys: [
-                      addressToBuffer(pubKey0, 0),
-                      addressToBuffer(pubKey3, 4),
-                      addressToBuffer(pubKey2, 2)
-                  ],
-                  approvers: 2,
-                  participants: 4,
-                  id: AccountType.Vesting
-                },
-                totalAmount: BigInt(1000),
-                initialUnlockAmount: BigInt(987),
-                vestingStart: 567,
-                vestingEnd: 44,
-                id: AccountType.Vault
-              },
-              expected_address: 'sm1qqqqqqz26rdxe5szj29fjafxm0yyg2mhazq96kg2kds04',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          expectedError: 'Missing index 0 in pubkeys array',
+        },
+        {
+          scenario: 'Last pubkey is missing',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey2, 2)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
           },
-          // first pubkey is missing
-          {
-            vaultAccount: { 
-              owner: {
-                  pubkeys: [
-                    addressToBuffer(pubKey3, 4),
-                    addressToBuffer(pubKey2, 2)
-                  ],
-                  approvers: 2,
-                  participants: 4,
-                  id: AccountType.Vesting
-                },
-                totalAmount: BigInt(1000),
-                initialUnlockAmount: BigInt(987),
-                vestingStart: 567,
-                vestingEnd: 44,
-                id: AccountType.Vault
-              },
-              expected_address: 'sm1qqqqqqz26rdxe5szj29fjafxm0yyg2mhazq96kg2kds04',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          expectedError: 'Pubkey quantity does not match the number of participants',
+        },
+        {
+          scenario: 'A pubkey is missing from the middle of the sequence',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey3, 3)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
           },
-          // last pubkey is missing
-          {
-            vaultAccount: { 
-              owner: {
-                  pubkeys: [
-                      addressToBuffer(pubKey0, 0),
-                      addressToBuffer(pubKey2, 2)
-                  ],
-                  approvers: 2,
-                  participants: 4,
-                  id: AccountType.Vesting
-                },
-                totalAmount: BigInt(1000),
-                initialUnlockAmount: BigInt(987),
-                vestingStart: 567,
-                vestingEnd: 44,
-                id: AccountType.Vault
-              },
-              expected_address: 'sm1qqqqqqz26rdxe5szj29fjafxm0yyg2mhazq96kg2kds04',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          expectedError: 'Missing index 2 in pubkeys array',
+        },
+        {
+          scenario: 'participants < approvers',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey2, 2),
+              addressToBuffer(pubKey3, 3)
+            ],
+            approvers: 5,
+            participants: 4,
+            id: AccountType.Vesting,
           },
-          // internal pubkey is missing
-          {
-            vaultAccount: { 
-              owner: {
-                  pubkeys: [
-                      addressToBuffer(pubKey0, 0),
-                      addressToBuffer(pubKey3, 4),
-                      addressToBuffer(pubKey2, 2)
-                  ],
-                  approvers: 2,
-                  participants: 4,
-                  id: AccountType.Vesting
-                },
-                totalAmount: BigInt(1000),
-                initialUnlockAmount: BigInt(987),
-                vestingStart: 567,
-                vestingEnd: 44,
-                id: AccountType.Vault
-              },
-              expected_address: 'sm1qqqqqqz26rdxe5szj29fjafxm0yyg2mhazq96kg2kds04',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
+          expectedError: 'Approvers cannot exceed the number of participants',
+        },
+        {
+          scenario: 'approvers == 0',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey2, 2),
+              addressToBuffer(pubKey3, 3)
+            ],
+            approvers: 0,
+            participants: 4,
+            id: AccountType.Vesting,
           },
-          // participants < approvers 
-          {
-            vaultAccount: { 
-              owner: {
-                  pubkeys: [
-                      addressToBuffer(pubKey0, 0),
-                      addressToBuffer(pubKey3, 3),
-                      addressToBuffer(pubKey2, 2)
-                  ],
-                  approvers: 5,
-                  participants: 4,
-                  id: AccountType.Vesting
-                },
-                totalAmount: BigInt(1000),
-                initialUnlockAmount: BigInt(987),
-                vestingStart: 567,
-                vestingEnd: 44,
-                id: AccountType.Vault
-              },
-              expected_address: 'sm1qqqqqqz26rdxe5szj29fjafxm0yyg2mhazq96kg2kds04',
-              expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
-          },
+          expectedError: 'Approvers cannot be 0',
+        },
       ];
 
-      for (const testCase of testCases) {
-          const { vaultAccount, expected_address, expected_pk } = testCase;
-          let errorOccurred = false;
-          try {
-            const resp = await app.getInfoVaultAccount(PATH, 1, vaultAccount, true);
-          } catch (e) {
-            errorOccurred = true;
-            const errRsp = processErrorResponse(e)
-            console.log(errRsp)
-            expect(errRsp).toMatchObject({
-              returnCode: 0x6984,
-              errorMessage: 'Data is invalid : Invalid crypto settings'
-            })
-          }
-          if (!errorOccurred) {
-            fail("No error was thrown as expected.");
-        }
+      for (const test of testCases) {
+        let errorOccurred = false;
+        const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting };
+        const vaultAccount: VaultAccount = {
+          owner,
+          totalAmount: BigInt(1000),
+          initialUnlockAmount: BigInt(987),
+          vestingStart: 567,
+          vestingEnd: 99999,
+          id: AccountType.Vault,
+        };
+        console.log("Testing: ", test.scenario)
+        await expect(app.getInfoVaultAccount(PATH, 1, vaultAccount, false))
+          .rejects
+          .toThrow(new Error(test.expectedError));
+      }
+
+      const testCases2 = [
+        {
+          scenario: 'TotalAmount overflow',
+          totalAmount: BigInt("0x10000000000000000"),
+          initialUnlockAmount: BigInt(987),
+          vestingStart: 567,
+          vestingEnd: 99999,
+          expectedError: 'Amount exceeds the maximum allowed value for uint64',
+        },
+        {
+          scenario: 'TotalAmount overflow',
+          totalAmount: BigInt(1000),
+          initialUnlockAmount: BigInt("0x10000000000000000"),
+          vestingStart: 567,
+          vestingEnd: 99999,
+          expectedError: 'Amount exceeds the maximum allowed value for uint64',
+        },
+        {
+          scenario: 'VestingStart overflow',
+          totalAmount: BigInt(1000),
+          initialUnlockAmount: BigInt(987),
+          vestingStart: 0x100000000,
+          vestingEnd: 99999,
+          expectedError: 'Vesting exceeds the maximum allowed value for uint32',
+        },
+        {
+          scenario: 'VestingEnd overflow',
+          totalAmount: BigInt(1000),
+          initialUnlockAmount: BigInt(987),
+          vestingStart: 567,
+          vestingEnd: 0x100000000,
+          expectedError: 'Vesting exceeds the maximum allowed value for uint32',
+        },
+      ]
+      for (const test of testCases2) {
+        let errorOccurred = false;
+        const vaultAccount: VaultAccount = {
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey2, 2),
+              addressToBuffer(pubKey3, 3)
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+
+          totalAmount: test.totalAmount,
+          initialUnlockAmount: test.initialUnlockAmount,
+          vestingStart: test.vestingStart,
+          vestingEnd: test.vestingEnd,
+          id: AccountType.Vault,
+        };
+        console.log("Testing: ", test.scenario)
+        await expect(app.getInfoVaultAccount(PATH, 1, vaultAccount, false))
+          .rejects
+          .toThrow(new Error(test.expectedError));
       }
 
     } finally {
@@ -433,7 +591,7 @@ describe('Standard', function () {
   function addressToBuffer(stringPubKey: string, index: number): Pubkey {
     const bufferPubKey = Buffer.from(stringPubKey, 'hex');
     return { index, pubkey: bufferPubKey };
-}
+  }
 
 
   // #{TODO} --> Add Zemu tests for different transactions. Include expert mode if needed

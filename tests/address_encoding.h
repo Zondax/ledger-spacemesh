@@ -353,18 +353,18 @@ vector<SpaceMeshVaultAddress> testvectorVault {
     {
         {
             {
-                "6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8",
-                "136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d"
+                "97f3bd871315281e8b83edc7a9fd0541066154449070ccdb3cdd42cf69ccde88",
+                "6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8"
             },
             "sm1qqqqqq990g4t9t7gqskhllfsln2jsqcal689zeqlaqqs0",
             2,
             2
         },
         "sm1qqqqqqxs7hvfy5880nccgjmz9w2wlgqmy0yttxs2haxct",
-        1000,
+        10,
         987,
-        567,
-        99999 
+        0,
+        44 
     },
     {
         {

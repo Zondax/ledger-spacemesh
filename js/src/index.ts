@@ -24,7 +24,8 @@ import { ResponseSign, EdSigner } from './types'
 const maxUint64 = BigInt("0xFFFFFFFFFFFFFFFF");
 const maxUint32 = BigInt("0xFFFFFFFF");
 const maxUint8 = BigInt("0xFF");
-const sizeBufferPubkey: number = 33
+const pubKeyLength: number = 32;
+
 export class SpaceMeshApp extends BaseApp {
   static _INS = {
     GET_VERSION: 0x00 as number,
@@ -71,7 +72,7 @@ export class SpaceMeshApp extends BaseApp {
     }
   }
 
-  async getInfoMultisigVestingAccount(path: string, internalIndex: number, account: Account): Promise<ResponseAddress>{
+  async getInfoMultisigVestingAccount(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
     this.checkAccountsSanity(internalIndex, account);
     const serializedAccount = this.serializeAccount(account);
     const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
@@ -89,13 +90,13 @@ export class SpaceMeshApp extends BaseApp {
       return {
         pubkey,
         address,
-      } as ResponseAddress   
+      } as ResponseAddress
     } catch (e) {
       throw processErrorResponse(e)
     }
   }
 
-  async getInfoVaultAccount(path: string, internalIndex: number, vaultAccount: VaultAccount, testMode: boolean): Promise<ResponseAddress>{
+  async getInfoVaultAccount(path: string, internalIndex: number, vaultAccount: VaultAccount, testMode: boolean): Promise<ResponseAddress> {
     if (!testMode) {
       this.checkAccountsSanity(internalIndex, vaultAccount.owner);
     }
@@ -115,7 +116,7 @@ export class SpaceMeshApp extends BaseApp {
       return {
         pubkey,
         address,
-      } as ResponseAddress   
+      } as ResponseAddress
     } catch (e) {
       throw processErrorResponse(e)
     }
@@ -162,12 +163,28 @@ export class SpaceMeshApp extends BaseApp {
         throw new Error(`Duplicate index ${pubkey.index} found in pubkeys array`)
       }
       indices.add(pubkey.index)
+
+      if (pubkey.pubkey.length != pubKeyLength) {
+        throw new Error(`Invalid pubkey size for ${pubkey.pubkey}`)
+      }
     }
-    
-    for (let i = 0; i < account.pubkeys.length; i++) {
+
+    for (let i = 0; i < indices.size; i++) {
       if (!indices.has(i)) {
         throw new Error(`Missing index ${i} in pubkeys array`)
       }
+    }
+
+    if (indices.size != account.participants) {
+      throw new Error(`Pubkey quantity does not match the number of participants`)
+    }
+
+    if (account.approvers == 0) {
+      throw new Error(`Approvers cannot be 0`)
+    }
+
+    if (account.participants < account.approvers) {
+      throw new Error(`Approvers cannot exceed the number of participants`)
     }
   }
 
@@ -181,31 +198,39 @@ export class SpaceMeshApp extends BaseApp {
     if (account.vestingStart > maxUint32 || account.vestingEnd > maxUint32) {
       throw new Error(`Vesting exceeds the maximum allowed value for uint32`);
     }
-    buff.writeBigUInt64LE(account.totalAmount,0)
-    buff.writeBigUInt64LE(account.initialUnlockAmount,8)
-    buff.writeUInt32LE(account.vestingStart,16)
-    buff.writeUInt32LE(account.vestingEnd,20)
+    buff.writeBigUInt64LE(account.totalAmount, 0)
+    buff.writeBigUInt64LE(account.initialUnlockAmount, 8)
+    buff.writeUInt32LE(account.vestingStart, 16)
+    buff.writeUInt32LE(account.vestingEnd, 20)
     const serializedAccount = Buffer.concat([serializedOwnerAccount, buff]);
-  
+
     return serializedAccount
   }
-  
+
   private serializeAccount(account: Account): Buffer {
-    let buff = Buffer.alloc(sizeBufferPubkey*account.pubkeys.length + 2)
-  
+    // calc buffer len
+    let buffLen: number = 0
+    for (const pubkey of account.pubkeys) {
+      // Each pubkey has to be stored in 33 bytes: 32 for pubkey and 1 for index
+      buffLen += pubkey.pubkey.length + 1
+    }
+
+    // add 2 bytes to store approvers and participants
+    let buff = Buffer.alloc(buffLen + 2)
+
     if (account.approvers > maxUint8 || account.participants > maxUint8) {
       throw new Error(`Approvers or participants exceed the maximum allowed value for uint8`);
     }
     buff.writeUInt8(account.approvers, 0)
     buff.writeUInt8(account.participants, 1)
-  
+
     let indexOffset: number = 2;
     for (const pubkey of account.pubkeys) {
-      buff.writeUInt8(pubkey.index, indexOffset);
-      pubkey.pubkey.copy(buff, indexOffset + 1);
-      indexOffset += sizeBufferPubkey;
+      buff.writeUInt8(pubkey.index, indexOffset)
+      pubkey.pubkey.copy(buff, indexOffset + 1)
+      indexOffset += pubkey.pubkey.length + 1
     }
-  
+
     return buff
   }
 }

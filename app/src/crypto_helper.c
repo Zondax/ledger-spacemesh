@@ -33,9 +33,13 @@
     }                          \
   } while (0)
 
-#define CHECK_ZX_OK(CALL) { \
-    zxerr_t err = CALL;  \
-    if (err!=zxerr_ok) return err;}
+#define CHECK_ZX_OK(CALL)      \
+  do {                         \
+    zxerr_t __cx_err = CALL;  \
+    if (__cx_err != zxerr_ok) {   \
+      return __cx_err;    \
+    }                          \
+  } while (0)
 
 zxerr_t updateScaleEncodedNumber(uint64_t num);
 uint16_t scaleEncodeUint64(uint64_t v, uint8_t* out);
@@ -57,7 +61,7 @@ zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const 
     CHECK_PARSER_OK(zxblake3_hash_update(template, sizeof(template)));
 
     if (account->id != WALLET) {
-        if (account->approvers > account->participants || account->participants > MAX_MULTISIG_PUB_KEY) {
+        if (account->approvers > account->participants || account->approvers == 0 || account->participants > MAX_MULTISIG_PUB_KEY) {
             return zxerr_invalid_crypto_settings;
         }
         CHECK_ZX_OK(updateScaleEncodedNumber(account->approvers));
