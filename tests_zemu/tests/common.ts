@@ -17,6 +17,7 @@ export const models: IDeviceModel[] = [
 ]
 
 export const PATH = "m/44'/540'/0'/0/0"
+export const TESTNET = "m/44'/1'/0'/0/0"
 
 export const defaultOptions = {
   ...DEFAULT_START_OPTIONS,

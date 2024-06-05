@@ -144,6 +144,11 @@ zxerr_t crypto_fillMultisigVestingAddress(const uint8_t *buffer, const uint16_t 
         return zxerr_invalid_crypto_settings;
     }
     const bool mainnet = (hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT);
+    const bool testnet = (hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_TESTNET);
+    if (!mainnet && !testnet) {
+        return zxerr_invalid_crypto_settings;
+    }
+
     const uint8_t outAddressLen = mainnet ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
     if (IO_APDU_BUFFER_SIZE < PUB_KEY_LENGTH + outAddressLen) {
@@ -176,8 +181,12 @@ zxerr_t crypto_fillVaultAddress(const uint8_t *buffer, const uint16_t bufferLen,
     if (buffer == NULL || addrResponseLen == NULL) {
         return zxerr_invalid_crypto_settings;
     }
-
     const bool mainnet = (hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT);
+    const bool testnet = (hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_TESTNET);
+    if (!mainnet && !testnet) {
+        return zxerr_invalid_crypto_settings;
+    }
+
     const uint8_t outAddressLen = mainnet ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
     if (IO_APDU_BUFFER_SIZE < PUB_KEY_LENGTH + outAddressLen) {
