@@ -81,9 +81,6 @@ describe('Standard', function () {
 
       console.log(resp)
 
-      // expect(resp.returnCode).toEqual(0x9000)
-      // expect(resp.errorMessage).toEqual('No errors')
-
       const expected_address = 'sm1qqqqqqyjdl0e9t6s3cxx3pqgtmxh998w5l74v5syjt6w5'
       const expected_pk = '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d'
 
@@ -136,8 +133,7 @@ describe('Standard', function () {
 
         const resp = await app.getInfoMultisigVestingAccount(PATH, 1, account);
         console.log(resp);
-        // expect(resp.returnCode).toEqual(0x9000);
-        // expect(resp.errorMessage).toEqual('No errors');
+
         expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
         expect(resp.address).toEqual(expected_address);
       }
@@ -189,8 +185,7 @@ describe('Standard', function () {
 
         const resp = await app.getInfoMultisigVestingAccount(PATH, 1, account);
         console.log(resp);
-        // expect(resp.returnCode).toEqual(0x9000);
-        // expect(resp.errorMessage).toEqual('No errors');
+
         expect(resp.pubkey?.toString('hex')).toEqual(expected_pk);
         expect(resp.address).toEqual(expected_address);
       }
@@ -288,12 +283,25 @@ describe('Standard', function () {
           },
         },
         {
-          scenario: 'One index is equal to or greater than participants',
+          scenario: 'Unsorted array',
           owner: {
             pubkeys: [
               addressToBuffer(pubKey0, 0),
               addressToBuffer(pubKey3, 4),
-              addressToBuffer(pubKey2, 2)
+              addressToBuffer(pubKey2, 2),
+            ],
+            approvers: 2,
+            participants: 4,
+            id: AccountType.Vesting,
+          },
+        },
+        {
+          scenario: 'One index is equal to or greater than participants',
+          owner: {
+            pubkeys: [
+              addressToBuffer(pubKey0, 0),
+              addressToBuffer(pubKey2, 2),
+              addressToBuffer(pubKey3, 4),
             ],
             approvers: 2,
             participants: 4,
@@ -305,8 +313,8 @@ describe('Standard', function () {
           vaultAccount: {
             owner: {
               pubkeys: [
-                addressToBuffer(pubKey3, 3),
-                addressToBuffer(pubKey2, 2)
+                addressToBuffer(pubKey2, 2),
+                addressToBuffer(pubKey3, 3)
               ],
               approvers: 2,
               participants: 4,
@@ -380,7 +388,6 @@ describe('Standard', function () {
       ];
 
       for (const testCase of testCases) {
-        let errorOccurred = false;
         const owner = testCase.owner ? testCase.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting };
         const vaultAccount: VaultAccount = {
           owner,
@@ -507,7 +514,6 @@ describe('Standard', function () {
       ];
 
       for (const test of testCases) {
-        let errorOccurred = false;
         const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting };
         const vaultAccount: VaultAccount = {
           owner,
@@ -558,7 +564,6 @@ describe('Standard', function () {
         },
       ]
       for (const test of testCases2) {
-        let errorOccurred = false;
         const vaultAccount: VaultAccount = {
           owner: {
             pubkeys: [
@@ -621,8 +626,6 @@ describe('Standard', function () {
       const signatureResponse = await signatureRequest
       console.log(signatureResponse)
 
-      // expect(signatureResponse.return_code).toEqual(0x9000)
-      // expect(signatureResponse.error_message).toEqual('No errors')
 
       // Now verify the signature
       const payload = Buffer.concat([singInfo.prefix, Buffer.from([singInfo.domain]), singInfo.message]);

@@ -87,13 +87,6 @@ zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const va
         return zxerr_no_data;
     }
 
-    const char* hrp;
-    if (mainnet) {
-        hrp = "sm";
-    } else {
-        hrp = "stest";
-    }
-
     uint8_t template[ADDRESS_LENGTH] = {0};
     template[ADDRESS_LENGTH - 1] = vaultAccount->id;
 

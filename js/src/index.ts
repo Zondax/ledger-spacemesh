@@ -76,9 +76,10 @@ export class SpaceMeshApp extends BaseApp {
     this.checkAccountsSanity(internalIndex, account);
     const serializedAccount = this.serializeAccount(account);
     const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
-
+    
+    // [path|internalIndex|approvers|participants|[index|pubkeys]]
     const chunks = this.prepareChunks(path, payload);
-
+    
     try {
       let response = await this.signSendChunk(this.getInstruction(account.id), 1, chunks.length, chunks[0])
       for (let i = 1; i < chunks.length; i += 1) {
@@ -96,13 +97,14 @@ export class SpaceMeshApp extends BaseApp {
     }
   }
 
-  async getInfoVaultAccount(path: string, internalIndex: number, vaultAccount: VaultAccount, testMode: boolean): Promise<ResponseAddress> {
+  async getInfoVaultAccount(path: string, internalIndex: number, vaultAccount: VaultAccount, testMode = false): Promise<ResponseAddress> {
     if (!testMode) {
       this.checkAccountsSanity(internalIndex, vaultAccount.owner);
     }
     const serializedAccount = this.serializeVaultAccount(vaultAccount);
     const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
 
+    // [path|internalIndex|approvers|participants|[index|pubkeys]|totalAmount|initialUnlockAmount|vestingStart|vestingEnd]
     const chunks = this.prepareChunks(path, payload);
 
     try {
@@ -186,6 +188,8 @@ export class SpaceMeshApp extends BaseApp {
     if (account.participants < account.approvers) {
       throw new Error(`Approvers cannot exceed the number of participants`)
     }
+
+    account.pubkeys.sort((a, b) => a.index - b.index);
   }
 
   private serializeVaultAccount(account: VaultAccount): Buffer {

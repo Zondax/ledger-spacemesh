@@ -26,7 +26,6 @@
 #define BUFF_APPROVERS_INDEX 1
 #define BUFF_PARTICIPANTS_INDEX 2
 #define BUFF_FIRST_ACCOUNT_INDEX 3
-#define BUFF_START_ACCOUNT_PUBKEY_INDEX 4
 #define VAULT_INFO_SIZE 24
 #define BUFF_ACCOUNT_INFO_LENGTH (PUB_KEY_LENGTH + 1)
 
@@ -34,13 +33,10 @@ uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
 // #{TODO} --> Check pubkey and sign methods
 
-zxerr_t createIndexesArray(const uint8_t *buffer, const uint16_t pubkeysBuffSize, uint8_t *indexes, uint8_t *indexesQty);
-zxerr_t createAccount(const uint8_t *buffer, const uint8_t pubkeyQty, const uint8_t internalPubkeyIndex,
-                      const uint8_t *pubkeyIndexes, const uint8_t id, account_t *account);
-zxerr_t checkAccountsSanity(const uint8_t *buffer, uint8_t *indexes, uint8_t pubkeyQty);
+zxerr_t createAccount(const uint8_t *buffer, const uint16_t pubkeysBuffSize, const uint8_t id, account_t *account);
 uint32_t load32(const uint8_t *src);
 uint64_t load64(const uint8_t *src);
-void logAccount(account_t *account, uint8_t pubkeyQty);
+void logAccount(account_t *account);
 
 zxerr_t crypto_extractPublicKey(uint8_t *pubKey, uint16_t pubKeyLen) {
     if (pubKey == NULL || pubKeyLen < PK_LEN_25519) {
@@ -118,18 +114,18 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
     }
 
     MEMZERO(buffer, bufferLen);
-    CHECK_ZXERR(crypto_extractPublicKey(buffer, bufferLen))
+    CHECK_ZXERR(crypto_extractPublicKey(buffer, bufferLen));
 
-    account_t walletccount;
-    MEMCPY(walletccount.keys[0], buffer, PUB_KEY_LENGTH);
+    account_t walletaccount;
+    MEMCPY(walletaccount.keys[0], buffer, PUB_KEY_LENGTH);
 
-    walletccount.participants = 1;
-    walletccount.id = WALLET;
+    walletaccount.participants = 1;
+    walletaccount.id = WALLET;
 
-    uint8_t address[64] = {0};
+    uint8_t address[51] = {0};
     uint8_t offset = 0;
     const char *hrp = mainnet ? "sm" : "stest";
-    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &walletccount, &offset, mainnet));
+    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &walletaccount, &offset, mainnet));
     zxerr_t err = bech32EncodeFromBytes((char *)buffer + PUB_KEY_LENGTH, 64, hrp, address + offset, ADDRESS_LENGTH, 1,
                                         BECH32_ENCODING_BECH32);
 
@@ -142,8 +138,8 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
     return zxerr_ok;
 }
 
-zxerr_t crypto_fillMultisigAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen,
-                                   uint8_t accountId) {
+zxerr_t crypto_fillMultisigVestingAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen,
+                                          uint8_t accountId) {
     if (buffer == NULL || addrResponseLen == NULL) {
         return zxerr_invalid_crypto_settings;
     }
@@ -155,33 +151,19 @@ zxerr_t crypto_fillMultisigAddress(const uint8_t *buffer, const uint16_t bufferL
     }
 
     uint8_t pubkeysBuffSize = bufferLen - BUFF_FIRST_ACCOUNT_INDEX;
-    uint8_t pubkeyIndexes[MAX_MULTISIG_PUB_KEY] = {0};
-    uint8_t pubkeyQty;
-    CHECK_ZXERR(createIndexesArray(buffer, pubkeysBuffSize, pubkeyIndexes, &pubkeyQty));
-    CHECK_ZXERR(checkAccountsSanity(buffer, pubkeyIndexes, pubkeyQty))
-
-    zxerr_t error = crypto_extractPublicKey(G_io_apdu_buffer, PUB_KEY_LENGTH);
-    if (error != zxerr_ok) {
-        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-        return error;
-    }
-
-    uint8_t internalPubkeyIndex = buffer[BUFF_INTERNAL_PUBKEY_INDEX];
     account_t account;
-    CHECK_ZXERR(createAccount(buffer, pubkeyQty, internalPubkeyIndex, pubkeyIndexes, accountId, &account));
-    logAccount(&account, pubkeyQty);
+    CHECK_ZXERR(createAccount(buffer, pubkeysBuffSize, accountId, &account));
+    logAccount(&account);
 
     uint8_t address[64] = {0};
     uint8_t addrOffset = 0;
     const char *hrp = mainnet ? "sm" : "stest";
-    error = crypto_encodeAccountPubkey(address, sizeof(address), &account, &addrOffset, mainnet);
+    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &account, &addrOffset, mainnet));
+
+    zxerr_t error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address + addrOffset,
+                                          ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32);
     if (error != zxerr_ok) {
-        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-        return error;
-    }
-    error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address + addrOffset, ADDRESS_LENGTH,
-                                  1, BECH32_ENCODING_BECH32);
-    if (error != zxerr_ok) {
+        ZEMU_LOGF(100, "error bech32EncodeFromBytes: %d\n", error);
         MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
         return error;
     }
@@ -203,33 +185,21 @@ zxerr_t crypto_fillVaultAddress(const uint8_t *buffer, const uint16_t bufferLen,
     }
 
     uint8_t pubkeysBuffSize = bufferLen - (BUFF_FIRST_ACCOUNT_INDEX + VAULT_INFO_SIZE);
-    uint8_t pubkeyIndexes[MAX_MULTISIG_PUB_KEY] = {0};
-    uint8_t pubkeyQty;
-    CHECK_ZXERR(createIndexesArray(buffer, pubkeysBuffSize, pubkeyIndexes, &pubkeyQty));
-    CHECK_ZXERR(checkAccountsSanity(buffer, pubkeyIndexes, pubkeyQty))
-
-    zxerr_t error = crypto_extractPublicKey(G_io_apdu_buffer, PUB_KEY_LENGTH);
-    if (error != zxerr_ok) {
-        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-        return error;
-    }
-
-    uint8_t internalPubkeyIndex = buffer[BUFF_INTERNAL_PUBKEY_INDEX];
     vault_account_t vaultAccount;
     account_t account;
-    CHECK_ZXERR(createAccount(buffer, pubkeyQty, internalPubkeyIndex, pubkeyIndexes, VESTING, &account));
+    CHECK_ZXERR(createAccount(buffer, pubkeysBuffSize, VESTING, &account));
     vaultAccount.owner = account;
     vaultAccount.totalAmount = load64(buffer + bufferLen - 24);
     vaultAccount.initialUnlockAmount = load64(buffer + bufferLen - 16);
     vaultAccount.vestingStart = load32(buffer + bufferLen - 8);
     vaultAccount.vestingEnd = load32(buffer + bufferLen - 4);
     vaultAccount.id = VAULT;
-    logAccount(&vaultAccount.owner, pubkeyQty);
+    logAccount(&vaultAccount.owner);
 
-    uint8_t address[64] = {0};
+    uint8_t address[51] = {0};
     uint8_t addrOffset = 0;
     const char *hrp = mainnet ? "sm" : "stest";
-    error = crypto_encodeVaultPubkey(address, sizeof(address), &vaultAccount, &addrOffset, mainnet);
+    zxerr_t error = crypto_encodeVaultPubkey(address, sizeof(address), &vaultAccount, &addrOffset, mainnet);
     if (error != zxerr_ok) {
         MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
         return error;
@@ -245,64 +215,43 @@ zxerr_t crypto_fillVaultAddress(const uint8_t *buffer, const uint16_t bufferLen,
     return zxerr_ok;
 }
 
-zxerr_t createIndexesArray(const uint8_t *buffer, const uint16_t pubkeysBuffSize, uint8_t *indexes, uint8_t *indexesQty) {
-    if (buffer == NULL || indexes == NULL || indexesQty == NULL) {
+zxerr_t createAccount(const uint8_t *buffer, const uint16_t pubkeysBuffSize, const uint8_t id, account_t *account) {
+    if (buffer == NULL || account == NULL) {
         return zxerr_invalid_crypto_settings;
     }
+
+    // Ensure the buffer size is a multiple of BUFF_ACCOUNT_INFO_LENGTH
     if (pubkeysBuffSize % BUFF_ACCOUNT_INFO_LENGTH != 0) {
         return zxerr_invalid_crypto_settings;
     }
 
-    uint8_t auxPubkeyQty = pubkeysBuffSize / PUB_KEY_LENGTH;
-    if (auxPubkeyQty >= MAX_MULTISIG_PUB_KEY) {
-        return zxerr_invalid_crypto_settings;
+    zxerr_t error = crypto_extractPublicKey(G_io_apdu_buffer, PUB_KEY_LENGTH);
+    if (error != zxerr_ok) {
+        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+        return error;
     }
 
-    uint16_t offsetIndex = BUFF_FIRST_ACCOUNT_INDEX;
-    for (int i = 0; i < auxPubkeyQty; i++) {
-        indexes[i] = buffer[offsetIndex];
-        offsetIndex += BUFF_ACCOUNT_INFO_LENGTH;
-    }
-    uint8_t internalPubkeyIndex = buffer[BUFF_INTERNAL_PUBKEY_INDEX];
-    indexes[auxPubkeyQty] = internalPubkeyIndex;
-    *indexesQty = auxPubkeyQty + 1;
-    return zxerr_ok;
-}
-
-zxerr_t createAccount(const uint8_t *buffer, const uint8_t pubkeyQty, const uint8_t internalPubkeyIndex,
-                      const uint8_t *pubkeyIndexes, const uint8_t id, account_t *account) {
-    if (buffer == NULL || pubkeyIndexes == NULL || account == NULL) {
-        return zxerr_invalid_crypto_settings;
-    }
-    uint16_t offset = BUFF_START_ACCOUNT_PUBKEY_INDEX;
-    for (int i = 0; i < pubkeyQty; i++) {
-        if (internalPubkeyIndex == pubkeyIndexes[i]) {
-            MEMCPY(account->keys[pubkeyIndexes[i]], G_io_apdu_buffer, PUB_KEY_LENGTH);
-        } else {
-            MEMCPY(account->keys[pubkeyIndexes[i]], buffer + offset, PUB_KEY_LENGTH);
-            offset += BUFF_ACCOUNT_INFO_LENGTH;
-        }
-    }
     account->approvers = buffer[BUFF_APPROVERS_INDEX];
     account->participants = buffer[BUFF_PARTICIPANTS_INDEX];
     account->id = id;
 
-    return zxerr_ok;
-}
-
-zxerr_t checkAccountsSanity(const uint8_t *buffer, uint8_t *indexes, uint8_t pubkeyQty) {
-    bool exist[MAX_MULTISIG_PUB_KEY] = {false};
-    for (uint8_t i = 0; i < pubkeyQty; i++) {
-        uint8_t index = indexes[i];
-        if (index >= pubkeyQty || exist[index]) {
-            return zxerr_invalid_crypto_settings;
-        }
-        exist[index] = true;
+    // Validate the number of public keys
+    if ((pubkeysBuffSize / BUFF_ACCOUNT_INFO_LENGTH) + 1 != account->participants) {
+        return zxerr_invalid_crypto_settings;
     }
 
-    uint8_t participants = buffer[BUFF_PARTICIPANTS_INDEX];
-    if (participants != pubkeyQty) {
-        return zxerr_invalid_crypto_settings;
+// Populate account public keys
+    uint16_t offsetIndex = BUFF_FIRST_ACCOUNT_INDEX;
+    uint8_t internalPubkeyIndex = buffer[BUFF_INTERNAL_PUBKEY_INDEX];
+    for (int i = 0; i < account->participants; i++) {
+        if (i == internalPubkeyIndex) {
+            MEMCPY(account->keys[i], G_io_apdu_buffer, PUB_KEY_LENGTH);
+        } else if (i == buffer[offsetIndex]) {
+            MEMCPY(account->keys[i], buffer + offsetIndex + 1, PUB_KEY_LENGTH);
+            offsetIndex += BUFF_ACCOUNT_INFO_LENGTH;
+        } else {
+            return zxerr_invalid_crypto_settings;
+        }
     }
 
     return zxerr_ok;
@@ -320,16 +269,19 @@ uint64_t load64(const uint8_t *src) {
     return w;
 }
 
-void logAccount(account_t *account, uint8_t pubkeyQty) {
+void logAccount(account_t *account) {
+    (void)account;
+#ifdef APP_TESTING
     if (account == NULL) {
         return;
     }
-    for (int i = 0; i < pubkeyQty; i++) {
-        char print[100] = {0};
+    char print[100] = {0};
+    for (int i = 0; i < account->participants; i++) {
         array_to_hexstr(print, sizeof(print), account->keys[i], 32);
         ZEMU_LOGF(100, "pubkey [%d] = %s\n", i, print);
     }
     ZEMU_LOGF(100, "approvers: %d; participants: %d\n", account->approvers, account->participants);
+#endif
 }
 
 // TODO: Move this function

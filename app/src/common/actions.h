@@ -52,7 +52,7 @@ __Z_INLINE zxerr_t app_fill_MultisigAddress(uint8_t accountId) {
     switch (accountId) {
         case MULTISIG: 
         case VESTING: {
-            err = crypto_fillMultisigAddress(message, messageLength, &action_addrResponseLen, accountId);
+            err = crypto_fillMultisigVestingAddress(message, messageLength, &action_addrResponseLen, accountId);
             break;
         }
         case VAULT: {

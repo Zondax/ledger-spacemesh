@@ -4,9 +4,6 @@ export interface SpaceMeshIns extends INSGeneric {
   GET_VERSION: 0x00;
   GET_ADDR: 0x01;
   SIGN: 0x02;
-  GET_MULTISIG_ADDR: 0x03;
-  GET_VESTING_ADDR: 0x04;
-  GET_VAULT_ADDR: 0x05;
 }
 
 export interface ResponseAddress {
