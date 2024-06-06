@@ -59,7 +59,7 @@ zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const 
 
     CHECK_PARSER_OK(zxblake3_hash_init());
     CHECK_PARSER_OK(zxblake3_hash_update(template, sizeof(template)));
-
+    
     if (account->id != WALLET) {
         if (account->approvers > account->participants || account->approvers == 0 || account->participants > MAX_MULTISIG_PUB_KEY) {
             return zxerr_invalid_crypto_settings;
@@ -107,16 +107,16 @@ zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const va
 
     uint8_t hashOffset = PUB_KEY_LENGTH - ADDRESS_LENGTH;
     buffOffset = &hashOffset;
-    MEMSET(address + hashOffset, 0, ADDRESS_RESERVED_SPACE);
+    MEMZERO(address + hashOffset, ADDRESS_RESERVED_SPACE);
     MEMMOVE(address, address + hashOffset, ADDRESS_LENGTH);
 
     return zxerr_ok;
 }
 
 zxerr_t updateScaleEncodedNumber(uint64_t num) {
-    uint8_t encNum = 0;
-    size_t size = scaleEncodeUint64(num, &encNum);
-    CHECK_PARSER_OK(zxblake3_hash_update(&encNum, size));
+    uint8_t encNum[8] = {0};
+    size_t size = scaleEncodeUint64(num, encNum);
+    CHECK_PARSER_OK(zxblake3_hash_update(encNum, size));
     return zxerr_ok;
 }
 
@@ -134,20 +134,20 @@ uint16_t scaleEncodeUint64(uint64_t v, uint8_t* out) {
 }
 
 uint16_t scaleEncodeUint8(uint64_t v, uint8_t* out) {
-    v = v << 2;  // Adjusting the value inside the function
+    v = v << 2;
     out[0] = (uint8_t)v;
     return 1;
 }
 
 uint16_t scaleEncodeUint16(uint64_t v, uint8_t* out) {
-    v = v << 2 | 0b01;  // Adjusting the value inside the function
+    v = v << 2 | 0b01;
     out[0] = (uint8_t)v;
     out[1] = (uint8_t)(v >> 8);
     return 2;
 }
 
 uint16_t scaleEncodeUint32(uint64_t v, uint8_t* out) {
-    v = v << 2 | 0b10;  // Adjusting the value inside the function
+    v = v << 2 | 0b10; 
     out[0] = (uint8_t)v;
     out[1] = (uint8_t)(v >> 8);
     out[2] = (uint8_t)(v >> 16);

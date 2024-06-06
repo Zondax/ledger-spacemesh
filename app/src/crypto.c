@@ -194,10 +194,8 @@ zxerr_t crypto_fillVaultAddress(const uint8_t *buffer, const uint16_t bufferLen,
     }
 
     uint8_t pubkeysBuffSize = bufferLen - (BUFF_FIRST_ACCOUNT_INDEX + VAULT_INFO_SIZE);
-    vault_account_t vaultAccount;
-    account_t account;
-    CHECK_ZXERR(createAccount(buffer, pubkeysBuffSize, VESTING, &account));
-    vaultAccount.owner = account;
+    vault_account_t vaultAccount = {0};
+    CHECK_ZXERR(createAccount(buffer, pubkeysBuffSize, VESTING, &vaultAccount.owner));
     vaultAccount.totalAmount = load64(buffer + bufferLen - 24);
     vaultAccount.initialUnlockAmount = load64(buffer + bufferLen - 16);
     vaultAccount.vestingStart = load32(buffer + bufferLen - 8);
@@ -249,7 +247,7 @@ zxerr_t createAccount(const uint8_t *buffer, const uint16_t pubkeysBuffSize, con
         return zxerr_invalid_crypto_settings;
     }
 
-// Populate account public keys
+    // Populate account public keys
     uint16_t offsetIndex = BUFF_FIRST_ACCOUNT_INDEX;
     uint8_t internalPubkeyIndex = buffer[BUFF_INTERNAL_PUBKEY_INDEX];
     for (int i = 0; i < account->participants; i++) {

@@ -87,7 +87,7 @@ describe('Standard', function () {
     })
   })
 
-  test.only.each(models)('show address - reject', async function (m) {
+  test.concurrent.each(models)('show address - reject', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({
@@ -159,11 +159,11 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { vaultAccount, expected_address, expected_pk } = data
 
-        const resp = await app.getInfoVaultAccount(data.path, 1, vaultAccount, false)
-        console.log(resp)
+          const resp = await app.getInfoVaultAccount(data.path, 1, vaultAccount, false)
+          console.log(resp)
 
-        expect(resp.pubkey.toString('hex')).toEqual(expected_pk)
-        expect(resp.address).toEqual(expected_address)
+          expect(resp.pubkey.toString('hex')).toEqual(expected_pk)
+          expect(resp.address).toEqual(expected_address)
       } finally {
         await sim.close()
       }
