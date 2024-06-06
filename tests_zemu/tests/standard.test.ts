@@ -93,7 +93,7 @@ describe('Standard', function () {
       await sim.start({
         ...defaultOptions,
         model: m.name,
-        rejectKeyword: m.name === 'stax' ? 'Public key' : '',
+        rejectKeyword: m.name === 'stax' ? 'QR' : '',
       })
       const app = new SpaceMeshApp(sim.getTransport())
 
