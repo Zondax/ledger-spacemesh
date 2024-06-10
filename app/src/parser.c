@@ -104,12 +104,10 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, c
 
     switch (displayIdx) {
         case 0:
-            // Display Item 0
             snprintf(outKey, outKeyLen, "Blind");
             snprintf(outVal, outValLen, "Signing");
             return parser_ok;
         case 1:
-            // Display Item 1
             snprintf(outKey, outKeyLen, "Txn hash");
             pageStringHex(outVal, outValLen, (char*)txnHash, sizeof(txnHash), pageIdx, pageCount);
             return parser_ok;

@@ -46,7 +46,7 @@ TEST(Keys, WalletAddressEncoding) {
 
         uint8_t address[64] = {0};
         uint8_t offset = 0;
-        crypto_encodeAccountPubkey(address, sizeof(address), &walletccount, &offset, !isTestNet);
+        crypto_encodeAccountPubkey(address, sizeof(address), &walletccount, &offset);
         char addressBench32[64] = {0};
         const char* hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address + offset, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32);
@@ -70,10 +70,10 @@ TEST(Keys, MultisigAddressEncoding) {
         multisigAccount.approvers = testcase.approvals;
         multisigAccount.id = MULTISIG;
 
-        
+
         uint8_t address[64] = {0};
         uint8_t offset = 0;
-        crypto_encodeAccountPubkey(address, sizeof(address), &multisigAccount, &offset, !isTestNet);\
+        crypto_encodeAccountPubkey(address, sizeof(address), &multisigAccount, &offset);
         char addressBench32[64] = {0};
         const char* hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address + offset, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32);
@@ -96,10 +96,10 @@ TEST(Keys, VestingAddressEncoding) {
         vestingAccount.participants = testcase.participants;
         vestingAccount.approvers = testcase.approvals;
         vestingAccount.id = VESTING;
-        
+
         uint8_t address[64] = {0};
         uint8_t offset = 0;
-        crypto_encodeAccountPubkey(address, sizeof(address), &vestingAccount, &offset, !isTestNet);
+        crypto_encodeAccountPubkey(address, sizeof(address), &vestingAccount, &offset);
         char addressBench32[64] = {0};
         const char* hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address + offset, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32);
@@ -129,7 +129,7 @@ TEST(Keys, VaultAddressEncoding) {
         vaultAccount.vestingStart = testcase.vestingStart;
         vaultAccount.vestingEnd = testcase.vestingEnd;
         vaultAccount.id = VAULT;
-        
+
         uint8_t address[64] = {0};
         uint8_t offset = 0;
         crypto_encodeVaultPubkey(address, sizeof(address), &vaultAccount, &offset, !isTestNet);

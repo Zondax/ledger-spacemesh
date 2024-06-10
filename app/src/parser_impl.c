@@ -15,6 +15,7 @@
  ********************************************************************************/
 
 #include "parser_impl.h"
+#include "zxerror.h"
 
 parser_error_t _read(parser_context_t *c, parser_tx_t *v) {
     UNUSED(c);
@@ -52,6 +53,30 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "display index out of range";
         case parser_display_page_out_of_range:
             return "display page out of range";
+
+        default:
+            return "Unrecognized error code";
+    }
+}
+
+const char *parser_getZxErrorDescription(zxerr_t err) {
+    switch (err) {
+        case zxerr_unknown:
+            return "error unknown";
+        case zxerr_ok:
+            return "No error";
+        case zxerr_no_data:
+            return "No more data";
+        case zxerr_buffer_too_small:
+            return "Buffer too small";
+        case zxerr_out_of_bounds:
+            return "Out of bound";
+        case zxerr_encoding_failed:
+            return "Encoding failed";
+        case zxerr_invalid_crypto_settings:
+            return "Invalid crypto settings";
+        case zxerr_ledger_api_error:
+            return "Api error";
 
         default:
             return "Unrecognized error code";

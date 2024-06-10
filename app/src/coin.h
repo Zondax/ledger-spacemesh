@@ -22,7 +22,6 @@ extern "C" {
 #define CLA 0x45
 
 #define HDPATH_LEN_DEFAULT 5
-// m/44'/540'/0'/0/0
 #define HDPATH_0_DEFAULT (0x80000000u | 0x2c)   // 44
 #define HDPATH_1_DEFAULT (0x80000000u | 0x21c)  // 540
 #define HDPATH_1_TESTNET (0x80000000u | 0x01)   // 1
@@ -39,14 +38,16 @@ extern "C" {
 
 #define ED25519_SIGNATURE_SIZE 64u
 
-#define PK_LEN_25519 32u
+#define PUB_KEY_LENGTH 32u
 #define SS58_ADDRESS_MAX_LEN 60u
 
 #define MAX_SIGN_SIZE 256u
 #define BLAKE2B_DIGEST_SIZE 32u
-#define GET_MULTISIG_ADDR  0x03 //extra instruction
-#define GET_VESTING_ADDR  0x04 //extra instruction
-#define GET_VAULT_ADDR  0x05 //extra instruction
+
+// Instructions
+#define GET_MULTISIG_ADDR  0x03
+#define GET_VESTING_ADDR  0x04
+#define GET_VAULT_ADDR  0x05
 
 // TODO: CHECK decimals
 #define COIN_AMOUNT_DECIMAL_PLACES 6

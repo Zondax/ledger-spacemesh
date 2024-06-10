@@ -18,11 +18,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "zxerror.h"
+#include "coin.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define PUB_KEY_LENGTH 32
 #define ADDRESS_LENGTH 24
 #define MIN_MAIN_ADDRESS_BUFFER_LEN 48
 #define MIN_TEST_ADDRESS_BUFFER_LEN 51
@@ -52,7 +53,7 @@ typedef struct {
     account_type_e id;
 } vault_account_t;
 
-zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const account_t *account, uint8_t *buffOffset, bool mainnet);
+zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const account_t *account, uint8_t *buffOffset);
 zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const vault_account_t *vaultAccount, uint8_t *buffOffset, bool mainnet);
 
 #ifdef __cplusplus

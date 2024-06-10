@@ -53,10 +53,6 @@ $(info COIN  = [$(COIN)])
 
 ifeq ($(COIN),SMESH)
 # Main app configuration
-# DEFINES += APP_STANDARD
-ifneq ($(TARGET_NAME),TARGET_NANOS)
-# DEFINES += SUBSTRATE_PARSER_FULL
-endif
 APPNAME = "SpaceMesh"
 APPPATH = "44'/540'"
 
@@ -80,7 +76,6 @@ ifndef ICONNAME
 $(error ICONNAME is not set)
 endif
 
-
 DEFINES += BLAKE3_NO_SSE2 BLAKE3_NO_SSE41 BLAKE3_NO_AVX2 BLAKE3_NO_AVX512 BLAKE3_USE_NEON=0
 BLAKE3_DIR := $(CURDIR)/../deps/BLAKE3-c
 INCLUDES_PATH += $(BLAKE3_DIR)
@@ -88,12 +83,7 @@ APP_SOURCE_FILES += $(BLAKE3_DIR)/blake3.c $(BLAKE3_DIR)/blake3_dispatch.c $(BLA
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
 CFLAGS += -Wvla
-# #{TODO} --> Need Rust?
-# LDFLAGS += -z muldefs
-# LDLIBS += -Lrust/target/thumbv6m-none-eabi/release -lrslib
-# APP_SOURCE_PATH += $(CURDIR)/rust/include
 
-# #{TODO} --> Need Rust?
 .PHONY: rust
 rust:
 	@echo "No rust code"
@@ -106,19 +96,6 @@ rust_clean:
 	@echo "No rust code"
 
 clean: rust_clean
-
-# .PHONY: rust
-# rust:
-# 	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo build --target thumbv6m-none-eabi --release
-
-# # Before linking, we need to be sure rust lib is there
-# bin/app.elf: rust
-
-# .PHONY: rust_clean
-# rust_clean:
-# 	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo clean
-
-# clean: rust_clean
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.side_loading
 

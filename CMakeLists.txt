@@ -29,7 +29,7 @@ endif()
 
 ########################################################
 
-project(ledger-template VERSION 0.0.0)
+project(ledger-spacemesh VERSION 0.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 cmake_policy(SET CMP0025 NEW)

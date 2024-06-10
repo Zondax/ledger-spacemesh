@@ -50,7 +50,7 @@ __Z_INLINE zxerr_t app_fill_MultisigAddress(uint8_t accountId) {
     action_addrResponseLen = 0;
     zxerr_t err = zxerr_ok;
     switch (accountId) {
-        case MULTISIG: 
+        case MULTISIG:
         case VESTING: {
             err = crypto_fillMultisigVestingAddress(message, messageLength, &action_addrResponseLen, accountId);
             break;
@@ -60,7 +60,7 @@ __Z_INLINE zxerr_t app_fill_MultisigAddress(uint8_t accountId) {
             break;
         }
         default:
-            THROW(APDU_CODE_DATA_INVALID); 
+            THROW(APDU_CODE_DATA_INVALID);
     }
 
     return err;

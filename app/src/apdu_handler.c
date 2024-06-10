@@ -94,6 +94,7 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
     THROW(APDU_CODE_INVALIDP1P2);
 }
 
+// Handle Wallet addresses
 __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     extractHDPath(rx, OFFSET_DATA);
 
@@ -126,13 +127,14 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
         memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
-    }     
+    }
 
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
     view_review_show(REVIEW_TXN);
     *flags |= IO_ASYNCH_REPLY;
 }
 
+// Handle Multisig, Vesting and Vault addresses
 __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     ZEMU_LOGF(50, "handleMultisig %d\n", rx);
     if (!process_chunk(tx, rx)) {
@@ -153,7 +155,7 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx = error_msg_length;
         THROW(APDU_CODE_DATA_INVALID);
-    }   
+    }
     if (requireConfirmation) {
         view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
         view_review_show(REVIEW_ADDRESS);
