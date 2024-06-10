@@ -141,12 +141,6 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_OK);
     }
 
-    const uint8_t *message = tx_get_buffer();
-    const uint16_t messageLength = tx_get_buffer_length();
-    if (message == NULL || messageLength < OFFSET_P1) {
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
     zxerr_t zxerr = app_fill_MultisigAddress(accountId);
 
     if (zxerr != zxerr_ok) {

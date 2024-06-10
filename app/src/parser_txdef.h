@@ -29,6 +29,12 @@ typedef struct {
     uint8_t txn_param_N;
 } parser_tx_t;
 
+typedef struct {
+    uint8_t participants;
+    uint8_t approvers;
+    const uint8_t *pubkeys;
+} multisig_t;
+
 #ifdef __cplusplus
 }
 #endif
