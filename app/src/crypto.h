@@ -33,7 +33,6 @@ zxerr_t crypto_fillMultisigVestingAddress(const uint8_t *buffer, const uint16_t 
 zxerr_t crypto_fillVaultAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen);
 
 zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
-const char *parser_getApiErrorDescription(zxerr_t err);
 
 #ifdef __cplusplus
 }

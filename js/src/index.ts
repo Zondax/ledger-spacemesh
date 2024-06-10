@@ -209,7 +209,7 @@ export class SpaceMeshApp extends BaseApp {
     buff.writeBigUInt64LE(account.initialUnlockAmount, 8)
     buff.writeUInt32LE(account.vestingStart, 16)
     buff.writeUInt32LE(account.vestingEnd, 20)
-    const serializedAccount = Buffer.concat([serializedOwnerAccount, buff]);
+    const serializedAccount = Buffer.concat([buff, serializedOwnerAccount]);
 
     return serializedAccount
   }

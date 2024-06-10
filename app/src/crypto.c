@@ -137,7 +137,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
     zxerr_t err = bech32EncodeFromBytes((char *)buffer + PUB_KEY_LENGTH, 64, hrp, address + offset, ADDRESS_LENGTH, 1,
                                         BECH32_ENCODING_BECH32);
 
-    const uint8_t addressLen = strnlen(address, MIN_TEST_ADDRESS_BUFFER_LEN);
+    const uint8_t addressLen = strnlen((const char*)address, MIN_TEST_ADDRESS_BUFFER_LEN);
     if (mainnet && addressLen != 48) {
         // error;
     }
@@ -166,6 +166,7 @@ zxerr_t crypto_fillMultisigVestingAddress(const uint8_t *buffer, const uint16_t 
     }
 
     uint8_t pubkeysBuffSize = bufferLen - BUFF_FIRST_ACCOUNT_INDEX;
+    // account_t * tmpAccount = (account_t*) buffer;
     account_t account;
     CHECK_ZXERR(createAccount(buffer, pubkeysBuffSize, accountId, &account));
     logAccount(&account);
@@ -178,13 +179,15 @@ zxerr_t crypto_fillMultisigVestingAddress(const uint8_t *buffer, const uint16_t 
 
     zxerr_t error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address + addrOffset,
                                           ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32);
+
+    const uint8_t addressLen = strnlen((const char*)address, 64);
     if (error != zxerr_ok) {
         ZEMU_LOGF(100, "error bech32EncodeFromBytes: %d\n", error);
         MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
         return error;
     }
 
-    *addrResponseLen = PUB_KEY_LENGTH + outAddressLen;
+    *addrResponseLen = PUB_KEY_LENGTH + addressLen;
     return zxerr_ok;
 }
 

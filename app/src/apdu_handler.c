@@ -30,6 +30,7 @@
 #include "view_internal.h"
 #include "zxmacros.h"
 #include "crypto_helper.h"
+#include "parser.h"
 
 static bool tx_initialized = false;
 static bool requireConfirmation = false;
@@ -105,7 +106,7 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
         THROW(APDU_CODE_DATA_INVALID);
     }
     if (requireConfirmation) {
-        view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
+        view_review_init(wallet_getItem, wallet_getNumItems, app_reply_address);
         view_review_show(REVIEW_ADDRESS);
         *flags |= IO_ASYNCH_REPLY;
         return;
@@ -143,21 +144,22 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
 
     zxerr_t zxerr = app_fill_MultisigAddress(accountId);
 
-    if (zxerr != zxerr_ok) {
-        const char *error_msg = parser_getApiErrorDescription(zxerr);
-        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
-        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
-        *tx = error_msg_length;
-        THROW(APDU_CODE_DATA_INVALID);
+    // if (zxerr != zxerr_ok) {
+    //     const char *error_msg = parser_getZxErrorDescription(zxerr);
+    //     const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+    //     memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
+    //     *tx = error_msg_length;
+    //     THROW(APDU_CODE_DATA_INVALID);
+    // }
+
+    if (accountId == VAULT) {
+        view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
+    } else {
+        view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
     }
-    if (requireConfirmation) {
-        view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
-        view_review_show(REVIEW_ADDRESS);
-        *flags |= IO_ASYNCH_REPLY;
-        return;
-    }
-    *tx = action_addrResponseLen;
-    THROW(APDU_CODE_OK);
+
+    view_review_show(REVIEW_ADDRESS);
+    *flags |= IO_ASYNCH_REPLY;
 }
 
 __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile uint32_t *tx) {

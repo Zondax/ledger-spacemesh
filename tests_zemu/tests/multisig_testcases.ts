@@ -3,6 +3,7 @@ import { AccountType } from '@zondax/ledger-spacemesh/src/types'
 
 export const MULTISIG_TESTCASES = [
   {
+    idx: 0,
     account: {
       pubkeys: [addressToBuffer(pubKey0, 0)],
       approvers: 2,
@@ -14,6 +15,7 @@ export const MULTISIG_TESTCASES = [
     path: PATH,
   },
   {
+    idx: 1,
     account: {
       pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 3), addressToBuffer(pubKey2, 2)],
       approvers: 2,
@@ -25,6 +27,7 @@ export const MULTISIG_TESTCASES = [
     path: PATH,
   },
   {
+    idx: 2,
     account: {
       pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 3), addressToBuffer(pubKey2, 2)],
       approvers: 3,
