@@ -42,15 +42,15 @@ typedef struct {
 } multisig_t;
 
 typedef struct {
-    uint8_t internalIndex;
     uint64_t totalAmount;
     uint64_t initialUnlockAmount;
     uint32_t vestingStart;
     uint32_t vestingEnd;
+    uint8_t internalIndex;
     uint8_t approvers;
     uint8_t participants;
     idx_pubkey_t keys[10];
-} vault_t;
+} __attribute__((packed)) vault_t;
 
 #ifdef __cplusplus
 }

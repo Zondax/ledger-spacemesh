@@ -104,10 +104,9 @@ export class SpaceMeshApp extends BaseApp {
     if (!testMode) {
       this.checkAccountsSanity(internalIndex, vaultAccount.owner);
     }
-    const serializedAccount = this.serializeVaultAccount(vaultAccount);
-    const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
+    const payload = this.serializeVaultAccount(internalIndex, vaultAccount);
 
-    // [path|internalIndex|approvers|participants|[index|pubkeys]|totalAmount|initialUnlockAmount|vestingStart|vestingEnd]
+    // [path | totalAmount | initialUnlockAmount | vestingStart | vestingEnd | internalIndex | approvers | participants [idx|pubkey] ]
     const chunks = this.prepareChunks(path, payload);
 
     try {
@@ -195,7 +194,7 @@ export class SpaceMeshApp extends BaseApp {
     account.pubkeys.sort((a, b) => a.index - b.index);
   }
 
-  private serializeVaultAccount(account: VaultAccount): Buffer {
+  private serializeVaultAccount(internalIndex: number, account: VaultAccount): Buffer {
     const serializedOwnerAccount = this.serializeAccount(account.owner);
     let buff = Buffer.alloc(24)
 
@@ -209,7 +208,10 @@ export class SpaceMeshApp extends BaseApp {
     buff.writeBigUInt64LE(account.initialUnlockAmount, 8)
     buff.writeUInt32LE(account.vestingStart, 16)
     buff.writeUInt32LE(account.vestingEnd, 20)
-    const serializedAccount = Buffer.concat([buff, serializedOwnerAccount]);
+    const internalIndexBuffer = Buffer.from([internalIndex])
+    const serializedAccount = Buffer.concat([buff, internalIndexBuffer, serializedOwnerAccount]);
+
+    console.log(`Serialized account: ${serializedAccount.toString('hex')}`)
 
     return serializedAccount
   }
