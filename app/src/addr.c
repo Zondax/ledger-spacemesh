@@ -60,18 +60,18 @@ zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char
     }
 }
 
-static zxerr_t getPublicKey(const uint8_t index, multisig_t *multisig, const uint8_t** pubkeyPtr) {
-    if (multisig == NULL || pubkeyPtr == NULL) {
+static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, idx_pubkey_t *keys, const uint8_t** pubkeyPtr) {
+    if (keys == NULL || pubkeyPtr == NULL) {
         return zxerr_no_data;
     }
-    if (index == multisig->internalIndex) {
+    if (index == internalIndex) {
         *pubkeyPtr = G_io_apdu_buffer;
         return zxerr_ok;
     }
 
     // On the tx_buffer we have only external pubkeys
-    const uint8_t tmpIndex = index > multisig->internalIndex ? (index - 1) : index;
-    *pubkeyPtr = multisig->keys[tmpIndex].pubkey;
+    const uint8_t tmpIndex = index > internalIndex ? (index - 1) : index;
+    *pubkeyPtr = keys[tmpIndex].pubkey;
     return zxerr_ok;
 }
 
@@ -127,7 +127,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
             const uint8_t tmpDisplayIdx = displayIdx - 4;
             const uint8_t *pubkeyPtr = NULL;
             snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, multisig, &pubkeyPtr))
+            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, multisig->internalIndex, multisig->keys, &pubkeyPtr))
             pageStringHex(outVal, outValLen, (const char*) pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
             return zxerr_ok;
         }
@@ -139,7 +139,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
 zxerr_t vault_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "vault_getNumItems\n");
 
-    const uint8_t fixedFields = 3; // Participants, Approvers, internal pubkey
+    const uint8_t fixedFields = 7; // TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
     const uint8_t totalExternalPubkeys = (tx_get_buffer_length() - fixedFields) / 33;
 
     // Everything from above + address + path
@@ -214,11 +214,11 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
             break;
 
         default: {
-            // const uint8_t tmpDisplayIdx = displayIdx - 8;
-            // const uint8_t *pubkeyPtr = NULL;
-            // snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            // CHECK_ZXERR(getPublicKey(tmpDisplayIdx, &vault->keys, &pubkeyPtr))
-            // pageStringHex(outVal, outValLen, (const char*) pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
+            const uint8_t tmpDisplayIdx = displayIdx - 8;
+            const uint8_t *pubkeyPtr = NULL;
+            snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
+            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, vault->internalIndex, vault->keys, &pubkeyPtr))
+            pageStringHex(outVal, outValLen, (const char*) pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
             break;
         }
     }
