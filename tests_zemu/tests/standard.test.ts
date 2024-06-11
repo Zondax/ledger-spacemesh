@@ -122,7 +122,7 @@ describe('Standard', function () {
         const { account, expected_address, expected_pk } = data
 
         const resp = app.getInfoMultisigVestingAccount(data.path, 1, account)
-      // Wait until we are not in the main menu
+        // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
         await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)
 
@@ -145,11 +145,16 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = await app.getInfoMultisigVestingAccount(data.path, 1, account)
-        console.log(resp)
+        const resp = app.getInfoMultisigVestingAccount(data.path, 1, account)
+        // Wait until we are not in the main menu
+        await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vesting_${data.idx}`)
 
-        expect(resp.pubkey.toString('hex')).toEqual(expected_pk)
-        expect(resp.address).toEqual(expected_address)
+        const vestingResponse = await resp
+        console.log(vestingResponse)
+
+        expect(vestingResponse.pubkey.toString('hex')).toEqual(expected_pk)
+        expect(vestingResponse.address).toEqual(expected_address)
       } finally {
         await sim.close()
       }
@@ -157,24 +162,24 @@ describe('Standard', function () {
   })
 
   describe.each(VAULT_TESTCASES)('Vault addresses', function (data) {
-    test.only.each(models)(`Test`, async function (m) {
+    test.concurrent.each(models)(`Test`, async function (m) {
       const sim = new Zemu(m.path)
       try {
         await sim.start({ ...defaultOptions, model: m.name })
         const app = new SpaceMeshApp(sim.getTransport())
         const { vaultAccount, expected_address, expected_pk } = data
 
-          const resp = app.getInfoVaultAccount(data.path, 1, vaultAccount, false)
+        const resp = app.getInfoVaultAccount(data.path, 1, vaultAccount, false)
 
-          // Wait until we are not in the main menu
-          await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-          await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vault_${data.idx}`)
+        // Wait until we are not in the main menu
+        await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vault_${data.idx}`)
 
-          const vaultResponse = await resp
-          console.log(vaultResponse)
+        const vaultResponse = await resp
+        console.log(vaultResponse)
 
-          expect(vaultResponse.pubkey.toString('hex')).toEqual(expected_pk)
-          expect(vaultResponse.address).toEqual(expected_address)
+        expect(vaultResponse.pubkey.toString('hex')).toEqual(expected_pk)
+        expect(vaultResponse.address).toEqual(expected_address)
       } finally {
         await sim.close()
       }

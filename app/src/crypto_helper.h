@@ -15,10 +15,11 @@
  ********************************************************************************/
 #pragma once
 
-#include <stdint.h>
 #include <stdbool.h>
-#include "zxerror.h"
+#include <stdint.h>
+
 #include "coin.h"
+#include "zxerror.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,32 +30,35 @@ extern "C" {
 #define MIN_TEST_ADDRESS_BUFFER_LEN 51
 #define MAX_MULTISIG_PUB_KEY 10
 
-typedef enum  {
+typedef enum {
     WALLET = 1,
     MULTISIG = 2,
     VESTING = 3,
     VAULT = 4,
 } account_type_e;
 
-typedef uint8_t pubkey_t[PUB_KEY_LENGTH];
 typedef struct {
-    pubkey_t keys[MAX_MULTISIG_PUB_KEY];
-    uint8_t participants;
+    uint8_t index;
+    uint8_t pubkey[32];
+} pubkey_t;
+
+typedef struct {
+    uint8_t internalIndex;
     uint8_t approvers;
-    account_type_e id;
+    uint8_t participants;
+    pubkey_t keys[MAX_MULTISIG_PUB_KEY];
 } account_t;
 
 typedef struct {
-    account_t owner;
     uint64_t totalAmount;
     uint64_t initialUnlockAmount;
     uint32_t vestingStart;
     uint32_t vestingEnd;
-    account_type_e id;
-} vault_account_t;
+    account_t owner;
+} __attribute__((packed)) vault_account_t;
 
-zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const account_t *account, uint8_t *buffOffset);
-zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const vault_account_t *vaultAccount, uint8_t *buffOffset, bool mainnet);
+zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_t *internalPubkey, const account_t *account, account_type_e id);
+zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_t *internalPubkey, const vault_account_t *vaultAccount, bool mainnet);
 
 #ifdef __cplusplus
 }

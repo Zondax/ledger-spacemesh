@@ -29,29 +29,6 @@ typedef struct {
     uint8_t txn_param_N;
 } parser_tx_t;
 
-typedef struct {
-    uint8_t index;
-    uint8_t pubkey[32];
-}idx_pubkey_t;
-
-typedef struct {
-    uint8_t internalIndex;
-    uint8_t approvers;
-    uint8_t participants;
-    idx_pubkey_t keys[10];
-} multisig_t;
-
-typedef struct {
-    uint64_t totalAmount;
-    uint64_t initialUnlockAmount;
-    uint32_t vestingStart;
-    uint32_t vestingEnd;
-    uint8_t internalIndex;
-    uint8_t approvers;
-    uint8_t participants;
-    idx_pubkey_t keys[10];
-} __attribute__((packed)) vault_t;
-
 #ifdef __cplusplus
 }
 #endif

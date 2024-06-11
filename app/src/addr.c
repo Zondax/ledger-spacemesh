@@ -14,18 +14,22 @@
  *  limitations under the License.
  ********************************************************************************/
 
+#include "addr.h"
+
 #include <stdio.h>
 
 #include "app_mode.h"
 #include "coin.h"
 #include "crypto.h"
+#include "crypto_helper.h"
+#include "os.h"
+#include "parser_txdef.h"
+#include "tx.h"
 #include "zxerror.h"
 #include "zxformat.h"
 #include "zxmacros.h"
-#include "parser_txdef.h"
-#include "os.h"
-#include "addr.h"
-#include "tx.h"
+
+extern uint8_t accountId;
 
 zxerr_t wallet_getNumItems(uint8_t *num_items) {
     zemu_log_stack("addr_getNumItems");
@@ -36,8 +40,8 @@ zxerr_t wallet_getNumItems(uint8_t *num_items) {
     return zxerr_ok;
 }
 
-zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                     uint8_t *pageCount) {
+zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+                       uint8_t pageIdx, uint8_t *pageCount) {
     ZEMU_LOGF(50, "[addr_getItem] %d/%d\n", displayIdx, pageIdx)
     switch (displayIdx) {
         case 0:
@@ -60,7 +64,8 @@ zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char
     }
 }
 
-static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, idx_pubkey_t *keys, const uint8_t** pubkeyPtr) {
+static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, pubkey_t *keys,
+                            const uint8_t **pubkeyPtr) {
     if (keys == NULL || pubkeyPtr == NULL) {
         return zxerr_no_data;
     }
@@ -78,7 +83,7 @@ static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, id
 zxerr_t multisigVesting_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "multisigVesting_getNumItems\n");
 
-    const uint8_t fixedFields = 3; // Participants, Approvers, internal pubkey
+    const uint8_t fixedFields = 3;  // Participants, Approvers, internal pubkey
     const uint8_t totalExternalPubkeys = (tx_get_buffer_length() - fixedFields) / 33;
 
     // Everything from above + address + path
@@ -86,8 +91,8 @@ zxerr_t multisigVesting_getNumItems(uint8_t *num_items) {
     return zxerr_ok;
 }
 
-zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                     uint8_t *pageCount) {
+zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+                                uint8_t pageIdx, uint8_t *pageCount) {
     ZEMU_LOGF(50, "[addr_getItem] %d/%d\n", displayIdx, pageIdx)
     uint8_t numItems = 0;
     multisigVesting_getNumItems(&numItems);
@@ -96,12 +101,16 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
     }
 
     // [internalIndex | approvers | participants [idx|pubkey]]
-    multisig_t *multisig = (multisig_t*) tx_get_buffer();
+    account_t *account = (account_t *)tx_get_buffer();
+
+    if (accountId != MULTISIG && accountId != VESTING) {
+        return zxerr_invalid_crypto_settings;
+    }
+    const char *accountType = accountId == MULTISIG ? "Multisig" : "Vesting";
 
     switch (displayIdx) {
         case 0:
-            //TODO: replace Multisig / Vesting depending on ???
-            snprintf(outKey, outKeyLen, "Multisig");
+            snprintf(outKey, outKeyLen, "%s", accountType);
             pageString(outVal, outValLen, (char *)(G_io_apdu_buffer + PUB_KEY_LENGTH), pageIdx, pageCount);
             return zxerr_ok;
 
@@ -115,20 +124,20 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
 
         case 2:
             snprintf(outKey, outKeyLen, "Participants");
-            snprintf(outVal, outValLen, "%d", multisig->participants);
+            snprintf(outVal, outValLen, "%d", account->participants);
             return zxerr_ok;
 
         case 3:
             snprintf(outKey, outKeyLen, "Validators");
-            snprintf(outVal, outValLen, "%d", multisig->approvers);
+            snprintf(outVal, outValLen, "%d", account->approvers);
             return zxerr_ok;
 
         default: {
             const uint8_t tmpDisplayIdx = displayIdx - 4;
             const uint8_t *pubkeyPtr = NULL;
             snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, multisig->internalIndex, multisig->keys, &pubkeyPtr))
-            pageStringHex(outVal, outValLen, (const char*) pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
+            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, account->internalIndex, account->keys, &pubkeyPtr))
+            pageStringHex(outVal, outValLen, (const char *)pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
             return zxerr_ok;
         }
     }
@@ -139,7 +148,8 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
 zxerr_t vault_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "vault_getNumItems\n");
 
-    const uint8_t fixedFields = 7; // TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
+// TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
+    const uint8_t fixedFields = 7;
     const uint8_t totalExternalPubkeys = (tx_get_buffer_length() - fixedFields) / 33;
 
     // Everything from above + address + path
@@ -148,7 +158,7 @@ zxerr_t vault_getNumItems(uint8_t *num_items) {
 }
 
 zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
-                     uint8_t *pageCount) {
+                      uint8_t *pageCount) {
     ZEMU_LOGF(50, "vault_getItem %d/%d\n", displayIdx, pageIdx)
     uint8_t numItems = 0;
     vault_getNumItems(&numItems);
@@ -158,12 +168,12 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
 
     // [totalAmount | initialUnlockAmount | vestingStart | vestingEnd
     //  internalIndex | approvers | participants [idx|pubkey] ]
-    vault_t *vault = (vault_t*) tx_get_buffer();
+    vault_account_t *vault = (vault_account_t *)tx_get_buffer();
     char tmpBuffer[30] = {0};
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Vault");
-            snprintf(outVal, outValLen, "%d", vault->internalIndex);
+            snprintf(outVal, outValLen, "%d", vault->owner.internalIndex);
             // pageString(outVal, outValLen, (char *)(G_io_apdu_buffer + PUB_KEY_LENGTH), pageIdx, pageCount);
             break;
 
@@ -205,20 +215,20 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
 
         case 6:
             snprintf(outKey, outKeyLen, "Participants");
-            snprintf(outVal, outValLen, "%d", vault->participants);
+            snprintf(outVal, outValLen, "%d", vault->owner.participants);
             break;
 
         case 7:
             snprintf(outKey, outKeyLen, "Validators");
-            snprintf(outVal, outValLen, "%d", vault->approvers);
+            snprintf(outVal, outValLen, "%d", vault->owner.approvers);
             break;
 
         default: {
             const uint8_t tmpDisplayIdx = displayIdx - 8;
             const uint8_t *pubkeyPtr = NULL;
             snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, vault->internalIndex, vault->keys, &pubkeyPtr))
-            pageStringHex(outVal, outValLen, (const char*) pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
+            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, vault->owner.internalIndex, vault->owner.keys, &pubkeyPtr))
+            pageStringHex(outVal, outValLen, (const char *)pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
             break;
         }
     }

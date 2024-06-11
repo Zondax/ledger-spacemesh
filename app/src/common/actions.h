@@ -43,7 +43,7 @@ __Z_INLINE zxerr_t app_fill_address() {
 }
 
 
-__Z_INLINE zxerr_t app_fill_MultisigAddress(uint8_t accountId) {
+__Z_INLINE zxerr_t app_fill_MultisigOrVestingAddress(uint8_t accountId) {
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();
@@ -52,7 +52,7 @@ __Z_INLINE zxerr_t app_fill_MultisigAddress(uint8_t accountId) {
     switch (accountId) {
         case MULTISIG:
         case VESTING: {
-            err = crypto_fillMultisigVestingAddress(message, messageLength, &action_addrResponseLen, accountId);
+            err = crypto_fillMultisigOrVestingAddress(message, messageLength, &action_addrResponseLen, accountId);
             break;
         }
         case VAULT: {

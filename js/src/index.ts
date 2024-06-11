@@ -81,9 +81,6 @@ export class SpaceMeshApp extends BaseApp {
     const chunks = this.prepareChunks(path, payload);
 
     try {
-      // // Instruction matches Account type
-      // WALLET = 0
-      // MULTISIG = 1
       let response = await this.signSendChunk(this.getInstruction(account.id), 1, chunks.length, chunks[0])
       for (let i = 1; i < chunks.length; i += 1) {
         response = await this.signSendChunk(this.getInstruction(account.id), 1 + i, chunks.length, chunks[i])
@@ -130,7 +127,6 @@ export class SpaceMeshApp extends BaseApp {
 
     const payload = Buffer.concat([blob.prefix, Buffer.from([blob.domain]), blob.message]);
     const chunks = this.prepareChunks(path, payload);
-    // TODO: if P2 is needed, use `sendGenericChunk`
     try {
       let signatureResponse = await this.signSendChunk(this.INS.SIGN, 1, chunks.length, chunks[0])
 

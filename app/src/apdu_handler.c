@@ -25,16 +25,16 @@
 #include "app_main.h"
 #include "coin.h"
 #include "crypto.h"
+#include "crypto_helper.h"
+#include "parser.h"
 #include "tx.h"
 #include "view.h"
 #include "view_internal.h"
 #include "zxmacros.h"
-#include "crypto_helper.h"
-#include "parser.h"
 
 static bool tx_initialized = false;
 static bool requireConfirmation = false;
-static uint8_t accountId = 0;
+uint8_t accountId = 0;
 
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
@@ -136,21 +136,22 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 }
 
 // Handle Multisig, Vesting and Vault addresses
-__Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+__Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx, uint8_t id) {
     ZEMU_LOGF(50, "handleMultisig %d\n", rx);
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
 
-    zxerr_t zxerr = app_fill_MultisigAddress(accountId);
+    accountId = id;
+    zxerr_t zxerr = app_fill_MultisigOrVestingAddress(accountId);
 
-    // if (zxerr != zxerr_ok) {
-    //     const char *error_msg = parser_getZxErrorDescription(zxerr);
-    //     const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
-    //     memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
-    //     *tx = error_msg_length;
-    //     THROW(APDU_CODE_DATA_INVALID);
-    // }
+    if (zxerr != zxerr_ok) {
+        const char *error_msg = parser_getZxErrorDescription(zxerr);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx = error_msg_length;
+        THROW(APDU_CODE_DATA_INVALID);
+    }
 
     if (accountId == VAULT) {
         view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
@@ -226,22 +227,19 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
                 case GET_MULTISIG_ADDR: {
                     CHECK_PIN_VALIDATED()
-                    accountId = MULTISIG;
-                    handleMultisig(flags, tx, rx);
+                    handleMultisig(flags, tx, rx, MULTISIG);
                     break;
                 }
 
                 case GET_VESTING_ADDR: {
                     CHECK_PIN_VALIDATED()
-                    accountId = VESTING;
-                    handleMultisig(flags, tx, rx);
+                    handleMultisig(flags, tx, rx, VESTING);
                     break;
                 }
 
                 case GET_VAULT_ADDR: {
                     CHECK_PIN_VALIDATED()
-                    accountId = VAULT;
-                    handleMultisig(flags, tx, rx);
+                    handleMultisig(flags, tx, rx, VAULT);
                     break;
                 }
 #if defined(APP_TESTING)
