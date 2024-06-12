@@ -87,6 +87,9 @@ export class Account {
   serialize() {
     const bs = new ByteStream()
 
+    // FIXME: would it be possible to serialize this.type as a single byte?
+    // that way we genealize the account concept?
+
     bs.appendUint8(this.approvers)
     bs.appendUint8(this.participants)
     for (const pubkey of this.pubkeys) {

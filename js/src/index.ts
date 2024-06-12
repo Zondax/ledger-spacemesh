@@ -65,11 +65,9 @@ export class SpaceMeshApp extends BaseApp {
     }
   }
 
-  async getAddressMultisig(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
-    if (account.type !== AccountType.Multisig) {
-      throw new Error('Invalid account type for multisig address')
-    }
+  // FIXME: show addressInDevice is not available?
 
+  async getAddressMultisig(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
     account.checkSanity()
 
     const bs = new ByteStream()
@@ -77,33 +75,32 @@ export class SpaceMeshApp extends BaseApp {
     bs.appendBytes(account.serialize())
     const payload = bs.getCompleteBuffer()
 
-    // [path|internalIndex|approvers|participants|[index|pubkeys]]
-    const chunks = this.prepareChunks(path, payload)
-
-    try {
-      let response
-      for (let i = 0; i < chunks.length; i++) {
-        response = await this.signSendChunk(this.INS.GET_ADDR_MULTISIG, i + 1, chunks.length, chunks[i])
-      }
-
-      if (!response) {
-        throw new Error('Failed to receive response from device')
-      }
-
-      return {
-        pubkey: response.readBytes(PUBKEYLEN),
-        address: response.getAvailableBuffer().toString(),
-      } as ResponseAddress
-    } catch (e) {
-      throw processErrorResponse(e)
+    if (account.type !== AccountType.Multisig) {
+      throw new Error('Invalid account type for multisig address')
     }
+    const ins = this.INS.GET_ADDR_MULTISIG
+
+    return await this.getAddressGeneric(path, ins, payload)
   }
 
   async getAddressVesting(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
+    account.checkSanity()
+
+    const bs = new ByteStream()
+    bs.appendUint8(internalIndex)
+    bs.appendBytes(account.serialize())
+    const payload = bs.getCompleteBuffer()
+
     if (account.type !== AccountType.Vesting) {
       throw new Error('Invalid account type for vesting address')
     }
 
+    const ins = this.INS.GET_ADDR_VESTING
+
+    return await this.getAddressGeneric(path, ins, payload)
+  }
+
+  async getAddressVault(path: string, internalIndex: number, account: VaultAccount): Promise<ResponseAddress> {
     account.checkSanity()
 
     const bs = new ByteStream()
@@ -111,13 +108,21 @@ export class SpaceMeshApp extends BaseApp {
     bs.appendBytes(account.serialize())
     const payload = bs.getCompleteBuffer()
 
-    // [path|internalIndex|approvers|participants|[index|pubkeys]]
+    if (account.type !== AccountType.Vault) {
+      throw new Error('Invalid account type for vesting address')
+    }
+    const ins = this.INS.GET_ADDR_VAULT
+
+    return await this.getAddressGeneric(path, ins, payload)
+  }
+
+  private async getAddressGeneric(path: string, ins: number, payload: Buffer): Promise<ResponseAddress> {
     const chunks = this.prepareChunks(path, payload)
 
     try {
       let response
       for (let i = 0; i < chunks.length; i++) {
-        response = await this.signSendChunk(this.INS.GET_ADDR_VESTING, i + 1, chunks.length, chunks[i])
+        response = await this.signSendChunk(ins, i + 1, chunks.length, chunks[i])
       }
 
       if (!response) {
@@ -132,46 +137,7 @@ export class SpaceMeshApp extends BaseApp {
       throw processErrorResponse(e)
     }
   }
-
-  async getAddressVault(path: string, internalIndex: number, account: VaultAccount, testMode = false): Promise<ResponseAddress> {
-    if (!testMode) {
-      account.serialize()
-    }
-
-    if (account.type !== AccountType.Vault) {
-      throw new Error('Invalid account type for vesting address')
-    }
-
-    const bs = new ByteStream()
-    bs.appendUint8(internalIndex)
-    bs.appendBytes(account.serialize())
-    const payload = bs.getCompleteBuffer()
-
-    // [path | totalAmount | initialUnlockAmount | vestingStart | vestingEnd | internalIndex | approvers | participants [idx|pubkey] ]
-    const chunks = this.prepareChunks(path, payload)
-
-    try {
-      let response
-      for (let i = 0; i < chunks.length; i++) {
-        response = await this.signSendChunk(this.INS.GET_ADDR_VAULT, i + 1, chunks.length, chunks[i])
-      }
-
-      if (!response) {
-        throw new Error('Failed to receive response from device')
-      }
-
-      const pubkey = response.readBytes(PUBKEYLEN)
-      const address = response.readBytes(response.length()).toString()
-
-      return {
-        pubkey,
-        address,
-      } as ResponseAddress
-    } catch (e) {
-      throw processErrorResponse(e)
-    }
-  }
-
+  
   async sign(path: BIP32Path, blob: EdSigner): Promise<ResponseSign> {
     const payload = Buffer.concat([blob.prefix, Buffer.from([blob.domain]), blob.message])
     const chunks = this.prepareChunks(path, payload)
@@ -186,19 +152,6 @@ export class SpaceMeshApp extends BaseApp {
       }
     } catch (e) {
       throw processErrorResponse(e)
-    }
-  }
-
-  private getInstruction(id: AccountType): number {
-    switch (id) {
-      case AccountType.Wallet:
-        return this.INS.GET_ADDR
-      case AccountType.Multisig:
-        return this.INS.GET_MULTISIG_ADDR
-      case AccountType.Vesting:
-        return this.INS.GET_VESTING_ADDR
-      case AccountType.Vault:
-        return this.INS.GET_VAULT_ADDR
     }
   }
 }
