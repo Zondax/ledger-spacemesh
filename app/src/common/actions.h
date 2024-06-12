@@ -51,7 +51,7 @@ __Z_INLINE zxerr_t app_fill_address_multisig_or_vesting(account_type_e account_t
 
     if (account_type == MULTISIG || account_type == VESTING) {
         return crypto_fillMultisigOrVestingAddress(message, messageLength, &action_addrResponseLen, account_type);
-    } 
+    }
 
     THROW(APDU_CODE_DATA_INVALID);
 }

@@ -36,13 +36,13 @@ static bool tx_initialized = false;
 static bool requireConfirmation = false;
 extern account_type_e addr_review_account_type;
 
-#define CATCH_ZXERR(zxerr) \
-    if (zxerr != zxerr_ok) { \
-        const char *error_msg = parser_getZxErrorDescription(zxerr); \
+#define CATCH_ZXERR(zxerr)                                                         \
+    if (zxerr != zxerr_ok) {                                                       \
+        const char *error_msg = parser_getZxErrorDescription(zxerr);               \
         const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer)); \
-        memcpy(G_io_apdu_buffer, error_msg, error_msg_length); \
-        *tx = error_msg_length; \
-        THROW(APDU_CODE_DATA_INVALID); \
+        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);                     \
+        *tx = error_msg_length;                                                    \
+        THROW(APDU_CODE_DATA_INVALID);                                             \
     }
 
 void extractHDPath(uint32_t rx, uint32_t offset) {
@@ -151,22 +151,21 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_OK);
     }
 
-    switch (account_type)
-    {
-    case MULTISIG:
-    case VESTING:
-        CATCH_ZXERR(app_fill_address_multisig_or_vesting(account_type));
-        addr_review_account_type = account_type;
-        view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
-        break;
-    case VAULT:
-        CATCH_ZXERR(app_fill_address_vault());
-        addr_review_account_type = account_type;
-        view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
-        break;
-    default:
-        THROW(APDU_CODE_DATA_INVALID);
-        break;
+    switch (account_type) {
+        case MULTISIG:
+        case VESTING:
+            CATCH_ZXERR(app_fill_address_multisig_or_vesting(account_type));
+            addr_review_account_type = account_type;
+            view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
+            break;
+        case VAULT:
+            CATCH_ZXERR(app_fill_address_vault());
+            addr_review_account_type = account_type;
+            view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
+            break;
+        default:
+            THROW(APDU_CODE_DATA_INVALID);
+            break;
     }
 
 #ifdef TARGET_STAX

@@ -11,7 +11,7 @@ on:
 
 jobs:
   configure:
-    runs-on: ${{ (github.event.repository.private == true || github.repository_owner == 'zondax') && 'zondax-runners' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     outputs:
       uid_gid: ${{ steps.get-user.outputs.uid_gid }}
     steps:
