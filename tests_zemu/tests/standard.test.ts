@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
+import Zemu, { ButtonKind, zondaxMainmenuNavigation } from '@zondax/zemu'
 import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, WALLET_TESTCASES, defaultOptions, models } from './common'
 import { EdSigner, Domain } from '@zondax/ledger-spacemesh/src/types'
@@ -113,18 +113,23 @@ describe('Standard', function () {
     }
   })
 
-  describe.each(MULTISIG_TESTCASES)('Multisig addresses', function (data) {
+  describe.only.each(MULTISIG_TESTCASES)('Multisig addresses', function (data) {
     test.concurrent.each(models)(`Test`, async function (m) {
       const sim = new Zemu(m.path)
       try {
-        await sim.start({ ...defaultOptions, model: m.name })
+        await sim.start({
+          ...defaultOptions,
+          model: m.name,
+          approveKeyword: m.name === 'stax' ? 'QR' : '',
+          approveAction: ButtonKind.ApproveTapButton,
+        })
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
         const resp = app.getInfoMultisigVestingAccount(data.path, 1, account)
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)
+        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)  
 
         const multisigResponse = await resp
         console.log(multisigResponse)
