@@ -207,8 +207,6 @@ export class SpaceMeshApp extends BaseApp {
     const internalIndexBuffer = Buffer.from([internalIndex])
     const serializedAccount = Buffer.concat([buff, internalIndexBuffer, serializedOwnerAccount]);
 
-    console.log(`Serialized account: ${serializedAccount.toString('hex')}`)
-
     return serializedAccount
   }
 

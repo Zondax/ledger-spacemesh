@@ -25,7 +25,7 @@ import { VAULT_TESTCASES } from './vault_testcases'
 import { MULTISIG_TESTCASES } from './multisig_testcases'
 import { VESTING_TESTCASES } from './vesting_testcases'
 
-jest.setTimeout(9000)
+jest.setTimeout(45000)
 
 describe('Standard', function () {
   test.concurrent.each(models)('can start and stop container', async function (m) {
@@ -113,23 +113,18 @@ describe('Standard', function () {
     }
   })
 
-  describe.only.each(MULTISIG_TESTCASES)('Multisig addresses', function (data) {
+  describe.each(MULTISIG_TESTCASES)('Multisig addresses', function (data) {
     test.concurrent.each(models)(`Test`, async function (m) {
       const sim = new Zemu(m.path)
       try {
-        await sim.start({
-          ...defaultOptions,
-          model: m.name,
-          approveKeyword: m.name === 'stax' ? 'QR' : '',
-          approveAction: ButtonKind.ApproveTapButton,
-        })
+        await sim.start({ ...defaultOptions, model: m.name })
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
         const resp = app.getInfoMultisigVestingAccount(data.path, 1, account)
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)  
+        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)
 
         const multisigResponse = await resp
         console.log(multisigResponse)

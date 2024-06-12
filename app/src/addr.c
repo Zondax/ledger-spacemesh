@@ -163,7 +163,8 @@ zxerr_t vault_getNumItems(uint8_t *num_items) {
 
 // TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
     const uint8_t fixedFields = 7;
-    const uint8_t totalExternalPubkeys = (tx_get_buffer_length() - fixedFields) / 33;
+    const uint8_t fixedFieldsBytes = 8 + 8 + 4 + 4 + 3;
+    const uint8_t totalExternalPubkeys = (tx_get_buffer_length() - fixedFieldsBytes) / 33;
 
     // Everything from above + address + path
     *num_items = totalExternalPubkeys + fixedFields + 2;
