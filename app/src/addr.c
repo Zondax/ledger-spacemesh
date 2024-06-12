@@ -101,7 +101,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
         return zxerr_no_data;
     }
 
-    if (accountType != MULTISIG && accountType != VESTING) {
+    if (addr_review_account_type != MULTISIG && addr_review_account_type != VESTING) {
         return zxerr_invalid_crypto_settings;
     }
 
@@ -111,7 +111,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
     *pageCount = 1;
     switch ((uint8_t)displayIdx) {
         case 0:
-            if (accountType == MULTISIG) {
+            if (addr_review_account_type == MULTISIG) {
                 snprintf(outKey, outKeyLen, "Multisig");
             } else {
                 snprintf(outKey, outKeyLen, "Vesting");
@@ -138,7 +138,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
             return zxerr_ok;
 
         case 255:
-            if (accountType == MULTISIG) {
+            if (addr_review_account_type == MULTISIG) {
                 snprintf(outVal, outKeyLen, "Review Multisig address");
             } else {
                 snprintf(outVal, outKeyLen, "Review Vesting address");
