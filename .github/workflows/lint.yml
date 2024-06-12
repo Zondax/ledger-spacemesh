@@ -12,7 +12,7 @@ on:
 
 jobs:
   lint:
-    runs-on: zondax-runners
+    runs-on: ${{ (github.event.repository.private == true || github.repository_owner == 'zondax') && 'zondax-runners' || 'ubuntu-latest' }}
     container: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder-legacy:latest
     steps:
       - uses: actions/checkout@v4
