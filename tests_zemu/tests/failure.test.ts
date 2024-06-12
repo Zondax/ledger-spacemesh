@@ -17,7 +17,7 @@
 import Zemu from '@zondax/zemu'
 import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
-import { Pubkey, AccountType, EdSigner, Domain, VaultAccount } from '@zondax/ledger-spacemesh/src/types'
+import { Account, AccountType, PubkeyItem, VaultAccount } from '@zondax/ledger-spacemesh/src/types'
 import { ResponseError } from '@zondax/ledger-js'
 
 // @ts-expect-error
@@ -48,30 +48,30 @@ describe('Failure scenarios', function () {
       const testCases = [
         {
           scenario: 'Duplicate index in pubkeys array',
-          owner: {
-            pubkeys: [addressToBuffer(pubKey0, 1)],
-            approvers: 2,
-            participants: 2,
-            id: AccountType.Vesting,
-          },
+          owner: new Account(
+            AccountType.Vesting,
+            2,
+            2,
+            [addressToBuffer(pubKey0, 1)]
+          ),
         },
         {
           scenario: 'Unsorted array',
-          owner: {
-            pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 4), addressToBuffer(pubKey2, 2)],
-            approvers: 2,
-            participants: 4,
-            id: AccountType.Vesting,
-          },
+          owner: new Account(
+            AccountType.Vesting,
+            2,
+            4,
+            [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 4)]
+          ),
         },
         {
           scenario: 'One index is equal to or greater than participants',
-          owner: {
-            pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 4)],
-            approvers: 2,
-            participants: 4,
-            id: AccountType.Vesting,
-          },
+          owner: new Account(
+            AccountType.Vesting,
+            2,
+            4,
+            [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 5)]
+          ),
         },
         {
           scenario: 'First pubkey is missing',
@@ -86,63 +86,57 @@ describe('Failure scenarios', function () {
         },
         {
           scenario: 'Last pubkey is missing',
-          owner: {
-            pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2)],
-            approvers: 2,
-            participants: 4,
-            id: AccountType.Vesting,
-          },
+          owner: new Account(
+            AccountType.Vesting,
+            2,
+            4,
+            [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2)]
+          ),
         },
         {
           scenario: 'A pubkey is missing from the middle of the sequence',
-          owner: {
-            pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 3)],
-            approvers: 2,
-            participants: 4,
-            id: AccountType.Vesting,
-          },
+          owner: new Account(
+            AccountType.Vesting,
+            2,
+            4,
+            [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 3)]
+          ),
         },
         {
           scenario: 'participants < approvers',
-          owner: {
-            pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)],
-            approvers: 5,
-            participants: 4,
-            id: AccountType.Vesting,
-          },
+          owner: new Account(
+            AccountType.Vesting,
+            5,
+            4,
+            [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)]
+          ),
         },
         {
           scenario: 'approvers == 0',
-          owner: {
-            pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)],
-            approvers: 0,
-            participants: 4,
-            id: AccountType.Vesting,
-          },
+          owner: new Account(
+            AccountType.Vesting,
+            0,
+            4,
+            [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)]
+          ),
         },
         {
           scenario: 'Corrupted pubkey',
-          owner: {
-            pubkeys: [addressToBuffer(pubKeyWrong, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)],
-            approvers: 2,
-            participants: 4,
-            id: AccountType.Vesting,
-          },
+          owner: new Account(
+            AccountType.Vesting,
+            2,
+            4,
+            [addressToBuffer(pubKeyWrong, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)]
+          ),
         },
       ]
 
       for (const testCase of testCases) {
         const owner = testCase.owner ? testCase.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount: VaultAccount = {
-          owner,
-          totalAmount: BigInt(1000),
-          initialUnlockAmount: BigInt(987),
-          vestingStart: 567,
-          vestingEnd: 99999,
-          id: AccountType.Vault,
-        }
+        const vaultAccount = new VaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
+
         console.log('testing: ', testCase.scenario)
-        await expect(app.getInfoVaultAccount(PATH, 1, vaultAccount, true)).rejects.toThrow(
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, true)).rejects.toThrow(
           new ResponseError(0x6984, 'Data is invalid : Invalid crypto settings'),
         )
       }
@@ -238,16 +232,10 @@ describe('Failure scenarios', function () {
 
       for (const test of testCases) {
         const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount: VaultAccount = {
-          owner,
-          totalAmount: BigInt(1000),
-          initialUnlockAmount: BigInt(987),
-          vestingStart: 567,
-          vestingEnd: 99999,
-          id: AccountType.Vault,
-        }
+        const vaultAccount = new VaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
+
         console.log('Testing: ', test.scenario)
-        await expect(app.getInfoVaultAccount(PATH, 1, vaultAccount, false)).rejects.toThrow(new Error(test.expectedError))
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, false)).rejects.toThrow(new Error(test.expectedError))
       }
 
       const testCases2 = [
@@ -285,30 +273,27 @@ describe('Failure scenarios', function () {
         },
       ]
       for (const test of testCases2) {
-        const vaultAccount: VaultAccount = {
-          owner: {
-            pubkeys: [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)],
-            approvers: 2,
-            participants: 4,
-            id: AccountType.Vesting,
-          },
+        const vaultAccount = new VaultAccount(
+          2,
+          4,
+          [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)],
+          test.totalAmount,
+          test.initialUnlockAmount,
+          test.vestingStart,
+          test.vestingEnd,
+        )
 
-          totalAmount: test.totalAmount,
-          initialUnlockAmount: test.initialUnlockAmount,
-          vestingStart: test.vestingStart,
-          vestingEnd: test.vestingEnd,
-          id: AccountType.Vault,
-        }
         console.log('Testing: ', test.scenario)
-        await expect(app.getInfoVaultAccount(PATH, 1, vaultAccount, false)).rejects.toThrow(new Error(test.expectedError))
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, false)).rejects.toThrow(new Error(test.expectedError))
       }
     } finally {
       await sim.close()
     }
   })
 
-  function addressToBuffer(stringPubKey: string, index: number): Pubkey {
+  function addressToBuffer(stringPubKey: string, index: number): PubkeyItem {
     const bufferPubKey = Buffer.from(stringPubKey, 'hex')
     return { index, pubkey: bufferPubKey }
   }
 })
+
