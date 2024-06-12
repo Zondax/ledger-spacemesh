@@ -34,7 +34,7 @@
 
 static bool tx_initialized = false;
 static bool requireConfirmation = false;
-uint8_t accountId = 0;
+account_type_e accountType = UNKNOWN;
 
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
@@ -136,14 +136,14 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 }
 
 // Handle Multisig, Vesting and Vault addresses
-__Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx, uint8_t id) {
+__Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx, account_type_e type) {
     ZEMU_LOGF(50, "handleMultisig %d\n", rx);
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
 
-    accountId = id;
-    zxerr_t zxerr = app_fill_MultisigOrVestingAddress(accountId);
+    accountType = type;
+    const zxerr_t zxerr = app_fill_MultisigOrVestingAddress(accountType);
 
     if (zxerr != zxerr_ok) {
         const char *error_msg = parser_getZxErrorDescription(zxerr);
@@ -153,13 +153,16 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    if (accountId == VAULT) {
+    if (accountType == VAULT) {
         view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
     } else {
         view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
     }
-
+#ifdef TARGET_STAX
+    view_review_show(REVIEW_TXN);
+#else
     view_review_show(REVIEW_ADDRESS);
+#endif
     *flags |= IO_ASYNCH_REPLY;
 }
 

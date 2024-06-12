@@ -31,6 +31,7 @@ extern "C" {
 #define MAX_MULTISIG_PUB_KEY 10
 
 typedef enum {
+    UNKNOWN = 0,
     WALLET = 1,
     MULTISIG = 2,
     VESTING = 3,

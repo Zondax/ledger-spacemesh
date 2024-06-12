@@ -29,7 +29,7 @@
 #include "zxformat.h"
 #include "zxmacros.h"
 
-extern uint8_t accountId;
+extern account_type_e accountType;
 
 zxerr_t wallet_getNumItems(uint8_t *num_items) {
     zemu_log_stack("addr_getNumItems");
@@ -96,21 +96,26 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
     ZEMU_LOGF(50, "[addr_getItem] %d/%d\n", displayIdx, pageIdx)
     uint8_t numItems = 0;
     multisigVesting_getNumItems(&numItems);
+
     if (displayIdx >= numItems) {
         return zxerr_no_data;
+    }
+
+    if (accountType != MULTISIG && accountType != VESTING) {
+        return zxerr_invalid_crypto_settings;
     }
 
     // [internalIndex | approvers | participants [idx|pubkey]]
     account_t *account = (account_t *)tx_get_buffer();
 
-    if (accountId != MULTISIG && accountId != VESTING) {
-        return zxerr_invalid_crypto_settings;
-    }
-    const char *accountType = accountId == MULTISIG ? "Multisig" : "Vesting";
-
-    switch (displayIdx) {
+    *pageCount = 1;
+    switch ((uint8_t)displayIdx) {
         case 0:
-            snprintf(outKey, outKeyLen, "%s", accountType);
+            if (accountType == MULTISIG) {
+                snprintf(outKey, outKeyLen, "Multisig");
+            } else {
+                snprintf(outKey, outKeyLen, "Vesting");
+            }
             pageString(outVal, outValLen, (char *)(G_io_apdu_buffer + PUB_KEY_LENGTH), pageIdx, pageCount);
             return zxerr_ok;
 
@@ -130,6 +135,14 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
         case 3:
             snprintf(outKey, outKeyLen, "Validators");
             snprintf(outVal, outValLen, "%d", account->approvers);
+            return zxerr_ok;
+
+        case 255:
+            if (accountType == MULTISIG) {
+                snprintf(outVal, outKeyLen, "Review Multisig address");
+            } else {
+                snprintf(outVal, outKeyLen, "Review Vesting address");
+            }
             return zxerr_ok;
 
         default: {
