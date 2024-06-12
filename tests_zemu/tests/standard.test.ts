@@ -70,7 +70,7 @@ describe('Standard', function () {
   })
 
   describe.each(WALLET_TESTCASES)('Wallet addresses', function (data) {
-    test.concurrent.each(models)(`Test`, async function (m) {
+    test.concurrent.each(models)(`Wallet path: ${data.path}`, async function (m) {
       const sim = new Zemu(m.path)
       try {
         await sim.start({ ...defaultOptions, model: m.name })
@@ -114,7 +114,7 @@ describe('Standard', function () {
   })
 
   describe.each(MULTISIG_TESTCASES)('Multisig addresses', function (data) {
-    test.concurrent.each(models)(`Test`, async function (m) {
+    test.concurrent.each(models)(`Multisig test: ${data.idx}`, async function (m) {
       const sim = new Zemu(m.path)
       try {
         await sim.start({ ...defaultOptions, model: m.name })
@@ -138,7 +138,7 @@ describe('Standard', function () {
   })
 
   describe.each(VESTING_TESTCASES)('Vesting addresses', function (data) {
-    test.concurrent.each(models)(`Test`, async function (m) {
+    test.concurrent.each(models)(`Vesting test: ${data.idx}`, async function (m) {
       const sim = new Zemu(m.path)
       try {
         await sim.start({ ...defaultOptions, model: m.name })
@@ -162,7 +162,7 @@ describe('Standard', function () {
   })
 
   describe.each(VAULT_TESTCASES)('Vault addresses', function (data) {
-    test.concurrent.each(models)(`Test`, async function (m) {
+    test.concurrent.each(models)(`Vault test: ${data.idx}`, async function (m) {
       const sim = new Zemu(m.path)
       try {
         await sim.start({ ...defaultOptions, model: m.name })
