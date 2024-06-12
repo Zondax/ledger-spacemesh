@@ -25,26 +25,39 @@
 #include "app_main.h"
 #include "coin.h"
 #include "crypto.h"
+#include "crypto_helper.h"
+#include "parser.h"
 #include "tx.h"
 #include "view.h"
 #include "view_internal.h"
 #include "zxmacros.h"
 
 static bool tx_initialized = false;
+static bool requireConfirmation = false;
+extern account_type_e addr_review_account_type;
+
+#define CATCH_ZXERR(zxerr)                                                         \
+    if (zxerr != zxerr_ok) {                                                       \
+        const char *error_msg = parser_getZxErrorDescription(zxerr);               \
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer)); \
+        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);                     \
+        *tx = error_msg_length;                                                    \
+        THROW(APDU_CODE_DATA_INVALID);                                             \
+    }
 
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
 
-    if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
+    if ((rx - offset) != sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
 
     memcpy(hdPath, G_io_apdu_buffer + offset, sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
 
-    // #{TODO} --> testnet necessary?
     const bool mainnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
+    const bool testnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_TESTNET;
 
-    if (!mainnet) {
+    if (!mainnet && !testnet) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 }
@@ -61,6 +74,7 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             tx_initialize();
             tx_reset();
             extractHDPath(rx, OFFSET_DATA);
+            requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
             tx_initialized = true;
             return false;
         case P1_ADD:
@@ -90,17 +104,18 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
     THROW(APDU_CODE_INVALIDP1P2);
 }
 
+// Handle Wallet addresses
 __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     extractHDPath(rx, OFFSET_DATA);
 
-    const uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
+    requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
     zxerr_t zxerr = app_fill_address();
     if (zxerr != zxerr_ok) {
         *tx = 0;
         THROW(APDU_CODE_DATA_INVALID);
     }
     if (requireConfirmation) {
-        view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
+        view_review_init(wallet_getItem, wallet_getNumItems, app_reply_address);
         view_review_show(REVIEW_ADDRESS);
         *flags |= IO_ASYNCH_REPLY;
         return;
@@ -110,7 +125,7 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
 }
 
 __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
-    zemu_log("handleSign\n");
+    ZEMU_LOGF(50, "handleSign %d\n", rx);
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
@@ -126,6 +141,38 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
     view_review_show(REVIEW_TXN);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
+// Handle Multisig, Vesting and Vault addresses
+__Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx, account_type_e account_type) {
+    ZEMU_LOGF(50, "handleMultisig %d\n", rx);
+    if (!process_chunk(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
+
+    switch (account_type) {
+        case MULTISIG:
+        case VESTING:
+            CATCH_ZXERR(app_fill_address_multisig_or_vesting(account_type));
+            addr_review_account_type = account_type;
+            view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
+            break;
+        case VAULT:
+            CATCH_ZXERR(app_fill_address_vault());
+            addr_review_account_type = account_type;
+            view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
+            break;
+        default:
+            THROW(APDU_CODE_DATA_INVALID);
+            break;
+    }
+
+#ifdef TARGET_STAX
+    view_review_show(REVIEW_TXN);
+#else
+    view_review_show(REVIEW_ADDRESS);
+#endif
     *flags |= IO_ASYNCH_REPLY;
 }
 
@@ -145,7 +192,7 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
     G_io_apdu_buffer[5] = (LEDGER_PATCH_VERSION >> 8) & 0xFF;
     G_io_apdu_buffer[6] = (LEDGER_PATCH_VERSION >> 0) & 0xFF;
 
-    G_io_apdu_buffer[7] = !IS_UX_ALLOWED;
+    G_io_apdu_buffer[7] = 0;
 
     G_io_apdu_buffer[8] = (TARGET_ID >> 24) & 0xFF;
     G_io_apdu_buffer[9] = (TARGET_ID >> 16) & 0xFF;
@@ -191,6 +238,23 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
                 }
 
+                case INS_GET_ADDR_MULTISIG: {
+                    CHECK_PIN_VALIDATED()
+                    handleMultisig(flags, tx, rx, MULTISIG);
+                    break;
+                }
+
+                case INS_GET_ADDR_VESTING: {
+                    CHECK_PIN_VALIDATED()
+                    handleMultisig(flags, tx, rx, VESTING);
+                    break;
+                }
+
+                case INS_GET_ADDR_VAULT: {
+                    CHECK_PIN_VALIDATED()
+                    handleMultisig(flags, tx, rx, VAULT);
+                    break;
+                }
 #if defined(APP_TESTING)
                 case INS_TEST: {
                     handleTest(flags, tx, rx);

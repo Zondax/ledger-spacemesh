@@ -22,6 +22,7 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+// {TODO}: Placeholder, replace with real txn structure
 typedef struct {
     uint8_t txn_param_0;
     uint8_t txn_param_1;

@@ -1,28 +1,29 @@
 /*******************************************************************************
-*   (c) 2018 - 2023 Zondax AG
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   (c) 2018 - 2023 Zondax AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
-#include "gmock/gmock.h"
-
-#include <iostream>
-#include <fstream>
-#include <json/json.h>
 #include <hexutils.h>
+#include <json/json.h>
 #include <parser_txdef.h>
-#include "parser.h"
+
+#include <fstream>
+#include <iostream>
+
 #include "app_mode.h"
+#include "gmock/gmock.h"
+#include "parser.h"
 #include "utils/common.h"
 
 using ::testing::TestWithParam;
@@ -36,9 +37,9 @@ typedef struct {
 } testcase_t;
 
 class JsonTestsA : public ::testing::TestWithParam<testcase_t> {
-public:
+   public:
     struct PrintToStringParamName {
-        template<class ParamType>
+        template <class ParamType>
         std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
             auto p = static_cast<testcase_t>(info.param);
             std::stringstream ss;
@@ -68,7 +69,6 @@ std::vector<testcase_t> GetJsonTestCases(std::string jsonFile) {
     std::cout << "Number of testcases: " << obj.size() << std::endl;
 
     for (int i = 0; i < obj.size(); i++) {
-
         auto outputs = std::vector<std::string>();
         for (auto s : obj[i]["output"]) {
             outputs.push_back(s.asString());
@@ -79,20 +79,14 @@ std::vector<testcase_t> GetJsonTestCases(std::string jsonFile) {
             outputs_expert.push_back(s.asString());
         }
 
-        answer.push_back(testcase_t{
-                obj[i]["index"].asUInt64(),
-                obj[i]["name"].asString(),
-                obj[i]["blob"].asString(),
-                outputs,
-                outputs_expert
-        });
+        answer.push_back(testcase_t{obj[i]["index"].asUInt64(), obj[i]["name"].asString(), obj[i]["blob"].asString(),
+                                    outputs, outputs_expert});
     }
 
     return answer;
 }
 
 void check_testcase(const testcase_t &tc, bool expert_mode) {
-
     app_mode_set_expert(expert_mode);
 
     parser_context_t ctx;
@@ -117,23 +111,19 @@ void check_testcase(const testcase_t &tc, bool expert_mode) {
 
     std::vector<std::string> expected = app_mode_expert() ? tc.expected_expert : tc.expected;
 
-    // #{TODO} --> After updating testvector, enable this part
-    #if 0
+// #{TODO} --> After updating testvector, enable this part
+#if 0
     EXPECT_EQ(output.size(), expected.size());
     for (size_t i = 0; i < expected.size(); i++) {
         if (i < output.size()) {
             EXPECT_THAT(output[i], testing::Eq(expected[i]));
         }
     }
-    #endif
+#endif
 }
 
 INSTANTIATE_TEST_SUITE_P
 
-(
-    JsonTestCasesCurrentTxVer,
-    JsonTestsA,
-    ::testing::ValuesIn(GetJsonTestCases("testcases.json")),
-    JsonTestsA::PrintToStringParamName()
-);
+    (JsonTestCasesCurrentTxVer, JsonTestsA, ::testing::ValuesIn(GetJsonTestCases("testcases.json")),
+     JsonTestsA::PrintToStringParamName());
 TEST_P(JsonTestsA, CheckUIOutput_CurrentTX_Expert) { check_testcase(GetParam(), true); }

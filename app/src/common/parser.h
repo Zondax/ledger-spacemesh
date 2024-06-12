@@ -21,8 +21,10 @@ extern "C" {
 #endif
 
 #include "parser_impl.h"
+#include "zxerror.h"
 
 const char *parser_getErrorDescription(parser_error_t err);
+const char *parser_getZxErrorDescription(zxerr_t err);
 const char *parser_getMsgPackTypeDescription(uint8_t type);
 
 //// parses a tx buffer

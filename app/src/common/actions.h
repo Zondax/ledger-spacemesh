@@ -21,8 +21,10 @@
 #include "apdu_codes.h"
 #include "coin.h"
 #include "crypto.h"
+#include "crypto_helper.h"
 #include "tx.h"
 #include "zxerror.h"
+#include "zxformat.h"
 
 extern uint16_t action_addrResponseLen;
 
@@ -38,6 +40,30 @@ __Z_INLINE zxerr_t app_fill_address() {
     }
 
     return zxerr_ok;
+}
+
+__Z_INLINE zxerr_t app_fill_address_multisig_or_vesting(account_type_e account_type) {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
+
+    action_addrResponseLen = 0;
+
+    if (account_type == MULTISIG || account_type == VESTING) {
+        return crypto_fillMultisigOrVestingAddress(message, messageLength, &action_addrResponseLen, account_type);
+    }
+
+    THROW(APDU_CODE_DATA_INVALID);
+}
+
+__Z_INLINE zxerr_t app_fill_address_vault() {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
+
+    action_addrResponseLen = 0;
+
+    return crypto_fillVaultAddress(message, messageLength, &action_addrResponseLen);
 }
 
 __Z_INLINE void app_sign() {

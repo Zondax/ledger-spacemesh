@@ -25,6 +25,7 @@
 #include "crypto.h"
 #include "parser_common.h"
 #include "parser_impl.h"
+#include "zxblake3.h"
 
 parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
     ctx->offset = 0;
@@ -66,7 +67,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     // #{TODO} --> function to retrieve num Items
     // *num_items = _getNumItems();
     UNUSED(ctx);
-    *num_items = 1;
+    *num_items = 2;
     if (*num_items == 0) {
         return parser_unexpected_number_items;
     }
@@ -98,21 +99,17 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, c
     CHECK_ERROR(checkSanity(numItems, displayIdx))
     cleanOutput(outKey, outKeyLen, outVal, outValLen);
 
+    uint8_t txnHash[32] = {0};
+    CHECK_ERROR(zxblake3_hash(ctx->buffer, ctx->bufferLen, txnHash, sizeof(txnHash)));
+
     switch (displayIdx) {
         case 0:
-            // Display Item 0
-            snprintf(outKey, outKeyLen, "Title #0");
-            snprintf(outVal, outValLen, "Value #0");
+            snprintf(outKey, outKeyLen, "Blind");
+            snprintf(outVal, outValLen, "Signing");
             return parser_ok;
         case 1:
-            // Display Item 1
-            snprintf(outKey, outKeyLen, "Title #1");
-            snprintf(outVal, outValLen, "Value #1");
-            return parser_ok;
-        case 10:
-            // Display Item 10
-            snprintf(outKey, outKeyLen, "Title #N");
-            snprintf(outVal, outValLen, "Value #N");
+            snprintf(outKey, outKeyLen, "Txn hash");
+            pageStringHex(outVal, outValLen, (char *)txnHash, sizeof(txnHash), pageIdx, pageCount);
             return parser_ok;
         default:
             break;
