@@ -1,11 +1,5 @@
 import { INSGeneric } from "@zondax/ledger-js";
 
-export interface SpaceMeshIns extends INSGeneric {
-  GET_VERSION: 0x00;
-  GET_ADDR: 0x01;
-  SIGN: 0x02;
-}
-
 export interface ResponseAddress {
   pubkey: Buffer;
   address: string;
@@ -40,7 +34,7 @@ export interface VaultAccount {
   initialUnlockAmount: bigint;
   vestingStart: number;
   vestingEnd: number;
-  id: AccountType;
+  id: AccountType;          // FIXME: why is this here? should be always fixed? AccountType.Vault
 }
 
 export enum Domain {

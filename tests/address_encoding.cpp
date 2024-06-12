@@ -107,7 +107,7 @@ TEST(Keys, VestingAddressEncoding) {
                 indexAux++;
             }
         }
-        vestingAccount.participants= testcase.participants;
+        vestingAccount.participants = testcase.participants;
         vestingAccount.approvers = testcase.approvals;
 
         uint8_t address[64] = {0};
@@ -124,7 +124,7 @@ TEST(Keys, VestingAddressEncoding) {
 }
 
 TEST(Keys, VaultAddressEncoding) {
-    for (const auto& testcase : testvectorVault) {
+    for (const auto &testcase : testvectorVault) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
         pubkey_t internalPubkey{};
@@ -133,7 +133,7 @@ TEST(Keys, VaultAddressEncoding) {
         // Read pubkeys from testvectors and set up owner account in vault account
         vaultAccount.owner.internalIndex = 0;
         uint8_t indexAux = 0;
-        for (auto i = 0; i < testcase.owner.publicKeys.size(); i++){
+        for (auto i = 0; i < testcase.owner.publicKeys.size(); i++) {
             if (i == vaultAccount.owner.internalIndex) {
                 parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.owner.publicKeys[i].c_str());
             } else {
@@ -153,11 +153,11 @@ TEST(Keys, VaultAddressEncoding) {
         uint8_t address[64] = {0};
         crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, &vaultAccount, !isTestNet);
         char addressBench32[64] = {0};
-        const char* hrp = isTestNet ? "stest" : "sm";
+        const char *hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address, ADDRESS_LENGTH, 1,
-        BECH32_ENCODING_BECH32);
+                              BECH32_ENCODING_BECH32);
 
-        std::string str(reinterpret_cast<const char*>(addressBench32), testcase.address.size());
+        std::string str(reinterpret_cast<const char *>(addressBench32), testcase.address.size());
         EXPECT_EQ(str, testcase.address);
     }
 }

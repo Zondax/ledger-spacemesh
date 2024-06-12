@@ -109,7 +109,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, c
             return parser_ok;
         case 1:
             snprintf(outKey, outKeyLen, "Txn hash");
-            pageStringHex(outVal, outValLen, (char*)txnHash, sizeof(txnHash), pageIdx, pageCount);
+            pageStringHex(outVal, outValLen, (char *)txnHash, sizeof(txnHash), pageIdx, pageCount);
             return parser_ok;
         default:
             break;

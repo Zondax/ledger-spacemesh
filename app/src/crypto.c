@@ -130,7 +130,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
 }
 
 zxerr_t crypto_fillMultisigOrVestingAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen,
-                                          uint8_t accountId) {
+                                            account_type_e account_type) {
     if (buffer == NULL || addrResponseLen == NULL) {
         return zxerr_invalid_crypto_settings;
     }
@@ -175,7 +175,7 @@ zxerr_t crypto_fillMultisigOrVestingAddress(const uint8_t *buffer, const uint16_
     uint8_t address[MIN_TEST_ADDRESS_BUFFER_LEN] = {0};
     const bool mainnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
     const char *hrp = mainnet ? "sm" : "stest";
-    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, account, accountId));
+    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, account, account_type));
 
     zxerr_t error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
                                           BECH32_ENCODING_BECH32);

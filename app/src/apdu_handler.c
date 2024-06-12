@@ -34,7 +34,16 @@
 
 static bool tx_initialized = false;
 static bool requireConfirmation = false;
-account_type_e accountType = UNKNOWN;
+extern account_type_e addr_review_account_type;
+
+#define CATCH_ZXERR(zxerr) \
+    if (zxerr != zxerr_ok) { \
+        const char *error_msg = parser_getZxErrorDescription(zxerr); \
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer)); \
+        memcpy(G_io_apdu_buffer, error_msg, error_msg_length); \
+        *tx = error_msg_length; \
+        THROW(APDU_CODE_DATA_INVALID); \
+    }
 
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
@@ -136,28 +145,30 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 }
 
 // Handle Multisig, Vesting and Vault addresses
-__Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx, account_type_e type) {
+__Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx, account_type_e account_type) {
     ZEMU_LOGF(50, "handleMultisig %d\n", rx);
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
 
-    accountType = type;
-    const zxerr_t zxerr = app_fill_MultisigOrVestingAddress(accountType);
-
-    if (zxerr != zxerr_ok) {
-        const char *error_msg = parser_getZxErrorDescription(zxerr);
-        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
-        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
-        *tx = error_msg_length;
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
-    if (accountType == VAULT) {
-        view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
-    } else {
+    switch (account_type)
+    {
+    case MULTISIG:
+    case VESTING:
+        CATCH_ZXERR(app_fill_address_multisig_or_vesting(account_type));
+        addr_review_account_type = account_type;
         view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
+        break;
+    case VAULT:
+        CATCH_ZXERR(app_fill_address_vault());
+        addr_review_account_type = account_type;
+        view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
+        break;
+    default:
+        THROW(APDU_CODE_DATA_INVALID);
+        break;
     }
+
 #ifdef TARGET_STAX
     view_review_show(REVIEW_TXN);
 #else
@@ -228,19 +239,19 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
                 }
 
-                case GET_MULTISIG_ADDR: {
+                case INS_GET_ADDR_MULTISIG: {
                     CHECK_PIN_VALIDATED()
                     handleMultisig(flags, tx, rx, MULTISIG);
                     break;
                 }
 
-                case GET_VESTING_ADDR: {
+                case INS_GET_ADDR_VESTING: {
                     CHECK_PIN_VALIDATED()
                     handleMultisig(flags, tx, rx, VESTING);
                     break;
                 }
 
-                case GET_VAULT_ADDR: {
+                case INS_GET_ADDR_VAULT: {
                     CHECK_PIN_VALIDATED()
                     handleMultisig(flags, tx, rx, VAULT);
                     break;

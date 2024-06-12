@@ -45,9 +45,9 @@ extern "C" {
 #define BLAKE2B_DIGEST_SIZE 32u
 
 // Instructions
-#define GET_MULTISIG_ADDR  0x03
-#define GET_VESTING_ADDR  0x04
-#define GET_VAULT_ADDR  0x05
+#define INS_GET_ADDR_MULTISIG 0x03
+#define INS_GET_ADDR_VESTING 0x04
+#define INS_GET_ADDR_VAULT 0x05
 
 // TODO: CHECK decimals
 #define COIN_AMOUNT_DECIMAL_PLACES 6

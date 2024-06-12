@@ -25,15 +25,15 @@ extern "C" {
 
 zxerr_t wallet_getNumItems(uint8_t *num_items);
 zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outValue, uint16_t outValueLen,
-                     uint8_t pageIdx, uint8_t *pageCount);
+                       uint8_t pageIdx, uint8_t *pageCount);
 
 zxerr_t multisigVesting_getNumItems(uint8_t *num_items);
 zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outValue, uint16_t outValueLen,
-                     uint8_t pageIdx, uint8_t *pageCount);
+                                uint8_t pageIdx, uint8_t *pageCount);
 
 zxerr_t vault_getNumItems(uint8_t *num_items);
 zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outValue, uint16_t outValueLen,
-                     uint8_t pageIdx, uint8_t *pageCount);
+                      uint8_t pageIdx, uint8_t *pageCount);
 #ifdef __cplusplus
 }
 #endif

@@ -31,6 +31,7 @@ export class SpaceMeshApp extends BaseApp {
     GET_VERSION: 0x00 as number,
     GET_ADDR: 0x01 as number,
     SIGN: 0x02 as number,
+
     GET_MULTISIG_ADDR: 0x03 as number,
     GET_VESTING_ADDR: 0x04 as number,
     GET_VAULT_ADDR: 0x05 as number,
@@ -75,6 +76,7 @@ export class SpaceMeshApp extends BaseApp {
   async getInfoMultisigVestingAccount(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
     this.checkAccountsSanity(internalIndex, account);
     const serializedAccount = this.serializeAccount(account);
+
     const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
 
     // [path|internalIndex|approvers|participants|[index|pubkeys]]
@@ -111,6 +113,7 @@ export class SpaceMeshApp extends BaseApp {
       for (let i = 1; i < chunks.length; i += 1) {
         response = await this.signSendChunk(this.getInstruction(vaultAccount.id), 1 + i, chunks.length, chunks[i])
       }
+
       const pubkey = response.readBytes(PUBKEYLEN)
       const address = response.readBytes(response.length()).toString()
 
@@ -210,6 +213,7 @@ export class SpaceMeshApp extends BaseApp {
     return serializedAccount
   }
 
+  // FIXME: Why do we need an index here? Why not [count] + [pubkeys...]?
   private serializeAccount(account: Account): Buffer {
     // calc buffer len
     let buffLen: number = 0

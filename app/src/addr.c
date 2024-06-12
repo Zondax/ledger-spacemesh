@@ -29,7 +29,7 @@
 #include "zxformat.h"
 #include "zxmacros.h"
 
-extern account_type_e accountType;
+account_type_e addr_review_account_type = 0;
 
 zxerr_t wallet_getNumItems(uint8_t *num_items) {
     zemu_log_stack("addr_getNumItems");
@@ -64,8 +64,7 @@ zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char
     }
 }
 
-static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, pubkey_t *keys,
-                            const uint8_t **pubkeyPtr) {
+static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, pubkey_t *keys, const uint8_t **pubkeyPtr) {
     if (keys == NULL || pubkeyPtr == NULL) {
         return zxerr_no_data;
     }
@@ -95,6 +94,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
                                 uint8_t pageIdx, uint8_t *pageCount) {
     ZEMU_LOGF(50, "[addr_getItem] %d/%d\n", displayIdx, pageIdx)
     uint8_t numItems = 0;
+
     multisigVesting_getNumItems(&numItems);
 
     if (displayIdx >= numItems) {
@@ -161,7 +161,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
 zxerr_t vault_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "vault_getNumItems\n");
 
-// TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
+    // TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
     const uint8_t fixedFields = 7;
     const uint8_t fixedFieldsBytes = 8 + 8 + 4 + 4 + 3;
     const uint8_t totalExternalPubkeys = (tx_get_buffer_length() - fixedFieldsBytes) / 33;
