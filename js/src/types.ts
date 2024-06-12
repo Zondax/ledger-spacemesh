@@ -9,7 +9,7 @@ export interface ResponseSign {
   signature: Buffer;
 }
 
-export interface Pubkey {
+export interface PubkeyItem {
   index: number;
   pubkey: Buffer;
 }
@@ -22,19 +22,18 @@ export enum AccountType {
 }
 
 export interface Account {
-  pubkeys: Pubkey[];
+  type: AccountType;
   participants: number;
   approvers: number;
-  id: AccountType;
+  pubkeys: PubkeyItem[];
 }
 
-export interface VaultAccount {
-  owner: Account;
+export interface VaultAccount extends Account {
   totalAmount: bigint;
   initialUnlockAmount: bigint;
   vestingStart: number;
   vestingEnd: number;
-  id: AccountType;          // FIXME: why is this here? should be always fixed? AccountType.Vault
+  type: AccountType.Vault;    // This account type is always fixed to AccountType.Vault
 }
 
 export enum Domain {
@@ -46,6 +45,8 @@ export enum Domain {
 	BEACON_FIRST_MSG    = 10,
 	BEACON_FOLLOWUP_MSG = 11
 }
+
+// FIXME: document this
 export interface EdSigner {
   prefix: Buffer;
   message: Buffer;

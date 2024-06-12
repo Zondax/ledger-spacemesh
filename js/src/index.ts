@@ -20,6 +20,7 @@ import { Account, VaultAccount, ResponseAddress, AccountType } from "./types";
 import { P1_VALUES, PUBKEYLEN } from './consts'
 
 import { ResponseSign, EdSigner } from './types'
+import { ByteStream } from '@zondax/ledger-js/dist/byteStream';
 
 const maxUint64 = BigInt("0xFFFFFFFFFFFFFFFF");
 const maxUint32 = BigInt("0xFFFFFFFF");
@@ -32,9 +33,9 @@ export class SpaceMeshApp extends BaseApp {
     GET_ADDR: 0x01 as number,
     SIGN: 0x02 as number,
 
-    GET_MULTISIG_ADDR: 0x03 as number,
-    GET_VESTING_ADDR: 0x04 as number,
-    GET_VAULT_ADDR: 0x05 as number,
+    GET_ADD_MULTISIG: 0x03 as number,
+    GET_ADDR_VESTING: 0x04 as number,
+    GET_ADDR_VAULT: 0x05 as number,
   }
 
   static _params = {
@@ -73,45 +74,101 @@ export class SpaceMeshApp extends BaseApp {
     }
   }
 
-  async getInfoMultisigVestingAccount(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
+  async getAddressMultisig(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
     this.checkAccountsSanity(internalIndex, account);
-    const serializedAccount = this.serializeAccount(account);
 
-    const payload = Buffer.concat([Buffer.from([internalIndex]), serializedAccount]);
+    if (account.type !== AccountType.Multisig) {
+      throw new Error('Invalid account type for multisig address');
+    }
+
+    const bs = new ByteStream()
+    bs.appendUint8(internalIndex)
+    bs.appendBytes(this.serializeAccount(account))
+    const payload = bs.getCompleteBuffer();
 
     // [path|internalIndex|approvers|participants|[index|pubkeys]]
     const chunks = this.prepareChunks(path, payload);
 
+
     try {
-      let response = await this.signSendChunk(this.getInstruction(account.id), 1, chunks.length, chunks[0])
-      for (let i = 1; i < chunks.length; i += 1) {
-        response = await this.signSendChunk(this.getInstruction(account.id), 1 + i, chunks.length, chunks[i])
+      let response;
+      for (let i = 0; i < chunks.length; i++) {
+        response = await this.signSendChunk(this.INS.GET_ADDR_MULTISIG, i + 1, chunks.length, chunks[i]);
       }
-      const pubkey = response.readBytes(PUBKEYLEN)
-      const address = response.readBytes(response.length()).toString()
+
+      if (!response) {
+        throw new Error('Failed to receive response from device');
+      }
 
       return {
-        pubkey,
-        address,
+        pubkey: response.readBytes(PUBKEYLEN),
+        address: response.getAvailableBuffer().toString(),
       } as ResponseAddress
+ 
     } catch (e) {
       throw processErrorResponse(e)
     }
   }
 
-  async getInfoVaultAccount(path: string, internalIndex: number, vaultAccount: VaultAccount, testMode = false): Promise<ResponseAddress> {
-    if (!testMode) {
-      this.checkAccountsSanity(internalIndex, vaultAccount.owner);
+  async getAddressVesting(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
+    this.checkAccountsSanity(internalIndex, account);
+
+    if (account.type !== AccountType.Vesting) {
+      throw new Error('Invalid account type for vesting address');
     }
-    const payload = this.serializeVaultAccount(internalIndex, vaultAccount);
+
+    const bs = new ByteStream()
+    bs.appendUint8(internalIndex)
+    bs.appendBytes(this.serializeAccount(account))
+    const payload = bs.getCompleteBuffer();
+
+    // [path|internalIndex|approvers|participants|[index|pubkeys]]
+    const chunks = this.prepareChunks(path, payload);
+
+
+    try {
+      let response;
+      for (let i = 0; i < chunks.length; i++) {
+        response = await this.signSendChunk(this.INS.GET_ADDR_VESTING, i + 1, chunks.length, chunks[i]);
+      }
+
+      if (!response) {
+        throw new Error('Failed to receive response from device');
+      }
+
+      return {
+        pubkey: response.readBytes(PUBKEYLEN),
+        address: response.getAvailableBuffer().toString(),
+      } as ResponseAddress
+ 
+    } catch (e) {
+      throw processErrorResponse(e)
+    }
+  }
+
+  async getAddressVault(path: string, internalIndex: number, account: VaultAccount, testMode = false): Promise<ResponseAddress> {
+
+    if (!testMode) {
+      this.checkAccountsSanity(internalIndex, account);
+    }
+
+    if (account.type !== AccountType.Vault) {
+      throw new Error('Invalid account type for vesting address');
+    }
+
+    const payload = this.serializeVaultAccount(internalIndex, account);
 
     // [path | totalAmount | initialUnlockAmount | vestingStart | vestingEnd | internalIndex | approvers | participants [idx|pubkey] ]
     const chunks = this.prepareChunks(path, payload);
 
     try {
-      let response = await this.signSendChunk(this.getInstruction(vaultAccount.id), 1, chunks.length, chunks[0])
-      for (let i = 1; i < chunks.length; i += 1) {
-        response = await this.signSendChunk(this.getInstruction(vaultAccount.id), 1 + i, chunks.length, chunks[i])
+      let response;
+      for (let i = 0; i < chunks.length; i++) {
+        response = await this.signSendChunk(this.INS.GET_ADDR_VAULT, i + 1, chunks.length, chunks[i]);
+      }
+
+      if (!response) {
+        throw new Error('Failed to receive response from device');
       }
 
       const pubkey = response.readBytes(PUBKEYLEN)
@@ -194,50 +251,43 @@ export class SpaceMeshApp extends BaseApp {
   }
 
   private serializeVaultAccount(internalIndex: number, account: VaultAccount): Buffer {
-    const serializedOwnerAccount = this.serializeAccount(account.owner);
-    let buff = Buffer.alloc(24)
-
     if (account.totalAmount > maxUint64 || account.initialUnlockAmount > maxUint64) {
       throw new Error(`Amount exceeds the maximum allowed value for uint64`);
     }
     if (account.vestingStart > maxUint32 || account.vestingEnd > maxUint32) {
       throw new Error(`Vesting exceeds the maximum allowed value for uint32`);
     }
-    buff.writeBigUInt64LE(account.totalAmount, 0)
-    buff.writeBigUInt64LE(account.initialUnlockAmount, 8)
-    buff.writeUInt32LE(account.vestingStart, 16)
-    buff.writeUInt32LE(account.vestingEnd, 20)
-    const internalIndexBuffer = Buffer.from([internalIndex])
-    const serializedAccount = Buffer.concat([buff, internalIndexBuffer, serializedOwnerAccount]);
 
-    return serializedAccount
+    const bs = new ByteStream()
+
+    bs.appendUint64(account.totalAmount)
+    bs.appendUint64(account.initialUnlockAmount)
+    bs.appendUint32(account.vestingStart)
+    bs.appendUint32(account.vestingEnd)
+
+    bs.appendUint8(internalIndex)
+    bs.appendBytes(this.serializeAccount(account))
+
+    return bs.getCompleteBuffer()
   }
 
   // FIXME: Why do we need an index here? Why not [count] + [pubkeys...]?
   private serializeAccount(account: Account): Buffer {
-    // calc buffer len
-    let buffLen: number = 0
-    for (const pubkey of account.pubkeys) {
-      // Each pubkey has to be stored in 33 bytes: 32 for pubkey and 1 for index
-      buffLen += pubkey.pubkey.length + 1
-    }
-
-    // add 2 bytes to store approvers and participants
-    let buff = Buffer.alloc(buffLen + 2)
 
     if (account.approvers > maxUint8 || account.participants > maxUint8) {
       throw new Error(`Approvers or participants exceed the maximum allowed value for uint8`);
     }
-    buff.writeUInt8(account.approvers, 0)
-    buff.writeUInt8(account.participants, 1)
 
-    let indexOffset: number = 2;
+    const b = new ByteStream()
+
+    b.appendUint8(account.approvers)
+    b.appendUint8(account.participants)
+
     for (const pubkey of account.pubkeys) {
-      buff.writeUInt8(pubkey.index, indexOffset)
-      pubkey.pubkey.copy(buff, indexOffset + 1)
-      indexOffset += pubkey.pubkey.length + 1
+      b.appendUint8(pubkey.index)
+      b.appendBytes(pubkey.pubkey)
     }
 
-    return buff
+    return b.getCompleteBuffer()
   }
 }
