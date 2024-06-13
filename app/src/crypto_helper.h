@@ -58,9 +58,9 @@ typedef struct {
 } __attribute__((packed)) vault_account_t;
 
 zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
-                                   const account_t *account, account_type_e id);
+                                   uint8_t internalIndex, const account_t *account, account_type_e id);
 zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
-                                 const vault_account_t *vaultAccount, bool mainnet);
+                                 uint8_t internalIndex, const vault_account_t *vaultAccount, bool mainnet);
 
 #ifdef __cplusplus
 }

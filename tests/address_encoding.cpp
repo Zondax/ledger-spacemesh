@@ -45,7 +45,8 @@ TEST(Keys, WalletAddressEncoding) {
         parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.publicKey.c_str());
 
         uint8_t address[64] = {0};
-        crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, NULL, WALLET);
+        const uint8_t internalIndex = 0;
+        crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, internalIndex, NULL, WALLET);
         char addressBench32[64] = {0};
         const char *hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address, ADDRESS_LENGTH, 1,
@@ -64,10 +65,11 @@ TEST(Keys, MultisigAddressEncoding) {
         account_t multisigAccount{};
 
         // Read pubkeys from testvectors and set up multisig account
-        multisigAccount.internalIndex = 0;
+        const uint8_t internalIndex = 0;
+
         uint8_t indexAux = 0;
         for (auto i = 0; i < testcase.publicKeys.size(); i++) {
-            if (i == multisigAccount.internalIndex) {
+            if (i == internalIndex) {
                 parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.publicKeys[i].c_str());
             } else {
                 parseHexString(multisigAccount.keys[indexAux].pubkey, PUB_KEY_LENGTH, testcase.publicKeys[i].c_str());
@@ -78,7 +80,7 @@ TEST(Keys, MultisigAddressEncoding) {
         multisigAccount.approvers = testcase.approvals;
 
         uint8_t address[64] = {0};
-        crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, &multisigAccount, MULTISIG);
+        crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, internalIndex, &multisigAccount, MULTISIG);
         char addressBench32[64] = {0};
         const char *hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address, ADDRESS_LENGTH, 1,
@@ -97,10 +99,11 @@ TEST(Keys, VestingAddressEncoding) {
         account_t vestingAccount{};
 
         // Read pubkeys from testvectors and set up vesting account
-        vestingAccount.internalIndex = 0;
+        const uint8_t internalIndex = 0;
+
         uint8_t indexAux = 0;
         for (auto i = 0; i < testcase.publicKeys.size(); i++) {
-            if (i == vestingAccount.internalIndex) {
+            if (i == internalIndex) {
                 parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.publicKeys[i].c_str());
             } else {
                 parseHexString(vestingAccount.keys[indexAux].pubkey, PUB_KEY_LENGTH, testcase.publicKeys[i].c_str());
@@ -112,7 +115,7 @@ TEST(Keys, VestingAddressEncoding) {
 
         uint8_t address[64] = {0};
         std::cout << "testcase.address: " << testcase.address << std::endl;
-        crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, &vestingAccount, VESTING);
+        crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, internalIndex, &vestingAccount, VESTING);
         char addressBench32[64] = {0};
         const char *hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address, ADDRESS_LENGTH, 1,
@@ -131,10 +134,10 @@ TEST(Keys, VaultAddressEncoding) {
         vault_account_t vaultAccount{};
 
         // Read pubkeys from testvectors and set up owner account in vault account
-        vaultAccount.owner.internalIndex = 0;
+        const uint8_t internalIndex = 0;
         uint8_t indexAux = 0;
         for (auto i = 0; i < testcase.owner.publicKeys.size(); i++) {
-            if (i == vaultAccount.owner.internalIndex) {
+            if (i == internalIndex) {
                 parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.owner.publicKeys[i].c_str());
             } else {
                 parseHexString(vaultAccount.owner.keys[indexAux].pubkey, 32, testcase.owner.publicKeys[i].c_str());
@@ -151,7 +154,7 @@ TEST(Keys, VaultAddressEncoding) {
         vaultAccount.vestingEnd = testcase.vestingEnd;
 
         uint8_t address[64] = {0};
-        crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, &vaultAccount, !isTestNet);
+        crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, internalIndex, &vaultAccount, !isTestNet);
         char addressBench32[64] = {0};
         const char *hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address, ADDRESS_LENGTH, 1,
