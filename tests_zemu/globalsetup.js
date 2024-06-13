@@ -5,9 +5,9 @@ const Zemu = require('@zondax/zemu')
  */
 const catchExit = () => {
   process.on('SIGINT', async () => {
-    await Zemu.default.stopAllEmuContainers();
-    process.exit();
-  });
+    await Zemu.default.stopAllEmuContainers()
+    process.exit()
+  })
 }
 
 /**
@@ -15,7 +15,7 @@ const catchExit = () => {
  * pulling the latest emulator image, and stopping any running emulator containers.
  */
 module.exports = async () => {
-  catchExit();
-  await Zemu.default.checkAndPullImage();
-  await Zemu.default.stopAllEmuContainers();
+  catchExit()
+  await Zemu.default.checkAndPullImage()
+  await Zemu.default.stopAllEmuContainers()
 }
