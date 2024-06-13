@@ -41,14 +41,13 @@ typedef enum {
 typedef struct {
     uint8_t index;
     uint8_t pubkey[32];
-} pubkey_t;
+} __attribute__((packed)) pubkey_item_t;
 
 typedef struct {
-    uint8_t internalIndex;
     uint8_t approvers;
     uint8_t participants;
-    pubkey_t keys[MAX_MULTISIG_PUB_KEY];
-} account_t;
+    pubkey_item_t keys[MAX_MULTISIG_PUB_KEY];
+} __attribute__((packed)) account_t;
 
 typedef struct {
     uint64_t totalAmount;
@@ -58,9 +57,9 @@ typedef struct {
     account_t owner;
 } __attribute__((packed)) vault_account_t;
 
-zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_t *internalPubkey,
+zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
                                    const account_t *account, account_type_e id);
-zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_t *internalPubkey,
+zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
                                  const vault_account_t *vaultAccount, bool mainnet);
 
 #ifdef __cplusplus
