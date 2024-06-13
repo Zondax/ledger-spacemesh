@@ -4,13 +4,12 @@
     "name": "TEST_NAME",
     "blob": "8ba466616464c4204b2a4ad9d4d900ea16f9dcee534b9c0189daa1acbccace73d794bf168b8a73e3a466616964ce000b6717a3666565ce001e163fa26676ce000153c8a367656eac6d61696e6e65742d76312e30a26768c420c061c4d8fc1dbdded2d7604be4568e3f6d041987ac37bde4b620b5ab39248adfa26c76ce00018b66a46e6f7465c41c48656c6c6f2074686572652c20746869732069732061206e6f746521a572656b6579c4206a08f935de3bb9eb65b9d206598f5d34419257491c4024ca5f88ea73749de231a3736e64c4209fa4543b7caf05ad7334a5a74033acdc130137d7afa1f6733509f6d4377c30d7a474797065a46166727a",
     "output": [
-      "0 | Txn type : ?????",
-      "1 | Sender [1/2] : ????"
+      "0 | Blind : Signing",
+      "1 | Txn Hash : 00000000000000"
     ],
     "output_expert": [
-      "0 | Txn type : ?????",
-      "1 | Sender [1/2] : ????",
-      "2 | EXPERT TEST : ?????"
+      "0 | Blind : Signing",
+      "1 | Txn Hash : 00000000000000"
     ]
   }
 ]
