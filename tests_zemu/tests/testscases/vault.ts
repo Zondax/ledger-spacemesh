@@ -1,11 +1,12 @@
 import { PATH, PATH_TESTNET } from '../common'
 import { VaultAccount } from '@zondax/ledger-spacemesh/src/types'
 import { addressToBuffer, pubKey0, pubKey2, pubKey3 } from './wallet'
+import {NoCheckVaultAccount} from "./NoCheckAccount";
 
 export const VAULT_TESTCASES = [
   {
     idx: 0,
-    vaultAccount: new VaultAccount(
+    vaultAccount: new NoCheckVaultAccount(
       2,
       2,
       [addressToBuffer(pubKey0, 0)],
@@ -20,7 +21,7 @@ export const VAULT_TESTCASES = [
   },
   {
     idx: 1,
-    vaultAccount: new VaultAccount(
+    vaultAccount: new NoCheckVaultAccount(
       4,
       2,
       [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 3), addressToBuffer(pubKey2, 2)],
@@ -35,7 +36,7 @@ export const VAULT_TESTCASES = [
   },
   {
     idx: 2,
-    vaultAccount: new VaultAccount(
+    vaultAccount: new NoCheckVaultAccount(
       4,
       3,
       [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 3), addressToBuffer(pubKey2, 2)],

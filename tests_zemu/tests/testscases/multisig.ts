@@ -1,11 +1,12 @@
 import { Account, AccountType } from '@zondax/ledger-spacemesh/src/types'
 import { addressToBuffer, pubKey0, pubKey2, pubKey3 } from './wallet'
 import { PATH, PATH_TESTNET } from '../common'
+import {NoCheckAccount} from "./NoCheckAccount";
 
 export const MULTISIG_TESTCASES = [
   {
     idx: 0,
-    account: new Account(
+    account: new NoCheckAccount(
       AccountType.Multisig,
       2,
       2,
@@ -17,7 +18,7 @@ export const MULTISIG_TESTCASES = [
   },
   {
     idx: 1,
-    account: new Account(
+    account: new NoCheckAccount(
       AccountType.Multisig,
       2,
       4,
@@ -29,7 +30,7 @@ export const MULTISIG_TESTCASES = [
   },
   {
     idx: 2,
-    account: new Account(
+    account: new NoCheckAccount(
       AccountType.Multisig,
       3,
       4,

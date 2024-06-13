@@ -25,6 +25,11 @@
 
 // jest.setTimeout(60000)
 
+describe('Failure scenarios', function () {
+    test('do nothing', function () {
+    })
+})
+
 // describe('Failure scenarios', function () {
 //   test.concurrent.each(models)('can start and stop container', async function (m) {
 //     const sim = new Zemu(m.path)
