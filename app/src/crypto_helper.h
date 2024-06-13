@@ -47,20 +47,20 @@ typedef struct {
     uint8_t approvers;
     uint8_t participants;
     pubkey_item_t keys[MAX_MULTISIG_PUB_KEY];
-} __attribute__((packed)) account_t;
+} __attribute__((packed)) generic_account_t;
 
 typedef struct {
     uint64_t totalAmount;
     uint64_t initialUnlockAmount;
     uint32_t vestingStart;
     uint32_t vestingEnd;
-    account_t owner;
+    generic_account_t owner;
 } __attribute__((packed)) vault_account_t;
 
 zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
-                                   uint8_t internalIndex, const account_t *account, account_type_e id);
+                                   const generic_account_t *account, account_type_e id);
 zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
-                                 uint8_t internalIndex, const vault_account_t *vaultAccount, bool mainnet);
+                                 const vault_account_t *vaultAccount, bool mainnet);
 
 #ifdef __cplusplus
 }

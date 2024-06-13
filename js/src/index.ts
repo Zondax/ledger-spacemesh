@@ -27,7 +27,7 @@ export class SpaceMeshApp extends BaseApp {
     GET_ADDR: 0x01 as number,
     SIGN: 0x02 as number,
 
-    GET_ADD_MULTISIG: 0x03 as number,
+    GET_ADDR_MULTISIG: 0x03 as number,
     GET_ADDR_VESTING: 0x04 as number,
     GET_ADDR_VAULT: 0x05 as number,
   }
@@ -68,7 +68,7 @@ export class SpaceMeshApp extends BaseApp {
   // FIXME: show addressInDevice is not available?
 
   async getAddressMultisig(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
-    account.checkSanity()
+    account.checkSanity(internalIndex)
 
     const bs = new ByteStream()
     bs.appendUint8(internalIndex)
@@ -84,7 +84,7 @@ export class SpaceMeshApp extends BaseApp {
   }
 
   async getAddressVesting(path: string, internalIndex: number, account: Account): Promise<ResponseAddress> {
-    account.checkSanity()
+    account.checkSanity(internalIndex)
 
     const bs = new ByteStream()
     bs.appendUint8(internalIndex)
@@ -101,7 +101,7 @@ export class SpaceMeshApp extends BaseApp {
   }
 
   async getAddressVault(path: string, internalIndex: number, account: VaultAccount): Promise<ResponseAddress> {
-    account.checkSanity()
+    account.checkSanity(internalIndex)
 
     const bs = new ByteStream()
     bs.appendUint8(internalIndex)

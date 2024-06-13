@@ -255,7 +255,7 @@ describe('Failure scenarios', function () {
 
       for (const test of testCases100) {
         const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount = new NoCheckVaultAccount(
+        const vaultAccount = new VaultAccount(
           owner.approvers,
           owner.participants,
           owner.pubkeys,
@@ -340,7 +340,7 @@ describe('Failure scenarios', function () {
 
       for (const test of testCases100) {
         const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount = new NoCheckVaultAccount(
+        const vaultAccount = new VaultAccount(
           owner.approvers,
           owner.participants,
           owner.pubkeys,

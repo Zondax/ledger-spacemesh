@@ -42,11 +42,11 @@ export enum AccountType {
 
 export interface AccountInterface {
   type: AccountType
-  checkSanity(): void
+  checkSanity(internalIndex: number): void
   serialize(): Buffer
 }
 
-export class Account {
+export class Account implements AccountInterface {
   type: AccountType
   approvers: number
   participants: number
@@ -54,15 +54,15 @@ export class Account {
 
   constructor(type: AccountType, approvers: number, participants: number, pubkeys: PubkeyItem[]) {
     this.type = type
-    this.approvers = approvers
     this.participants = participants
+    this.approvers = approvers
     this.pubkeys = pubkeys
-
-    this.checkSanity()
   }
 
-  checkSanity() {
+  checkSanity(internalIndex: number) {
     const indices = new Set<number>()
+
+    indices.add(internalIndex)
     for (const pubkey of this.pubkeys) {
       if (indices.has(pubkey.index)) {
         throw new Error(`Duplicate index ${pubkey.index} found in pubkeys array`)
@@ -71,6 +71,12 @@ export class Account {
 
       if (pubkey.pubkey.length !== 32) {
         throw new Error(`Invalid pubkey size for ${pubkey.pubkey}`)
+      }
+    }
+
+    for (let i = 0; i < indices.size; i++) {
+      if (!indices.has(i)) {
+        throw new Error(`Missing index ${i} in pubkeys array`)
       }
     }
 
@@ -113,25 +119,23 @@ export class VaultAccount extends Account {
   vestingEnd: number
 
   constructor(
-    participants: number,
     approvers: number,
+    participants: number,
     pubkeys: PubkeyItem[],
     totalAmount: bigint,
     initialUnlockAmount: bigint,
     vestingStart: number,
     vestingEnd: number
   ) {
-    super(AccountType.Vault, participants, approvers, pubkeys)
+    super(AccountType.Vault, approvers, participants, pubkeys)
     this.totalAmount = totalAmount
     this.initialUnlockAmount = initialUnlockAmount
     this.vestingStart = vestingStart
     this.vestingEnd = vestingEnd
-
-    this.checkSanity()
   }
 
-  checkSanity(): void {
-    super.checkSanity()
+  checkSanity(internalIndex: number): void {
+    super.checkSanity(internalIndex)
 
     if (this.totalAmount > maxUint64 || this.initialUnlockAmount > maxUint64) {
       throw new Error(`Amount exceeds the maximum allowed value for uint64`)

@@ -113,7 +113,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
     // FIXME: Avoid accessing buffer directly here.. keep context
     // [internalIndex | approvers | participants [idx|pubkey]]
     const uint8_t internalIndex = tx_get_buffer()[0];
-    account_t *account = (account_t *)(tx_get_buffer() + 1);
+    generic_account_t *account = (generic_account_t *)(tx_get_buffer() + 1);
 
     *pageCount = 1;
     switch ((uint8_t)displayIdx) {
@@ -190,18 +190,19 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
     if (displayIdx >= numItems) {
         return zxerr_no_data;
     }
+    *pageCount = 1;
 
-    // [totalAmount | initialUnlockAmount | vestingStart | vestingEnd
-    //  internalIndex | approvers | participants [idx|pubkey] ]
+    // [internalIndex | initialUnlockAmount | vestingStart | vestingEnd
+    // | approvers | participants [idx|pubkey] ]
     const uint8_t internalIndex = tx_get_buffer()[0];
     vault_account_t *vault = (vault_account_t *)(tx_get_buffer() + 1);
 
     char tmpBuffer[30] = {0};
-    switch (displayIdx) {
+    switch ((uint8_t)displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Vault");
             snprintf(outVal, outValLen, "%d", internalIndex);
-            // pageString(outVal, outValLen, (char *)(G_io_apdu_buffer + PUB_KEY_LENGTH), pageIdx, pageCount);
+            pageString(outVal, outValLen, (char *)(G_io_apdu_buffer + PUB_KEY_LENGTH), pageIdx, pageCount);
             break;
 
         case 1: {
@@ -248,6 +249,10 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
         case 7:
             snprintf(outKey, outKeyLen, "Validators");
             snprintf(outVal, outValLen, "%d", vault->owner.approvers);
+            break;
+
+        case 255:
+            snprintf(outVal, outKeyLen, "Review Vault address");
             break;
 
         default: {

@@ -102,7 +102,7 @@ describe('Standard', function () {
 
       const respRequest = app.getAddressAndPubKey(PATH, true)
 
-      await expect(respRequest).rejects.toMatchObject({
+      expect(respRequest).rejects.toMatchObject({
         returnCode: 0x6986,
         errorMessage: 'Transaction rejected',
       })
@@ -150,7 +150,7 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = app.getAddressMultisig(data.path, 1, account as Account)
+        const resp = app.getAddressVesting(data.path, 1, account as Account)
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
         await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vesting_${data.idx}`)

@@ -1,4 +1,4 @@
-import { AccountType } from '@zondax/ledger-spacemesh/src/types'
+import { AccountType, Account } from '@zondax/ledger-spacemesh/src/types'
 import { addressToBuffer, pubKey0, pubKey2, pubKey3 } from './wallet'
 import { PATH, PATH_TESTNET } from '../common'
 import { NoCheckAccount, TestCase } from './types'
@@ -6,14 +6,14 @@ import { NoCheckAccount, TestCase } from './types'
 export const VESTING_TESTCASES: TestCase[] = [
   {
     idx: 0,
-    account: new NoCheckAccount(AccountType.Vesting, 2, 2, [addressToBuffer(pubKey0, 0)]),
+    account: new Account(AccountType.Vesting, 2, 2, [addressToBuffer(pubKey0, 0)]),
     expected_address: 'sm1qqqqqq8987egzymqzujln6hpvd649zhf4p5mkdclnwtv0',
     expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
     path: PATH,
   },
   {
     idx: 1,
-    account: new NoCheckAccount(AccountType.Vesting, 2, 4, [
+    account: new Account(AccountType.Vesting, 2, 4, [
       addressToBuffer(pubKey0, 0),
       addressToBuffer(pubKey3, 3),
       addressToBuffer(pubKey2, 2),
@@ -24,7 +24,7 @@ export const VESTING_TESTCASES: TestCase[] = [
   },
   {
     idx: 2,
-    account: new NoCheckAccount(AccountType.Vesting, 3, 4, [
+    account: new Account(AccountType.Vesting, 3, 4, [
       addressToBuffer(pubKey0, 0),
       addressToBuffer(pubKey3, 3),
       addressToBuffer(pubKey2, 2),

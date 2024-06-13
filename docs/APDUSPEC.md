@@ -163,7 +163,7 @@ All other packets/chunks contain data chunks that are described below
 | Field   | Type      | Content     | Note                     |
 | ------- | --------- | ----------- | ------------------------ |
 | PK      | byte (32) | Public Key  |                          |
-| ADDR    | byte (??) | address     | vault address            |
+| ADDR    | byte (24) | address     | vault address            |
 | SW1-SW2 | byte (2)  | Return code | see list of return codes |
 
 ---
