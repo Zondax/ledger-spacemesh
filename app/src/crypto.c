@@ -275,7 +275,8 @@ zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen,
     uint8_t address[MIN_TEST_ADDRESS_BUFFER_LEN] = {0};
     const char *hrp = calculate_hrp();
 
-    CHECK_ZXERR(crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, internalIndex, vaultAccount, is_mainnet()));
+    CHECK_ZXERR(
+        crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, internalIndex, vaultAccount, is_mainnet()));
 
     zxerr_t error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
                                           BECH32_ENCODING_BECH32);
