@@ -129,7 +129,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
     return zxerr_ok;
 }
 
-zxerr_t crypto_fillMultisigOrVestingAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen,
+zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen,
                                             account_type_e account_type) {
     if (buffer == NULL || addrResponseLen == NULL) {
         return zxerr_invalid_crypto_settings;
@@ -193,7 +193,7 @@ zxerr_t crypto_fillMultisigOrVestingAddress(const uint8_t *buffer, const uint16_
     return zxerr_ok;
 }
 
-zxerr_t crypto_fillVaultAddress(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen) {
+zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen) {
     if (buffer == NULL || addrResponseLen == NULL) {
         return zxerr_invalid_crypto_settings;
     }

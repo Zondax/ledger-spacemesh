@@ -82,6 +82,10 @@ static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, pu
 zxerr_t multisigVesting_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "multisigVesting_getNumItems\n");
 
+    if ( addr_review_account_type != MULTISIG && addr_review_account_type != VESTING) {
+        return zxerr_encoding_failed;
+    }
+
     const uint8_t fixedFields = 3;  // Participants, Approvers, internal pubkey
     const uint8_t totalExternalPubkeys = (tx_get_buffer_length() - fixedFields) / 33;
 
@@ -160,6 +164,10 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
 
 zxerr_t vault_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "vault_getNumItems\n");
+
+    if ( addr_review_account_type != VAULT) {
+        return zxerr_encoding_failed;
+    }
 
     // TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
     const uint8_t fixedFields = 7;

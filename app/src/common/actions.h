@@ -27,6 +27,7 @@
 #include "zxformat.h"
 
 extern uint16_t action_addrResponseLen;
+extern account_type_e addr_review_account_type;
 
 __Z_INLINE zxerr_t app_fill_address() {
     // Put data directly in the apdu buffer
@@ -42,28 +43,45 @@ __Z_INLINE zxerr_t app_fill_address() {
     return zxerr_ok;
 }
 
-__Z_INLINE zxerr_t app_fill_address_multisig_or_vesting(account_type_e account_type) {
+__Z_INLINE zxerr_t app_fill_address_multisig() {
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    addr_review_account_type = UNKNOWN;
+
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();
 
     action_addrResponseLen = 0;
 
-    if (account_type == MULTISIG || account_type == VESTING) {
-        return crypto_fillMultisigOrVestingAddress(message, messageLength, &action_addrResponseLen, account_type);
-    }
+    CHECK_ZXERR(crypto_fillAddressMultisigOrVesting(message, messageLength, &action_addrResponseLen, MULTISIG));
 
-    THROW(APDU_CODE_DATA_INVALID);
+    addr_review_account_type = MULTISIG;
+    return zxerr_ok;
+}
+
+__Z_INLINE zxerr_t app_fill_address_vesting() {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
+
+    action_addrResponseLen = 0;
+    CHECK_ZXERR(crypto_fillAddressMultisigOrVesting(message, messageLength, &action_addrResponseLen, VESTING));
+
+    addr_review_account_type = VESTING;
+    return zxerr_ok;
 }
 
 __Z_INLINE zxerr_t app_fill_address_vault() {
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    addr_review_account_type = UNKNOWN;
+
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();
 
     action_addrResponseLen = 0;
+    CHECK_ZXERR(crypto_fillAddressVault(message, messageLength, &action_addrResponseLen));
 
-    return crypto_fillVaultAddress(message, messageLength, &action_addrResponseLen);
+    addr_review_account_type = VAULT;
+    return zxerr_ok;
 }
 
 __Z_INLINE void app_sign() {
