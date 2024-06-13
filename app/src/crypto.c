@@ -123,8 +123,9 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
     uint8_t address[MIN_TEST_ADDRESS_BUFFER_LEN] = {0};
 
     const char *hrp = calculate_hrp();
+    const uint8_t internalIndex = 0;
 
-    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, NULL, WALLET));
+    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, internalIndex, NULL, WALLET));
 
     zxerr_t err =
         bech32EncodeFromBytes((char *)buffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32);
@@ -142,19 +143,20 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
     return zxerr_ok;
 }
 
-zxerr_t _readAccount(const uint8_t *buffer, uint16_t bufferLen, account_t *account, account_type_e account_type) {
-    // TODO: move parsing here and later move to another file
-    if (buffer == NULL) {
-        return zxerr_invalid_crypto_settings;
-    }
-}
+// TODO: move parsing here and later move to another file
+// zxerr_t _readAccount(const uint8_t *buffer, uint16_t bufferLen, account_t *account, account_type_e account_type) {
+//     if (buffer == NULL) {
+//         return zxerr_invalid_crypto_settings;
+//     }
+// }
 
-zxerr_t _readAccountVault(const uint8_t *buffer, uint16_t bufferLen, vault_account_t *account, account_type_e account_type) {
-    // TODO: move parsing here and later move to another file
-    if (buffer == NULL) {
-        return zxerr_invalid_crypto_settings;
-    }
-}
+// TODO: move parsing here and later move to another file
+// zxerr_t _readAccountVault(const uint8_t *buffer, uint16_t bufferLen, vault_account_t *account, account_type_e
+// account_type) {
+//    if (buffer == NULL) {
+//        return zxerr_invalid_crypto_settings;
+//    }
+//}
 
 zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen,
                                             account_type_e account_type) {
@@ -177,7 +179,7 @@ zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_
     // approvers | participants [idx|pubkey]]
     // TODO: move to _readAccountVault + validation
     // FIXME: misaligned access throw in this CPU. Be careful with misaligned u32
-    uint8_t internal_index = buffer[0];
+    uint8_t internalIndex = buffer[0];
     account_t *account = (account_t *)(buffer + 1);
 
     // Validate the number of public keys
@@ -188,7 +190,7 @@ zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_
     // validate account
     uint8_t indexAux = 0;
     for (int i = 0; i < account->participants; i++) {
-        if (i == internal_index) {
+        if (i == internalIndex) {
             continue;
         }
         if (i == account->keys[indexAux].index) {
@@ -206,7 +208,7 @@ zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_
     uint8_t address[MIN_TEST_ADDRESS_BUFFER_LEN] = {0};
     const char *hrp = calculate_hrp();
 
-    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, account, account_type));
+    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, internalIndex, account, account_type));
 
     zxerr_t error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
                                           BECH32_ENCODING_BECH32);
@@ -244,7 +246,7 @@ zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen,
     // internalIndex
     // [totalAmount | initialUnlockAmount | vestingStart | vestingEnd
     // account -> approvers | participants | [idx|pubkey]]
-    uint8_t internal_index = buffer[0];
+    uint8_t internalIndex = buffer[0];
     vault_account_t *vaultAccount = (vault_account_t *)(buffer + 1);
 
     // Validate the number of public keys
@@ -255,7 +257,7 @@ zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen,
     // create account
     uint8_t indexAux = 0;
     for (int i = 0; i < vaultAccount->owner.participants; i++) {
-        if (i == internal_index) {
+        if (i == internalIndex) {
             continue;
         }
         if (i == vaultAccount->owner.keys[indexAux].index) {
@@ -273,7 +275,7 @@ zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen,
     uint8_t address[MIN_TEST_ADDRESS_BUFFER_LEN] = {0};
     const char *hrp = calculate_hrp();
 
-    CHECK_ZXERR(crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, vaultAccount, is_mainnet()));
+    CHECK_ZXERR(crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, internalIndex, vaultAccount, is_mainnet()));
 
     zxerr_t error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
                                           BECH32_ENCODING_BECH32);

@@ -110,8 +110,10 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
         return zxerr_invalid_crypto_settings;
     }
 
+    // FIXME: Avoid accessing buffer directly here.. keep context
     // [internalIndex | approvers | participants [idx|pubkey]]
-    account_t *account = (account_t *)tx_get_buffer();
+    const uint8_t internalIndex = tx_get_buffer()[0];
+    account_t *account = (account_t *)(tx_get_buffer()+1);
 
     *pageCount = 1;
     switch ((uint8_t)displayIdx) {
@@ -154,7 +156,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
             const uint8_t tmpDisplayIdx = displayIdx - 4;
             const uint8_t *pubkeyPtr = NULL;
             snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, account->internalIndex, account->keys, &pubkeyPtr))
+            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, internalIndex, account->keys, &pubkeyPtr))
             pageStringHex(outVal, outValLen, (const char *)pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
             return zxerr_ok;
         }
@@ -191,12 +193,14 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
 
     // [totalAmount | initialUnlockAmount | vestingStart | vestingEnd
     //  internalIndex | approvers | participants [idx|pubkey] ]
-    vault_account_t *vault = (vault_account_t *)tx_get_buffer();
+    const uint8_t internalIndex = tx_get_buffer()[0];
+    vault_account_t *vault = (vault_account_t *)(tx_get_buffer()+1);
+
     char tmpBuffer[30] = {0};
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Vault");
-            snprintf(outVal, outValLen, "%d", vault->owner.internalIndex);
+            snprintf(outVal, outValLen, "%d", internalIndex);
             // pageString(outVal, outValLen, (char *)(G_io_apdu_buffer + PUB_KEY_LENGTH), pageIdx, pageCount);
             break;
 
@@ -250,7 +254,7 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
             const uint8_t tmpDisplayIdx = displayIdx - 8;
             const uint8_t *pubkeyPtr = NULL;
             snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, vault->owner.internalIndex, vault->owner.keys, &pubkeyPtr))
+            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, internalIndex, vault->owner.keys, &pubkeyPtr))
             pageStringHex(outVal, outValLen, (const char *)pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
             break;
         }
