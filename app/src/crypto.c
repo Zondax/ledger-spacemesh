@@ -24,7 +24,6 @@
 
 #define BUFF_FIRST_ACCOUNT_INDEX 3
 #define VAULT_INFO_SIZE 24
-#define BUFF_ACCOUNT_INFO_LENGTH (PUB_KEY_LENGTH + 1)
 
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
@@ -169,8 +168,8 @@ zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_
     }
 
     uint8_t pubkeysBuffSize = bufferLen - BUFF_FIRST_ACCOUNT_INDEX;
-    // Ensure the buffer size is a multiple of BUFF_ACCOUNT_INFO_LENGTH
-    if (pubkeysBuffSize % BUFF_ACCOUNT_INFO_LENGTH != 0) {
+    // Ensure the buffer size is a multiple of pubkey_item_t
+    if (pubkeysBuffSize % sizeof(pubkey_item_t) != 0) {
         return zxerr_invalid_crypto_settings;
     }
 
@@ -182,7 +181,7 @@ zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_
     account_t *account = (account_t *)(buffer + 1);
 
     // Validate the number of public keys
-    if ((pubkeysBuffSize / BUFF_ACCOUNT_INFO_LENGTH) + 1 != account->participants) {
+    if ((pubkeysBuffSize / sizeof(pubkey_item_t)) + 1 != account->participants) {
         return zxerr_invalid_crypto_settings;
     }
 
@@ -236,8 +235,8 @@ zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen,
     }
 
     uint8_t pubkeysBuffSize = bufferLen - (BUFF_FIRST_ACCOUNT_INDEX + VAULT_INFO_SIZE);
-    // Ensure the buffer size is a multiple of BUFF_ACCOUNT_INFO_LENGTH
-    if (pubkeysBuffSize % BUFF_ACCOUNT_INFO_LENGTH != 0) {
+    // Ensure the buffer size is a multiple of pubkey_item_t s
+    if (pubkeysBuffSize % sizeof(pubkey_item_t) != 0) {
         return zxerr_invalid_crypto_settings;
     }
 
@@ -249,7 +248,7 @@ zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen,
     vault_account_t *vaultAccount = (vault_account_t *)(buffer + 1);
 
     // Validate the number of public keys
-    if ((pubkeysBuffSize / BUFF_ACCOUNT_INFO_LENGTH) + 1 != vaultAccount->owner.participants) {
+    if ((pubkeysBuffSize / sizeof(pubkey_item_t)) + 1 != vaultAccount->owner.participants) {
         return zxerr_invalid_crypto_settings;
     }
 
