@@ -19,14 +19,13 @@ import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
 import { AccountType, PubkeyItem, VaultAccount } from '@zondax/ledger-spacemesh/src/types'
 import { ResponseError } from '@zondax/ledger-js'
-import {NoCheckAccount, NoCheckVaultAccount} from "./testscases/NoCheckAccount";
+import { NoCheckAccount, NoCheckVaultAccount } from './testscases/NoCheckAccount'
 import { addressToBuffer } from './testscases/wallet'
 
 jest.setTimeout(60000)
 
 describe('Failure scenarios', function () {
-    test('do nothing', function () {
-    })
+  test('do nothing', function () {})
 })
 
 const pubKey0 = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d189f8'
@@ -37,30 +36,23 @@ const pubKeyWrong = '6f1581709bb7b1ef030d210db18e3b0ba1c776fba65d8cdaad05415142d
 const testCases1 = [
   {
     scenario: 'Duplicate index in pubkeys array',
-    owner: new NoCheckAccount(
-      AccountType.Vesting,
-      2,
-      2,
-      [addressToBuffer(pubKey0, 1)]
-    ),
+    owner: new NoCheckAccount(AccountType.Vesting, 2, 2, [addressToBuffer(pubKey0, 1)]),
   },
   {
     scenario: 'Unsorted array',
-    owner: new NoCheckAccount(
-      AccountType.Vesting,
-      2,
-      4,
-      [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 4)]
-    ),
+    owner: new NoCheckAccount(AccountType.Vesting, 2, 4, [
+      addressToBuffer(pubKey0, 0),
+      addressToBuffer(pubKey2, 2),
+      addressToBuffer(pubKey3, 4),
+    ]),
   },
   {
     scenario: 'One index is equal to or greater than participants',
-    owner: new NoCheckAccount(
-      AccountType.Vesting,
-      2,
-      4,
-      [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 5)]
-    ),
+    owner: new NoCheckAccount(AccountType.Vesting, 2, 4, [
+      addressToBuffer(pubKey0, 0),
+      addressToBuffer(pubKey2, 2),
+      addressToBuffer(pubKey3, 5),
+    ]),
   },
   {
     scenario: 'First pubkey is missing',
@@ -75,48 +67,35 @@ const testCases1 = [
   },
   {
     scenario: 'Last pubkey is missing',
-    owner: new NoCheckAccount(
-      AccountType.Vesting,
-      2,
-      4,
-      [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2)]
-    ),
+    owner: new NoCheckAccount(AccountType.Vesting, 2, 4, [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2)]),
   },
   {
     scenario: 'A pubkey is missing from the middle of the sequence',
-    owner: new NoCheckAccount(
-      AccountType.Vesting,
-      2,
-      4,
-      [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 3)]
-    ),
+    owner: new NoCheckAccount(AccountType.Vesting, 2, 4, [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey3, 3)]),
   },
   {
     scenario: 'participants < approvers',
-    owner: new NoCheckAccount(
-      AccountType.Vesting,
-      5,
-      4,
-      [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)]
-    ),
+    owner: new NoCheckAccount(AccountType.Vesting, 5, 4, [
+      addressToBuffer(pubKey0, 0),
+      addressToBuffer(pubKey2, 2),
+      addressToBuffer(pubKey3, 3),
+    ]),
   },
   {
     scenario: 'approvers == 0',
-    owner: new NoCheckAccount(
-      AccountType.Vesting,
-      0,
-      4,
-      [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)]
-    ),
+    owner: new NoCheckAccount(AccountType.Vesting, 0, 4, [
+      addressToBuffer(pubKey0, 0),
+      addressToBuffer(pubKey2, 2),
+      addressToBuffer(pubKey3, 3),
+    ]),
   },
   {
     scenario: 'Corrupted pubkey',
-    owner: new NoCheckAccount(
-      AccountType.Vesting,
-      2,
-      4,
-      [addressToBuffer(pubKeyWrong, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)]
-    ),
+    owner: new NoCheckAccount(AccountType.Vesting, 2, 4, [
+      addressToBuffer(pubKeyWrong, 0),
+      addressToBuffer(pubKey2, 2),
+      addressToBuffer(pubKey3, 3),
+    ]),
   },
 ]
 
@@ -248,7 +227,15 @@ describe('Failure scenarios', function () {
 
       for (const testCase of testCases1) {
         const owner = testCase.owner ? testCase.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount = new NoCheckVaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
+        const vaultAccount = new NoCheckVaultAccount(
+          owner.approvers,
+          owner.participants,
+          owner.pubkeys,
+          BigInt(1000),
+          BigInt(987),
+          567,
+          99999,
+        )
 
         console.log('testing: ', testCase.scenario)
         await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(
@@ -268,7 +255,15 @@ describe('Failure scenarios', function () {
 
       for (const test of testCases100) {
         const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount = new NoCheckVaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
+        const vaultAccount = new NoCheckVaultAccount(
+          owner.approvers,
+          owner.participants,
+          owner.pubkeys,
+          BigInt(1000),
+          BigInt(987),
+          567,
+          99999,
+        )
 
         console.log('Testing: ', test.scenario)
         await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
@@ -317,7 +312,15 @@ describe('Failure scenarios', function () {
 
       for (const testCase of testCases1) {
         const owner = testCase.owner ? testCase.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount = new NoCheckVaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
+        const vaultAccount = new NoCheckVaultAccount(
+          owner.approvers,
+          owner.participants,
+          owner.pubkeys,
+          BigInt(1000),
+          BigInt(987),
+          567,
+          99999,
+        )
 
         console.log('testing: ', testCase.scenario)
         await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(
@@ -337,7 +340,15 @@ describe('Failure scenarios', function () {
 
       for (const test of testCases100) {
         const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount = new NoCheckVaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
+        const vaultAccount = new NoCheckVaultAccount(
+          owner.approvers,
+          owner.participants,
+          owner.pubkeys,
+          BigInt(1000),
+          BigInt(987),
+          567,
+          99999,
+        )
 
         console.log('Testing: ', test.scenario)
         await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
@@ -367,4 +378,3 @@ describe('Failure scenarios', function () {
     return { index, pubkey: bufferPubKey }
   }
 })
-

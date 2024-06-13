@@ -1,4 +1,4 @@
-import { Account, VaultAccount, PubkeyItem, AccountType } from './types'
+import { Account, AccountType, PubkeyItem, VaultAccount } from './types'
 
 describe('Account', () => {
   it('should create an Account instance and check sanity', () => {
@@ -69,10 +69,12 @@ describe('VaultAccount', () => {
       { index: 1, pubkey: Buffer.alloc(32) },
     ]
 
-      const totalAmount = BigInt(500)
-      const initialUnlockAmount = BigInt(1000)
+    const totalAmount = BigInt(500)
+    const initialUnlockAmount = BigInt(1000)
 
-    expect(() => new VaultAccount(2, 1, pubkeys, totalAmount, initialUnlockAmount, 0, 10)).toThrow('Total amount cannot be less than initial unlock amount')
+    expect(() => new VaultAccount(2, 1, pubkeys, totalAmount, initialUnlockAmount, 0, 10)).toThrow(
+      'Total amount cannot be less than initial unlock amount'
+    )
   })
 
   it('should throw an error if vesting start is greater than vesting end', () => {
@@ -81,9 +83,11 @@ describe('VaultAccount', () => {
       { index: 1, pubkey: Buffer.alloc(32) },
     ]
 
-      const totalAmount = BigInt(1500)
-      const initialUnlockAmount = BigInt(1000)
+    const totalAmount = BigInt(1500)
+    const initialUnlockAmount = BigInt(1000)
 
-    expect(() => new VaultAccount(2, 1, pubkeys, totalAmount, initialUnlockAmount, 10, 0)).toThrow('Vesting start cannot be greater than vesting end')
+    expect(() => new VaultAccount(2, 1, pubkeys, totalAmount, initialUnlockAmount, 10, 0)).toThrow(
+      'Vesting start cannot be greater than vesting end'
+    )
   })
 })

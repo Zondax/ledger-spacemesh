@@ -1,5 +1,5 @@
-import { PubkeyItem } from "@zondax/ledger-spacemesh/dist/types"
-import { PATH, PATH_TESTNET } from "../common"
+import { PubkeyItem } from '@zondax/ledger-spacemesh/dist/types'
+import { PATH, PATH_TESTNET } from '../common'
 
 export function addressToBuffer(stringPubKey: string, index: number): PubkeyItem {
   const bufferPubKey = Buffer.from(stringPubKey, 'hex')

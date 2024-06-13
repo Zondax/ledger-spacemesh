@@ -1,7 +1,5 @@
 {
   "name": "integration-tests",
-  "author": "Zondax AG",
-  "license": "Apache-2.0",
   "version": "1.0.0",
   "description": "",
   "keywords": [
@@ -12,6 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/Zondax/ledger-spacemesh"
   },
+  "license": "Apache-2.0",
+  "author": "Zondax AG",
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "ts-node tests/pullImageKillOld.ts",

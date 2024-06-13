@@ -137,7 +137,7 @@ export class SpaceMeshApp extends BaseApp {
       throw processErrorResponse(e)
     }
   }
-  
+
   async sign(path: BIP32Path, blob: EdSigner): Promise<ResponseSign> {
     const payload = Buffer.concat([blob.prefix, Buffer.from([blob.domain]), blob.message])
     const chunks = this.prepareChunks(path, payload)

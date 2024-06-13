@@ -1,5 +1,6 @@
 import { ByteStream } from '@zondax/ledger-js/dist/byteStream'
-import {maxUint32, maxUint64} from "./consts";
+
+import { maxUint32, maxUint64 } from './consts'
 
 export interface ResponseAddress {
   pubkey: Buffer
@@ -40,9 +41,9 @@ export enum AccountType {
 }
 
 export interface AccountInterface {
-  type: AccountType;
-  checkSanity(): void;
-  serialize(): Buffer;
+  type: AccountType
+  checkSanity(): void
+  serialize(): Buffer
 }
 
 export class Account {
@@ -132,12 +133,12 @@ export class VaultAccount extends Account {
   checkSanity(): void {
     super.checkSanity()
 
-      if (this.totalAmount > maxUint64 || this.initialUnlockAmount > maxUint64) {
-          throw new Error(`Amount exceeds the maximum allowed value for uint64`);
-      }
-      if (this.vestingStart > maxUint32 || this.vestingEnd > maxUint32) {
-          throw new Error(`Vesting exceeds the maximum allowed value for uint32`);
-      }
+    if (this.totalAmount > maxUint64 || this.initialUnlockAmount > maxUint64) {
+      throw new Error(`Amount exceeds the maximum allowed value for uint64`)
+    }
+    if (this.vestingStart > maxUint32 || this.vestingEnd > maxUint32) {
+      throw new Error(`Vesting exceeds the maximum allowed value for uint32`)
+    }
 
     if (this.initialUnlockAmount > this.totalAmount) {
       throw new Error(`Total amount cannot be less than initial unlock amount`)
