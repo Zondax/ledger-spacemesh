@@ -299,3 +299,72 @@ describe('Failure scenarios', function () {
   }
 })
 
+describe('Failure scenarios', function () {
+  test.concurrent.each(models)('can start and stop container', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(models)('Invalid data in api', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new SpaceMeshApp(sim.getTransport())
+
+      for (const testCase of testCases1) {
+        const owner = testCase.owner ? testCase.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
+        const vaultAccount = new NoCheckVaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
+
+        console.log('testing: ', testCase.scenario)
+        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(
+          new ResponseError(0x6984, 'Data is invalid : Invalid crypto settings'),
+        )
+      }
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(models)('invalid data in js', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new SpaceMeshApp(sim.getTransport())
+
+      for (const test of testCases100) {
+        const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
+        const vaultAccount = new NoCheckVaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
+
+        console.log('Testing: ', test.scenario)
+        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
+      }
+
+      for (const test of testCases200) {
+        const vaultAccount = new VaultAccount(
+          2,
+          4,
+          [addressToBuffer(pubKey0, 0), addressToBuffer(pubKey2, 2), addressToBuffer(pubKey3, 3)],
+          test.totalAmount,
+          test.initialUnlockAmount,
+          test.vestingStart,
+          test.vestingEnd,
+        )
+
+        console.log('Testing: ', test.scenario)
+        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
+      }
+    } finally {
+      await sim.close()
+    }
+  })
+
+  function addressToBuffer(stringPubKey: string, index: number): PubkeyItem {
+    const bufferPubKey = Buffer.from(stringPubKey, 'hex')
+    return { index, pubkey: bufferPubKey }
+  }
+})
+

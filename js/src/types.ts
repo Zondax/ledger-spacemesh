@@ -32,13 +32,17 @@ export interface EdSigner {
   domain: Domain
 }
 
-/////
-
 export enum AccountType {
   Wallet = 1,
   Multisig = 2,
   Vesting = 3,
   Vault = 4,
+}
+
+export interface AccountInterface {
+  type: AccountType;
+  checkSanity(): void;
+  serialize(): Buffer;
 }
 
 export class Account {

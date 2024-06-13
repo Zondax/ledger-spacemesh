@@ -26,6 +26,7 @@ import { VAULT_TESTCASES } from './testscases/vault'
 import { MULTISIG_TESTCASES } from './testscases/multisig'
 import { VESTING_TESTCASES } from './testscases/vesting'
 import { WALLET_TESTCASES } from './testscases/wallet'
+import { Account, VaultAccount } from '@zondax/ledger-spacemesh/dist/types'
 
 jest.setTimeout(45000)
 
@@ -125,7 +126,7 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = app.getAddressMultisig(data.path, 1, account)
+        const resp = app.getAddressMultisig(data.path, 1, account as Account )
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
         await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)
@@ -149,7 +150,7 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = app.getAddressMultisig(data.path, 1, account)
+        const resp = app.getAddressMultisig(data.path, 1, account as Account)
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
         await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vesting_${data.idx}`)
@@ -171,9 +172,9 @@ describe('Standard', function () {
       try {
         await sim.start({ ...defaultOptions, model: m.name })
         const app = new SpaceMeshApp(sim.getTransport())
-        const { vaultAccount, expected_address, expected_pk } = data
+        const { account, expected_address, expected_pk } = data
 
-        const resp = app.getAddressVault(data.path, 1, vaultAccount)
+        const resp = app.getAddressVault(data.path, 1, account as VaultAccount)
 
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())

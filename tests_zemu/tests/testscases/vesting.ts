@@ -1,9 +1,9 @@
-import { Account, AccountType } from '@zondax/ledger-spacemesh/src/types'
+import { AccountType } from '@zondax/ledger-spacemesh/src/types'
 import { addressToBuffer, pubKey0, pubKey2, pubKey3 } from './wallet'
 import { PATH, PATH_TESTNET } from '../common'
-import {NoCheckAccount} from "./NoCheckAccount";
+import { NoCheckAccount, TestCase } from './types';
 
-export const VESTING_TESTCASES = [
+export const VESTING_TESTCASES: TestCase[] = [
   {
     idx: 0,
     account: new NoCheckAccount(
