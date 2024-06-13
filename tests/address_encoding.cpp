@@ -39,7 +39,7 @@ TEST(Keys, WalletAddressEncoding) {
     for (const auto &testcase : testvectorWallet) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
-        pubkey_t internalPubkey{};
+        pubkey_item_t internalPubkey{};
 
         // Read pubkey from testvectors and set up wallet account
         parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.publicKey.c_str());
@@ -60,7 +60,7 @@ TEST(Keys, MultisigAddressEncoding) {
     for (const auto &testcase : testvectorMultisig) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
-        pubkey_t internalPubkey{};
+        pubkey_item_t internalPubkey{};
         account_t multisigAccount{};
 
         // Read pubkeys from testvectors and set up multisig account
@@ -93,7 +93,7 @@ TEST(Keys, VestingAddressEncoding) {
     for (const auto &testcase : testvectorVesting) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
-        pubkey_t internalPubkey{};
+        pubkey_item_t internalPubkey{};
         account_t vestingAccount{};
 
         // Read pubkeys from testvectors and set up vesting account
@@ -127,7 +127,7 @@ TEST(Keys, VaultAddressEncoding) {
     for (const auto &testcase : testvectorVault) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
-        pubkey_t internalPubkey{};
+        pubkey_item_t internalPubkey{};
         vault_account_t vaultAccount{};
 
         // Read pubkeys from testvectors and set up owner account in vault account

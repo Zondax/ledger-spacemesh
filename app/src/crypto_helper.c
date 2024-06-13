@@ -106,8 +106,8 @@ static zxerr_t updateScaleEncodedNumber(uint64_t num) {
     return zxerr_ok;
 }
 
-zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_t *internalPubkey,
-                                   const account_t *account, account_type_e account_type) {
+zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
+                                   uint8_t internalIndex, const account_t *account, account_type_e account_type) {
     if (address == NULL || internalPubkey == NULL || addressLen < MIN_TEST_ADDRESS_BUFFER_LEN) {
         return zxerr_no_data;
     }
@@ -138,7 +138,7 @@ zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const 
         // encode pubkeys
         uint8_t indexAux = 0;
         for (uint8_t i = 0; i < account->participants; i++) {
-            if (i == account->internalIndex) {
+            if (i == internalIndex) {
                 CHECK_PARSER_OK(zxblake3_hash_update(internalPubkey->pubkey, PUB_KEY_LENGTH));
             } else {
                 CHECK_PARSER_OK(zxblake3_hash_update(account->keys[indexAux].pubkey, PUB_KEY_LENGTH));
@@ -156,8 +156,8 @@ zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const 
     return zxerr_ok;
 }
 
-zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_t *internalPubkey,
-                                 const vault_account_t *vaultAccount, bool mainnet) {
+zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
+                                 uint8_t internalIndex, const vault_account_t *vaultAccount, bool mainnet) {
     const uint8_t minAddressLen = mainnet ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
     if (address == NULL || vaultAccount == NULL || addressLen < minAddressLen) {
         return zxerr_no_data;
@@ -168,8 +168,8 @@ zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pu
 
     // first get vesting address without bech32Encode and clean encode buffer
     uint8_t addressVesting[100] = {0};
-    CHECK_ZX_OK(
-        crypto_encodeAccountPubkey(addressVesting, sizeof(addressVesting), internalPubkey, &vaultAccount->owner, VESTING));
+    CHECK_ZX_OK(crypto_encodeAccountPubkey(addressVesting, sizeof(addressVesting), internalPubkey, internalIndex,
+                                           &vaultAccount->owner, VESTING));
 
     CHECK_PARSER_OK(zxblake3_hash_init());
     CHECK_PARSER_OK(zxblake3_hash_update(template, sizeof(template)));

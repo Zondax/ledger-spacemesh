@@ -64,7 +64,8 @@ zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char
     }
 }
 
-static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, pubkey_t *keys, const uint8_t **pubkeyPtr) {
+static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, pubkey_item_t *keys,
+                            const uint8_t **pubkeyPtr) {
     if (keys == NULL || pubkeyPtr == NULL) {
         return zxerr_no_data;
     }
@@ -82,7 +83,7 @@ static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, pu
 zxerr_t multisigVesting_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "multisigVesting_getNumItems\n");
 
-    if ( addr_review_account_type != MULTISIG && addr_review_account_type != VESTING) {
+    if (addr_review_account_type != MULTISIG && addr_review_account_type != VESTING) {
         return zxerr_encoding_failed;
     }
 
@@ -165,7 +166,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
 zxerr_t vault_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "vault_getNumItems\n");
 
-    if ( addr_review_account_type != VAULT) {
+    if (addr_review_account_type != VAULT) {
         return zxerr_encoding_failed;
     }
 
