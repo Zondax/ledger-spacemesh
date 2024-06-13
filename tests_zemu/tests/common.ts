@@ -1,4 +1,3 @@
-import { PubkeyItem } from '@zondax/ledger-spacemesh/dist/types'
 import { IDeviceModel, DEFAULT_START_OPTIONS } from '@zondax/zemu'
 
 import { resolve } from 'path'

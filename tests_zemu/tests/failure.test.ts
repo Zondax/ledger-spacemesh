@@ -19,8 +19,8 @@ import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
 import { AccountType, PubkeyItem, VaultAccount } from '@zondax/ledger-spacemesh/src/types'
 import { ResponseError } from '@zondax/ledger-js'
-import { NoCheckAccount, NoCheckVaultAccount } from './testscases/NoCheckAccount'
 import { addressToBuffer } from './testscases/wallet'
+import { NoCheckAccount, NoCheckVaultAccount } from './testscases/types'
 
 jest.setTimeout(60000)
 
