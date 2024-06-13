@@ -291,6 +291,7 @@ zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen,
 
     return zxerr_ok;
 }
+
 void logAccount(account_t *account) {
     (void)account;
 #ifdef APP_TESTING
