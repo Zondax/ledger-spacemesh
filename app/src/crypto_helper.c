@@ -108,7 +108,7 @@ static zxerr_t updateScaleEncodedNumber(uint64_t num) {
 
 zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
                                    const generic_account_t *account, account_type_e account_type) {
-    if (address == NULL || internalPubkey == NULL || addressLen < MIN_TEST_ADDRESS_BUFFER_LEN) {
+    if (address == NULL || internalPubkey == NULL || addressLen < MAX_ADDRESS_LENGTH) {
         return zxerr_no_data;
     }
 
@@ -157,9 +157,8 @@ zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const 
 }
 
 zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
-                                 const vault_account_t *vaultAccount, bool mainnet) {
-    const uint8_t minAddressLen = mainnet ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
-    if (address == NULL || vaultAccount == NULL || addressLen < minAddressLen) {
+                                 const vault_account_t *vaultAccount) {
+    if (address == NULL || vaultAccount == NULL || addressLen < MAX_ADDRESS_LENGTH) {
         return zxerr_no_data;
     }
 

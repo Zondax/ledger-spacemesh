@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Spacemesh App
 
 ## General structure

@@ -22,10 +22,8 @@
 #include "zxformat.h"
 #include "zxmacros.h"
 
-#define BUFF_FIRST_ACCOUNT_INDEX 3
-#define VAULT_INFO_SIZE 24
-
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
+extern address_request_t addr_request;
 
 void logAccount(generic_account_t *account, pubkey_item_t *internalPubkey);
 
@@ -108,192 +106,111 @@ catch_cx_error:
     return error;
 }
 
-zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrResponseLen) {
-    if (bufferLen < PUB_KEY_LENGTH + MIN_TEST_ADDRESS_BUFFER_LEN) {
+zxerr_t crypto_fillAddress(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen) {
+    // Clear up first
+    MEMZERO(outBuffer, outBufferLen);
+    *addrResponseLen = 0;
+
+    if (outBufferLen < PUB_KEY_LENGTH + MAX_ADDRESS_LENGTH) {
         return zxerr_unknown;
     }
 
-    MEMZERO(buffer, bufferLen);
-
     // Get pubkey and account
-    pubkey_item_t internalPubkey = {.pubkey = {0}, .index = buffer[0]};
+    pubkey_item_t internalPubkey = {.pubkey = {0}, .index = 0};
     CHECK_ZXERR(crypto_extractPublicKey(internalPubkey.pubkey, sizeof(internalPubkey.pubkey)));
 
     // Bech32 encoding on account
-    uint8_t address[MIN_TEST_ADDRESS_BUFFER_LEN] = {0};
-
-    const char *hrp = calculate_hrp();
-
+    uint8_t address[MAX_ADDRESS_LENGTH] = {0};
     CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, NULL, WALLET));
 
-    zxerr_t err =
-        bech32EncodeFromBytes((char *)buffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32);
+    const char *hrp = calculate_hrp();
+    MEMCPY(outBuffer, internalPubkey.pubkey, PUB_KEY_LENGTH);
+    CHECK_ZXERR(bech32EncodeFromBytes((char *)outBuffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
+                                      BECH32_ENCODING_BECH32));
 
-    if (err != zxerr_ok) {
-        MEMZERO(buffer, bufferLen);
-        return zxerr_encoding_failed;
-    }
-
-    // Copy pubkey in the buffer
-    MEMCPY(buffer, internalPubkey.pubkey, PUB_KEY_LENGTH);
-    const uint8_t outAddressLen = is_mainnet() ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
-
-    *addrResponseLen = PUB_KEY_LENGTH + outAddressLen;
+    *addrResponseLen = PUB_KEY_LENGTH + strnlen((const char *)address, MAX_ADDRESS_LENGTH);
     return zxerr_ok;
 }
 
-// TODO: move parsing here and later move to another file
-// zxerr_t _readAccount(const uint8_t *buffer, uint16_t bufferLen, account_t *account, account_type_e account_type) {
-//     if (buffer == NULL) {
-//         return zxerr_invalid_crypto_settings;
-//     }
-// }
+zxerr_t crypto_fillAddressMultisigOrVesting(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen) {
+    // Clear up first in case returned error is ignored
+    MEMZERO(outBuffer, outBufferLen);
+    *addrResponseLen = 0;
 
-// TODO: move parsing here and later move to another file
-// zxerr_t _readAccountVault(const uint8_t *buffer, uint16_t bufferLen, vault_account_t *account, account_type_e
-// account_type) {
-//    if (buffer == NULL) {
-//        return zxerr_invalid_crypto_settings;
-//    }
-//}
+    if (outBuffer == NULL || addrResponseLen == NULL) {
+        return zxerr_out_of_bounds;
+    }
 
-zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen,
-                                            account_type_e account_type) {
-    if (buffer == NULL || addrResponseLen == NULL) {
+    if (outBufferLen < PUB_KEY_LENGTH + MAX_ADDRESS_LENGTH) {
+        return zxerr_buffer_too_small;
+    }
+
+    if (addr_request.account_type != MULTISIG && addr_request.account_type == VESTING) {
         return zxerr_invalid_crypto_settings;
-    }
-
-    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-    if (IO_APDU_BUFFER_SIZE < PUB_KEY_LENGTH + MIN_TEST_ADDRESS_BUFFER_LEN) {
-        return zxerr_unknown;
-    }
-
-    uint8_t pubkeysBuffSize = bufferLen - BUFF_FIRST_ACCOUNT_INDEX;
-    // Ensure the buffer size is a multiple of pubkey_item_t
-    if (pubkeysBuffSize % sizeof(pubkey_item_t) != 0) {
-        return zxerr_invalid_crypto_settings;
-    }
-
-    // [internalIndex
-    // approvers | participants [idx|pubkey]]
-    // TODO: move to _readAccountVault + validation
-    // FIXME: misaligned access throw in this CPU. Be careful with misaligned u32
-    pubkey_item_t internalPubkey = {.pubkey = {0}, .index = buffer[0]};
-    generic_account_t *account = (generic_account_t *)(buffer + 1);
-
-    // Validate the number of public keys
-    if ((pubkeysBuffSize / sizeof(pubkey_item_t)) + 1 != account->participants) {
-        return zxerr_invalid_crypto_settings;
-    }
-
-    // validate account
-    uint8_t indexAux = 0;
-    for (int i = 0; i < account->participants; i++) {
-        if (i == internalPubkey.index) {
-            continue;
-        }
-        if (i == account->keys[indexAux].index) {
-            indexAux++;
-        } else {
-            return zxerr_invalid_crypto_settings;
-        }
     }
 
     // Get internal Pubkey
+    pubkey_item_t internalPubkey = {.pubkey = {0}, .index = addr_request.internalIndex};
     CHECK_ZXERR(crypto_extractPublicKey(internalPubkey.pubkey, sizeof(internalPubkey.pubkey)));
-    logAccount(account, &internalPubkey);
 
-    uint8_t address[MIN_TEST_ADDRESS_BUFFER_LEN] = {0};
-    const char *hrp = calculate_hrp();
+    logAccount(addr_request.account, &internalPubkey);
 
-    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, account, account_type));
-
-    zxerr_t error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
-                                          BECH32_ENCODING_BECH32);
-
-    if (error != zxerr_ok) {
-        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-        return error;
-    }
+    uint8_t address[MAX_ADDRESS_LENGTH] = {0};
+    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, addr_request.account,
+                                           addr_request.account_type));
 
     // Copy internal pubkey in the buffer
-    MEMCPY(G_io_apdu_buffer, internalPubkey.pubkey, PUB_KEY_LENGTH);
+    const char *hrp = calculate_hrp();
+    MEMCPY(outBuffer, internalPubkey.pubkey, PUB_KEY_LENGTH);
+    CHECK_ZXERR(bech32EncodeFromBytes((char *)outBuffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
+                                      BECH32_ENCODING_BECH32));
 
-    const uint8_t outAddressLen = is_mainnet() ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
-    *addrResponseLen = PUB_KEY_LENGTH + outAddressLen;
+    *addrResponseLen = PUB_KEY_LENGTH + strnlen((const char *)address, MAX_ADDRESS_LENGTH);
+
     return zxerr_ok;
 }
 
-zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen) {
-    if (buffer == NULL || addrResponseLen == NULL) {
+zxerr_t crypto_fillAddressVault(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen) {
+    // Clear up first in case returned error is ignored
+    MEMZERO(outBuffer, outBufferLen);
+    *addrResponseLen = 0;
+
+    if (outBuffer == NULL || addrResponseLen == NULL) {
+        return zxerr_out_of_bounds;
+    }
+
+    if (outBufferLen < PUB_KEY_LENGTH + MAX_ADDRESS_LENGTH) {
+        return zxerr_buffer_too_small;
+    }
+
+    if (addr_request.account_type != VAULT) {
         return zxerr_invalid_crypto_settings;
-    }
-
-    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-    if (IO_APDU_BUFFER_SIZE < PUB_KEY_LENGTH + MIN_TEST_ADDRESS_BUFFER_LEN) {
-        return zxerr_unknown;
-    }
-
-    uint8_t pubkeysBuffSize = bufferLen - (BUFF_FIRST_ACCOUNT_INDEX + VAULT_INFO_SIZE);
-    // Ensure the buffer size is a multiple of pubkey_item_t s
-    if (pubkeysBuffSize % sizeof(pubkey_item_t) != 0) {
-        return zxerr_invalid_crypto_settings;
-    }
-
-    // TODO: move to _readAccountVault + validation
-    // internalIndex
-    // [totalAmount | initialUnlockAmount | vestingStart | vestingEnd
-    // account -> approvers | participants | [idx|pubkey]]
-    pubkey_item_t internalPubkey = {.pubkey = {0}, .index = buffer[0]};
-    vault_account_t *vaultAccount = (vault_account_t *)(buffer + 1);
-
-    // Validate the number of public keys
-    if ((pubkeysBuffSize / sizeof(pubkey_item_t)) + 1 != vaultAccount->owner.participants) {
-        return zxerr_invalid_crypto_settings;
-    }
-
-    // create account
-    uint8_t indexAux = 0;
-    for (int i = 0; i < vaultAccount->owner.participants; i++) {
-        if (i == internalPubkey.index) {
-            continue;
-        }
-        if (i == vaultAccount->owner.keys[indexAux].index) {
-            indexAux++;
-        } else {
-            return zxerr_invalid_crypto_settings;
-        }
     }
 
     // Get internal Pubkey
+    pubkey_item_t internalPubkey = {.pubkey = {0}, .index = addr_request.internalIndex};
     CHECK_ZXERR(crypto_extractPublicKey(internalPubkey.pubkey, sizeof(internalPubkey.pubkey)));
-    logAccount(&vaultAccount->owner, &internalPubkey);
 
-    uint8_t address[MIN_TEST_ADDRESS_BUFFER_LEN] = {0};
+    logAccount(&addr_request.vault_account->owner, &internalPubkey);
+
+    uint8_t address[MAX_ADDRESS_LENGTH] = {0};
+    CHECK_ZXERR(crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, addr_request.vault_account));
+
     const char *hrp = calculate_hrp();
-
-    CHECK_ZXERR(crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, vaultAccount, is_mainnet()));
-
-    zxerr_t error = bech32EncodeFromBytes((char *)G_io_apdu_buffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
-                                          BECH32_ENCODING_BECH32);
-    if (error != zxerr_ok) {
-        MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-        return error;
-    }
-
-    // Copy internal pubkey in the buffer
     MEMCPY(G_io_apdu_buffer, internalPubkey.pubkey, PUB_KEY_LENGTH);
+    CHECK_ZXERR(bech32EncodeFromBytes((char *)outBuffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
+                                      BECH32_ENCODING_BECH32));
 
-    const uint8_t outAddressLen = is_mainnet() ? MIN_MAIN_ADDRESS_BUFFER_LEN : MIN_TEST_ADDRESS_BUFFER_LEN;
-
-    *addrResponseLen = PUB_KEY_LENGTH + outAddressLen;
+    *addrResponseLen = PUB_KEY_LENGTH + strnlen((const char *)address, MAX_ADDRESS_LENGTH);
 
     return zxerr_ok;
 }
 
 void logAccount(generic_account_t *account, pubkey_item_t *internalPubkey) {
+#ifndef APP_TESTING
     (void)account;
-#ifdef APP_TESTING
+    (void)internalPubkey;
+#else
     if (account == NULL) {
         return;
     }

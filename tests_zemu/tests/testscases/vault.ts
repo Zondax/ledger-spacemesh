@@ -1,7 +1,7 @@
 import { PATH, PATH_TESTNET } from '../common'
 import { addressToBuffer, pubKey0, pubKey2, pubKey3 } from './wallet'
 import { NoCheckVaultAccount, TestCase } from './types'
-import {VaultAccount } from '@zondax/ledger-spacemesh/src/types'
+import { VaultAccount } from '@zondax/ledger-spacemesh/src/types'
 
 export const VAULT_TESTCASES: TestCase[] = [
   {
@@ -20,7 +20,7 @@ export const VAULT_TESTCASES: TestCase[] = [
       BigInt(1000),
       BigInt(987),
       44,
-      567
+      567,
     ),
     expected_address: 'sm1qqqqqqzj5kp6th98s68h05qee99tfxfp25almus50kyvw',
     expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
