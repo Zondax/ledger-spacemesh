@@ -15,9 +15,8 @@
  ******************************************************************************* */
 
 import Zemu from '@zondax/zemu'
-import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
+import { AccountType, PubkeyItem, SpaceMeshApp, VaultAccount } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
-import { AccountType, PubkeyItem, VaultAccount } from '@zondax/ledger-spacemesh/src/types'
 import { ResponseError } from '@zondax/ledger-js'
 import { addressToBuffer } from './testscases/wallet'
 import { NoCheckAccount, NoCheckVaultAccount } from './testscases/types'
@@ -255,15 +254,7 @@ describe('Failure scenarios', function () {
 
       for (const test of testCases100) {
         const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount = new VaultAccount(
-          owner.approvers,
-          owner.participants,
-          owner.pubkeys,
-          BigInt(1000),
-          BigInt(987),
-          567,
-          99999,
-        )
+        const vaultAccount = new VaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
 
         console.log('Testing: ', test.scenario)
         await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
@@ -340,15 +331,7 @@ describe('Failure scenarios', function () {
 
       for (const test of testCases100) {
         const owner = test.owner ? test.owner : { pubkeys: [], participants: 0, approvers: 0, id: AccountType.Vesting }
-        const vaultAccount = new VaultAccount(
-          owner.approvers,
-          owner.participants,
-          owner.pubkeys,
-          BigInt(1000),
-          BigInt(987),
-          567,
-          99999,
-        )
+        const vaultAccount = new VaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
 
         console.log('Testing: ', test.scenario)
         await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
