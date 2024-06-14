@@ -39,12 +39,13 @@ TEST(Keys, WalletAddressEncoding) {
     for (const auto &testcase : testvectorWallet) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
-        pubkey_t internalPubkey{};
+        pubkey_item_t internalPubkey{};
 
         // Read pubkey from testvectors and set up wallet account
         parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.publicKey.c_str());
 
         uint8_t address[64] = {0};
+        const uint8_t internalIndex = 0;
         crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, NULL, WALLET);
         char addressBench32[64] = {0};
         const char *hrp = isTestNet ? "stest" : "sm";
@@ -60,14 +61,14 @@ TEST(Keys, MultisigAddressEncoding) {
     for (const auto &testcase : testvectorMultisig) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
-        pubkey_t internalPubkey{};
-        account_t multisigAccount{};
+        pubkey_item_t internalPubkey{};
+        generic_account_t multisigAccount{};
 
         // Read pubkeys from testvectors and set up multisig account
-        multisigAccount.internalIndex = 0;
+        internalPubkey.index = 0;
         uint8_t indexAux = 0;
         for (auto i = 0; i < testcase.publicKeys.size(); i++) {
-            if (i == multisigAccount.internalIndex) {
+            if (i == internalPubkey.index) {
                 parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.publicKeys[i].c_str());
             } else {
                 parseHexString(multisigAccount.keys[indexAux].pubkey, PUB_KEY_LENGTH, testcase.publicKeys[i].c_str());
@@ -93,14 +94,14 @@ TEST(Keys, VestingAddressEncoding) {
     for (const auto &testcase : testvectorVesting) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
-        pubkey_t internalPubkey{};
-        account_t vestingAccount{};
+        pubkey_item_t internalPubkey{};
+        generic_account_t vestingAccount{};
 
         // Read pubkeys from testvectors and set up vesting account
-        vestingAccount.internalIndex = 0;
+        internalPubkey.index = 0;
         uint8_t indexAux = 0;
         for (auto i = 0; i < testcase.publicKeys.size(); i++) {
-            if (i == vestingAccount.internalIndex) {
+            if (i == internalPubkey.index) {
                 parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.publicKeys[i].c_str());
             } else {
                 parseHexString(vestingAccount.keys[indexAux].pubkey, PUB_KEY_LENGTH, testcase.publicKeys[i].c_str());
@@ -127,14 +128,14 @@ TEST(Keys, VaultAddressEncoding) {
     for (const auto &testcase : testvectorVault) {
         const string prefix = "stest";
         const bool isTestNet = testcase.address.substr(0, prefix.size()) == prefix;
-        pubkey_t internalPubkey{};
+        pubkey_item_t internalPubkey{};
         vault_account_t vaultAccount{};
 
         // Read pubkeys from testvectors and set up owner account in vault account
-        vaultAccount.owner.internalIndex = 0;
+        internalPubkey.index = 0;
         uint8_t indexAux = 0;
         for (auto i = 0; i < testcase.owner.publicKeys.size(); i++) {
-            if (i == vaultAccount.owner.internalIndex) {
+            if (i == internalPubkey.index) {
                 parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.owner.publicKeys[i].c_str());
             } else {
                 parseHexString(vaultAccount.owner.keys[indexAux].pubkey, 32, testcase.owner.publicKeys[i].c_str());

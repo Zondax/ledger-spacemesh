@@ -36,15 +36,6 @@ static bool tx_initialized = false;
 static bool requireConfirmation = false;
 extern account_type_e addr_review_account_type;
 
-#define CATCH_ZXERR(zxerr)                                                         \
-    if (zxerr != zxerr_ok) {                                                       \
-        const char *error_msg = parser_getZxErrorDescription(zxerr);               \
-        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer)); \
-        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);                     \
-        *tx = error_msg_length;                                                    \
-        THROW(APDU_CODE_DATA_INVALID);                                             \
-    }
-
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
 
@@ -109,11 +100,9 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
     extractHDPath(rx, OFFSET_DATA);
 
     requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
-    zxerr_t zxerr = app_fill_address();
-    if (zxerr != zxerr_ok) {
-        *tx = 0;
-        THROW(APDU_CODE_DATA_INVALID);
-    }
+
+    CATCH_ZXERR_WITH_MESSAGE(app_fill_address());
+
     if (requireConfirmation) {
         view_review_init(wallet_getItem, wallet_getNumItems, app_reply_address);
         view_review_show(REVIEW_ADDRESS);
@@ -151,16 +140,19 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_OK);
     }
 
+    addr_review_account_type = UNKNOWN;
+
     switch (account_type) {
         case MULTISIG:
+            CATCH_ZXERR_WITH_MESSAGE(app_fill_address_multisig());
+            view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
+            break;
         case VESTING:
-            CATCH_ZXERR(app_fill_address_multisig_or_vesting(account_type));
-            addr_review_account_type = account_type;
+            CATCH_ZXERR_WITH_MESSAGE(app_fill_address_vesting());
             view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
             break;
         case VAULT:
-            CATCH_ZXERR(app_fill_address_vault());
-            addr_review_account_type = account_type;
+            CATCH_ZXERR_WITH_MESSAGE(app_fill_address_vault());
             view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
             break;
         default:

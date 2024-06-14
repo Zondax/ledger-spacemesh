@@ -143,39 +143,88 @@ All other packets/chunks contain data chunks that are described below
 
 #### Command
 
-| Field   | Type     | Content                   | Expected          |
-| ------- | -------- | ------------------------- | ----------------- |
-| CLA     | byte (1) | Application Identifier    | 0x45              |
-| INS     | byte (1) | Instruction ID            | 0x03              |
-| P1      | byte (1) | Request User confirmation | No = 0            |
-| P2      | byte (1) | Parameter 2               | ignored           |
-| L       | byte (1) | Bytes in payload          | 20                |
-| Path[0] | byte (4) | Derivation Path Data      | 0x80000000 \| 44  |
-| Path[1] | byte (4) | Derivation Path Data      | 0x80000000 \| 540 |
-| Path[2] | byte (4) | Derivation Path Data      | ?                 |
-| Path[3] | byte (4) | Derivation Path Data      | ?                 |
-| Path[4] | byte (4) | Derivation Path Data      | ?                 |
-
-##### Account
-
-| Field               | Type           | Content                 | Note |
-| ------------------- | -------------- | ----------------------- | ---- |
-| APPROVERS_COUNT     | byte (1)       | Number of approvers     |      |
-| PARTICIPANTS_COUNT  | byte (1)       | Number of participants  |      |
-| ------------------- | --------       | ----------------------- | ---- |
-| INDEX               | byte (1 \* N)  | Index of the public key |      |
-| PK                  | byte (32 \* N) | Public Key              |      |
+| Field          | Type          | Content                   | Expected          |
+| -------------- | ------------- | ------------------------- | ----------------- |
+| CLA            | byte (1)      | Application Identifier    | 0x45              |
+| INS            | byte (1)      | Instruction ID            | 0x03              |
+| P1             | byte (1)      | Request User confirmation | No = 0            |
+| P2             | byte (1)      | Parameter 2               | ignored           |
+| L              | byte (1)      | Bytes in payload          | 20                |
+| Path[0]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 44  |
+| Path[1]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 540 |
+| Path[2]        | byte (4)      | Derivation Path Data      | ?                 |
+| Path[3]        | byte (4)      | Derivation Path Data      | ?                 |
+| Path[4]        | byte (4)      | Derivation Path Data      | ?                 |
+| internal_index | byte (1)      | internal index            |                   |
+| Account        | Account Vault | Account Vault             | ? bytes           |
 
 #### Response
 
 | Field   | Type      | Content     | Note                     |
 | ------- | --------- | ----------- | ------------------------ |
 | PK      | byte (32) | Public Key  |                          |
-| ADDR    | byte (??) | address     | vault address            |
+| ADDR    | byte (24) | address     | vault address            |
 | SW1-SW2 | byte (2)  | Return code | see list of return codes |
 
 ---
 
 ### INS_GET_ADDR_VESTING
 
+| Field          | Type          | Content                   | Expected          |
+| -------------- | ------------- | ------------------------- | ----------------- |
+| CLA            | byte (1)      | Application Identifier    | 0x45              |
+| INS            | byte (1)      | Instruction ID            | 0x04              |
+| P1             | byte (1)      | Request User confirmation | No = 0            |
+| P2             | byte (1)      | Parameter 2               | ignored           |
+| L              | byte (1)      | Bytes in payload          | 20                |
+| Path[0]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 44  |
+| Path[1]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 540 |
+| Path[2]        | byte (4)      | Derivation Path Data      | ?                 |
+| Path[3]        | byte (4)      | Derivation Path Data      | ?                 |
+| Path[4]        | byte (4)      | Derivation Path Data      | ?                 |
+| internal_index | byte (1)      | internal index            |                   |
+| Account        | Account Vault | Account Vault             | ? bytes           |
+
 ### INS_GET_ADDR_VAULT
+
+| Field          | Type          | Content                   | Expected          |
+| -------------- | ------------- | ------------------------- | ----------------- |
+| CLA            | byte (1)      | Application Identifier    | 0x45              |
+| INS            | byte (1)      | Instruction ID            | 0x05              |
+| P1             | byte (1)      | Request User confirmation | No = 0            |
+| P2             | byte (1)      | Parameter 2               | ignored           |
+| L              | byte (1)      | Bytes in payload          | 20                |
+| Path[0]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 44  |
+| Path[1]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 540 |
+| Path[2]        | byte (4)      | Derivation Path Data      | ?                 |
+| Path[3]        | byte (4)      | Derivation Path Data      | ?                 |
+| Path[4]        | byte (4)      | Derivation Path Data      | ?                 |
+| internal_index | byte (1)      | internal index            |                   |
+| AccountVault   | Account Vault | Account Vault             | ? bytes           |
+
+### Other structures
+
+#### PubkeyItem
+
+| Field  | Type    | Content    | Note                |
+| ------ | ------- | ---------- | ------------------- |
+| idx    | u8      | Index      | Index of the pubkey |
+| pubkey | u8 (32) | Public Key | 32-byte public key  |
+
+#### Account
+
+| Field        | Type                        | Content                | Note                  |
+| ------------ | --------------------------- | ---------------------- | --------------------- |
+| approvers    | u8 (1)                      | Number of approvers    | 1 byte                |
+| participants | u8 (1)                      | Number of participants | 1 byte                |
+| pubkey item  | PubkeyItem (participants-1) | Public key items       | Array of pubkey items |
+
+#### AccountVault
+
+| Field               | Type    | Content               | Note    |
+| ------------------- | ------- | --------------------- | ------- |
+| totalAmount         | u64     | Total amount          | 8 bytes |
+| initialUnlockAmount | u64     | Initial unlock amount | 8 bytes |
+| vestingStart        | u32     | Vesting start time    | 4 bytes |
+| vestingEnd          | u32     | Vesting end time      | 4 bytes |
+| account             | Account | owner account         | ? bytes |

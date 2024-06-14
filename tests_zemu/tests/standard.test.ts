@@ -14,16 +14,19 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { ButtonKind, zondaxMainmenuNavigation } from '@zondax/zemu'
+import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
 import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
-import { PATH, WALLET_TESTCASES, defaultOptions, models } from './common'
+import { PATH, defaultOptions, models } from './common'
 import { EdSigner, Domain } from '@zondax/ledger-spacemesh/src/types'
 
 // @ts-expect-error
 import ed25519 from 'ed25519-supercop'
-import { VAULT_TESTCASES } from './vault_testcases'
-import { MULTISIG_TESTCASES } from './multisig_testcases'
-import { VESTING_TESTCASES } from './vesting_testcases'
+
+import { VAULT_TESTCASES } from './testscases/vault'
+import { MULTISIG_TESTCASES } from './testscases/multisig'
+import { VESTING_TESTCASES } from './testscases/vesting'
+import { WALLET_TESTCASES } from './testscases/wallet'
+import { Account, VaultAccount } from '@zondax/ledger-spacemesh/dist/types'
 
 jest.setTimeout(45000)
 
@@ -98,10 +101,12 @@ describe('Standard', function () {
       const app = new SpaceMeshApp(sim.getTransport())
 
       const respRequest = app.getAddressAndPubKey(PATH, true)
+
       expect(respRequest).rejects.toMatchObject({
         returnCode: 0x6986,
         errorMessage: 'Transaction rejected',
       })
+
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
       try {
@@ -121,7 +126,7 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = app.getInfoMultisigVestingAccount(data.path, 1, account)
+        const resp = app.getAddressMultisig(data.path, 1, account as Account)
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
         await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)
@@ -145,7 +150,7 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = app.getInfoMultisigVestingAccount(data.path, 1, account)
+        const resp = app.getAddressVesting(data.path, 1, account as Account)
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
         await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vesting_${data.idx}`)
@@ -167,9 +172,9 @@ describe('Standard', function () {
       try {
         await sim.start({ ...defaultOptions, model: m.name })
         const app = new SpaceMeshApp(sim.getTransport())
-        const { vaultAccount, expected_address, expected_pk } = data
+        const { account, expected_address, expected_pk } = data
 
-        const resp = app.getInfoVaultAccount(data.path, 1, vaultAccount, false)
+        const resp = app.getAddressVault(data.path, 1, account as VaultAccount)
 
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
@@ -202,7 +207,7 @@ describe('Standard', function () {
         message: test,
       }
 
-      // do not wait here.. we need to navigate
+      // do not wait here... we need to navigate
       const signatureRequest = app.sign(PATH, singInfo)
 
       // Wait until we are not in the main menu
