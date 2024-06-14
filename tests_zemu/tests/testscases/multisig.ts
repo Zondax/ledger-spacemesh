@@ -1,4 +1,4 @@
-import { AccountType, Account } from '@zondax/ledger-spacemesh/src/types'
+import { AccountType, Account } from '@zondax/ledger-spacemesh/dist/types'
 import { addressToBuffer, pubKey0, pubKey2, pubKey3 } from './wallet'
 import { PATH, PATH_TESTNET } from '../common'
 import { NoCheckAccount, TestCase } from './types'
