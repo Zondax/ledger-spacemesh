@@ -150,14 +150,10 @@ zxerr_t crypto_fillAddressMultisigOrVesting(uint8_t *outBuffer, uint16_t outBuff
     *addrResponseLen = 0;
 
     if (outBufferLen < sizeof(apdu_address_response_t)) {
-        return zxerr_unknown;
+        return zxerr_buffer_too_small;
     }
 
     apdu_address_response_t *resp = (apdu_address_response_t *)outBuffer;
-
-    if (outBufferLen < PUB_KEY_LENGTH + MAX_ADDRESS_LENGTH) {
-        return zxerr_buffer_too_small;
-    }
 
     if (addr_request.account_type != MULTISIG && addr_request.account_type != VESTING) {
         return zxerr_invalid_crypto_settings;
