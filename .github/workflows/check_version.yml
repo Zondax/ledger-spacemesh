@@ -7,11 +7,9 @@ on:
       - main
       - develop
       - master # for safety reasons
-      - dev  # for safety reasons
 
 jobs:
   configure:
-    if: ${{ !(github.repository_owner == 'zondax' && github.ref == 'refs/heads/dev') }}
     runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     outputs:
       uid_gid: ${{ steps.get-user.outputs.uid_gid }}
@@ -20,7 +18,6 @@ jobs:
         run: echo "uid_gid=$(id -u):$(id -g)" >> $GITHUB_OUTPUT
 
   get_version:
-    if: ${{ !(github.repository_owner == 'zondax' && github.ref == 'refs/heads/dev') }}
     needs: configure
     runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     container:
@@ -40,7 +37,6 @@ jobs:
         run: echo "version=$(cat ./app/app.version)" >> $GITHUB_OUTPUT
 
   check_app_version:
-    if: ${{ !(github.repository_owner == 'zondax' && github.ref == 'refs/heads/dev') }}
     needs: get_version
     runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     steps:
