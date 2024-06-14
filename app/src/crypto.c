@@ -159,7 +159,7 @@ zxerr_t crypto_fillAddressMultisigOrVesting(uint8_t *outBuffer, uint16_t outBuff
         return zxerr_buffer_too_small;
     }
 
-    if (addr_request.account_type != MULTISIG && addr_request.account_type == VESTING) {
+    if (addr_request.account_type != MULTISIG && addr_request.account_type != VESTING) {
         return zxerr_invalid_crypto_settings;
     }
 
