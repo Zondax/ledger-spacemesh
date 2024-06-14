@@ -1,48 +1,58 @@
 {
-  "name": "@zondax/ledger-template",
-  "author": "Zondax AG",
-  "license": "Apache-2.0",
+  "name": "@zondax/ledger-spacemesh",
   "version": "0.0.1",
-  "description": "Node API for the Template App (Ledger Nano S/X/S+)",
-  "main": "./dist/index.js",
-  "typings": "./dist/index.d.ts",
-  "types": "./dist/index.d.ts",
-  "homepage": "https://github.com/zondax/ledger-template",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zondax/ledger-template.git"
-  },
+  "description": "Node API for the Spacemesh App (Ledger Nano S/X/S+)",
   "keywords": [
     "Zondax",
     "Ledger",
+    "Typescript",
     "Javascript",
-    "Template"
+    "Spacemesh"
+  ],
+  "homepage": "https://github.com/zondax/ledger-spacemesh",
+  "bugs": {
+    "url": "https://github.com/zondax/ledger-spacemesh/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zondax/ledger-spacemesh.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Zondax AG",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
+  "files": [
+    "dist/**"
   ],
   "scripts": {
-    "build": "tsc"
-  },
-  "bugs": {
-    "url": "https://github.com/zondax/ledger-template/issues"
+    "build": "tsc",
+    "format": "FORCE_COLOR=1 prettier --write . && sort-package-json",
+    "format:check": "FORCE_COLOR=1 prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "test": "yarn build && jest",
+    "upgrade": "bunx npm-check-updates -i"
   },
   "dependencies": {
-    "@zondax/ledger-js": "^0.9.1"
+    "@zondax/ledger-js": "^0.10.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.17",
-    "@typescript-eslint/eslint-plugin": "^7.0.1",
-    "@typescript-eslint/parser": "^7.0.1",
+    "@ledgerhq/hw-transport-mocker": "^6.28.6",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
+    "@types/jest": "29.5.12",
+    "@types/node": "^20.12.13",
+    "@typescript-eslint/eslint-plugin": "^7.11.0",
+    "@typescript-eslint/parser": "^7.11.0",
     "eslint": "^9.3.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-config-standard-with-typescript": "^43.0.1",
     "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-n": "^17.7.0",
-    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-tsdoc": "^0.3.0",
+    "eslint-plugin-unused-imports": "^4.0.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.3.3"
+    "ts-jest": "^29.1.4",
+    "typescript": "^5.4.5"
   },
-  "files": [
-    "dist/**/*"
-  ],
   "publishConfig": {
     "access": "public"
   }

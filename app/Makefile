@@ -29,7 +29,7 @@ include $(BOLOS_SDK)/Makefile.defines
 # Set the default value for PRODUCTION_BUILD to 0 if not already defined
 PRODUCTION_BUILD ?= 0
 
-$(info ************ TARGET_NAME  = [$(TARGET_NAME)])
+$(info ************ SPACEMESH_NAME  = [$(TARGET_NAME)])
 
 # Display whether this is a production build or for internal use
 ifeq ($(PRODUCTION_BUILD), 1)
@@ -43,25 +43,18 @@ DEFINES += PRODUCTION_BUILD=$(PRODUCTION_BUILD)
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.app_testing
 
-# #{TODO} --> Need for an special mode?
-# DEFINES += REVIEW_SCREEN_ENABLED APP_BLIND_MODE_ENABLED
-
 ifndef COIN
-COIN=TODO
+COIN=SMESH
 endif
 
 include $(CURDIR)/Makefile.version
 
 $(info COIN  = [$(COIN)])
 
-ifeq ($(COIN),TODO)
+ifeq ($(COIN),SMESH)
 # Main app configuration
-# DEFINES += APP_STANDARD
-ifneq ($(TARGET_NAME),TARGET_NANOS)
-# DEFINES += SUBSTRATE_PARSER_FULL
-endif
-APPNAME = "Template"
-APPPATH = "44'/283'"
+APPNAME = "SpaceMesh"
+APPPATH = "44'/540'"
 
 else
 define error_message
@@ -83,14 +76,14 @@ ifndef ICONNAME
 $(error ICONNAME is not set)
 endif
 
+DEFINES += BLAKE3_NO_SSE2 BLAKE3_NO_SSE41 BLAKE3_NO_AVX2 BLAKE3_NO_AVX512 BLAKE3_USE_NEON=0
+BLAKE3_DIR := $(CURDIR)/../deps/BLAKE3-c
+INCLUDES_PATH += $(BLAKE3_DIR)
+APP_SOURCE_FILES += $(BLAKE3_DIR)/blake3.c $(BLAKE3_DIR)/blake3_dispatch.c $(BLAKE3_DIR)/blake3_portable.c
+
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
 CFLAGS += -Wvla
-# #{TODO} --> Need Rust?
-# LDFLAGS += -z muldefs
-# LDLIBS += -Lrust/target/thumbv6m-none-eabi/release -lrslib
-# APP_SOURCE_PATH += $(CURDIR)/rust/include
 
-# #{TODO} --> Need Rust?
 .PHONY: rust
 rust:
 	@echo "No rust code"
@@ -104,19 +97,6 @@ rust_clean:
 
 clean: rust_clean
 
-# .PHONY: rust
-# rust:
-# 	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo build --target thumbv6m-none-eabi --release
-
-# # Before linking, we need to be sure rust lib is there
-# bin/app.elf: rust
-
-# .PHONY: rust_clean
-# rust_clean:
-# 	cd rust && CARGO_HOME="$(CURDIR)/rust/.cargo" cargo clean
-
-# clean: rust_clean
-
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.side_loading
 
 # Import generic rules from the SDK
@@ -126,7 +106,7 @@ include $(BOLOS_SDK)/Makefile.rules
 dep/%.d: %.c Makefile
 
 listvariants:
-	@echo VARIANTS COIN template
+	@echo VARIANTS COIN SMESH
 
 .PHONY: version
 version:

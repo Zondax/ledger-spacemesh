@@ -19,12 +19,12 @@
 extern "C" {
 #endif
 
-// #{TODO} ---> Replace CLA, Token symbol, HDPATH, etc etc
-#define CLA 0x80
+#define CLA 0x45
 
 #define HDPATH_LEN_DEFAULT 5
 #define HDPATH_0_DEFAULT (0x80000000u | 0x2c)   // 44
-#define HDPATH_1_DEFAULT (0x80000000u | 0x11b)  // 283
+#define HDPATH_1_DEFAULT (0x80000000u | 0x21c)  // 540
+#define HDPATH_1_TESTNET (0x80000000u | 0x01)   // 1
 
 #define HDPATH_2_DEFAULT (0x80000000u | 0u)
 #define HDPATH_3_DEFAULT (0u)
@@ -38,19 +38,24 @@ extern "C" {
 
 #define ED25519_SIGNATURE_SIZE 64u
 
-#define PK_LEN_25519 32u
+#define PUB_KEY_LENGTH 32u
 #define SS58_ADDRESS_MAX_LEN 60u
 
 #define MAX_SIGN_SIZE 256u
 #define BLAKE2B_DIGEST_SIZE 32u
 
-#define COIN_AMOUNT_DECIMAL_PLACES 6
-#define COIN_TICKER "TODO "
+// Instructions
+#define INS_GET_ADDR_MULTISIG 0x03
+#define INS_GET_ADDR_VESTING 0x04
+#define INS_GET_ADDR_VAULT 0x05
 
-#define MENU_MAIN_APP_LINE1 "Template"
+// TODO: CHECK decimals
+#define COIN_AMOUNT_DECIMAL_PLACES 6
+#define COIN_TICKER "SMESH "
+
+#define MENU_MAIN_APP_LINE1 "SpaceMesh"
 #define MENU_MAIN_APP_LINE2 "Ready"
-#define MENU_MAIN_APP_LINE2_SECRET "???"
-#define APPVERSION_LINE1 "Template"
+#define APPVERSION_LINE1 "SpaceMesh"
 #define APPVERSION_LINE2 "v" APPVERSION
 
 #ifdef __cplusplus

@@ -15,16 +15,20 @@
  ******************************************************************************* */
 
 import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
-import { TemplateApp } from '@zondax/ledger-template'
-import { PATH, defaultOptions, models, txBlobExample } from './common'
+import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
+import { PATH, defaultOptions, models } from './common'
+import { EdSigner, Domain } from '@zondax/ledger-spacemesh/src/types'
 
 // @ts-expect-error
 import ed25519 from 'ed25519-supercop'
 
-jest.setTimeout(60000)
+import { VAULT_TESTCASES } from './testscases/vault'
+import { MULTISIG_TESTCASES } from './testscases/multisig'
+import { VESTING_TESTCASES } from './testscases/vesting'
+import { WALLET_TESTCASES } from './testscases/wallet'
+import { Account, VaultAccount } from '@zondax/ledger-spacemesh/dist/types'
 
-const expected_address = 'BX63ZW4O5PWWFDH3J33QEB5YN7IN5XOKPDUQ5DCZ232EDY4DWN3XKUQRCA'
-const expected_pk = '0dfdbcdb8eebed628cfb4ef70207b86fd0deddca78e90e8c59d6f441e383b377'
+jest.setTimeout(45000)
 
 describe('Standard', function () {
   test.concurrent.each(models)('can start and stop container', async function (m) {
@@ -51,7 +55,7 @@ describe('Standard', function () {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
-      const app = new TemplateApp(sim.getTransport())
+      const app = new SpaceMeshApp(sim.getTransport())
       try {
         const resp = await app.getVersion()
         console.log(resp)
@@ -61,142 +65,164 @@ describe('Standard', function () {
         expect(resp).toHaveProperty('minor')
         expect(resp).toHaveProperty('patch')
       } catch {
-        console.log("getVersion error")
+        console.log('getVersion error')
       }
     } finally {
       await sim.close()
     }
   })
 
-  test.concurrent.each(models)('get address', async function (m) {
+  describe.each(WALLET_TESTCASES)('Wallet addresses', function (data) {
+    test.concurrent.each(models)(`Wallet path: ${data.path}`, async function (m) {
+      const sim = new Zemu(m.path)
+      try {
+        await sim.start({ ...defaultOptions, model: m.name })
+        const app = new SpaceMeshApp(sim.getTransport())
+
+        const resp = await app.getAddressAndPubKey(data.path)
+        console.log(resp)
+
+        expect(resp.pubkey.toString('hex')).toEqual(data.expectedPk)
+        expect(resp.address).toEqual(data.expectedAddress)
+      } finally {
+        await sim.close()
+      }
+    })
+  })
+
+  test.concurrent.each(models)('show address - reject', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({
+        ...defaultOptions,
+        model: m.name,
+        rejectKeyword: m.name === 'stax' ? 'QR' : '',
+      })
+      const app = new SpaceMeshApp(sim.getTransport())
+
+      const respRequest = app.getAddressAndPubKey(PATH, true)
+
+      expect(respRequest).rejects.toMatchObject({
+        returnCode: 0x6986,
+        errorMessage: 'Transaction rejected',
+      })
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      try {
+        await sim.compareSnapshotsAndReject('.', `${m.prefix.toLowerCase()}-show_address_reject`)
+      } finally {
+      }
+    } finally {
+      await sim.close()
+    }
+  })
+
+  describe.each(MULTISIG_TESTCASES)('Multisig addresses', function (data) {
+    test.concurrent.each(models)(`Multisig test: ${data.idx}`, async function (m) {
+      const sim = new Zemu(m.path)
+      try {
+        await sim.start({ ...defaultOptions, model: m.name })
+        const app = new SpaceMeshApp(sim.getTransport())
+        const { account, expected_address, expected_pk } = data
+
+        const resp = app.getAddressMultisig(data.path, 1, account as Account)
+        // Wait until we are not in the main menu
+        await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)
+
+        const multisigResponse = await resp
+        console.log(multisigResponse)
+
+        expect(multisigResponse.pubkey.toString('hex')).toEqual(expected_pk)
+        expect(multisigResponse.address).toEqual(expected_address)
+      } finally {
+        await sim.close()
+      }
+    })
+  })
+
+  describe.each(VESTING_TESTCASES)('Vesting addresses', function (data) {
+    test.concurrent.each(models)(`Vesting test: ${data.idx}`, async function (m) {
+      const sim = new Zemu(m.path)
+      try {
+        await sim.start({ ...defaultOptions, model: m.name })
+        const app = new SpaceMeshApp(sim.getTransport())
+        const { account, expected_address, expected_pk } = data
+
+        const resp = app.getAddressVesting(data.path, 1, account as Account)
+        // Wait until we are not in the main menu
+        await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vesting_${data.idx}`)
+
+        const vestingResponse = await resp
+        console.log(vestingResponse)
+
+        expect(vestingResponse.pubkey.toString('hex')).toEqual(expected_pk)
+        expect(vestingResponse.address).toEqual(expected_address)
+      } finally {
+        await sim.close()
+      }
+    })
+  })
+
+  describe.each(VAULT_TESTCASES)('Vault addresses', function (data) {
+    test.concurrent.each(models)(`Vault test: ${data.idx}`, async function (m) {
+      const sim = new Zemu(m.path)
+      try {
+        await sim.start({ ...defaultOptions, model: m.name })
+        const app = new SpaceMeshApp(sim.getTransport())
+        const { account, expected_address, expected_pk } = data
+
+        const resp = app.getAddressVault(data.path, 1, account as VaultAccount)
+
+        // Wait until we are not in the main menu
+        await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+        await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vault_${data.idx}`)
+
+        const vaultResponse = await resp
+        console.log(vaultResponse)
+
+        expect(vaultResponse.pubkey.toString('hex')).toEqual(expected_pk)
+        expect(vaultResponse.address).toEqual(expected_address)
+      } finally {
+        await sim.close()
+      }
+    })
+  })
+
+  test.concurrent.each(models)('sign blind', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
-      const app = new TemplateApp(sim.getTransport())
+      const app = new SpaceMeshApp(sim.getTransport())
 
-      try {
-        const resp = await app.getAddressAndPubKey(PATH, false)
+      const responseAddr = await app.getAddressAndPubKey(PATH)
+      const pubKey = responseAddr.pubkey
 
-        console.log(resp)
-        // expect(resp.pubkey).toEqual(expected_pk)
-        // expect(resp.address).toEqual(expected_address)
-      } catch {
-        console.log("getAddress error")
+      const test = Buffer.from('This is a dummy message that will be signed by Spacemesh app')
+      let singInfo: EdSigner = {
+        prefix: Buffer.from('test'),
+        domain: Domain.HARE,
+        message: test,
       }
 
+      // do not wait here... we need to navigate
+      const signatureRequest = app.sign(PATH, singInfo)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_blind`)
+
+      const signatureResponse = await signatureRequest
+      console.log(signatureResponse)
+
+      // Now verify the signature
+      const payload = Buffer.concat([singInfo.prefix, Buffer.from([singInfo.domain]), singInfo.message])
+      const valid = ed25519.verify(signatureResponse.signature, payload, pubKey)
+      expect(valid).toEqual(true)
     } finally {
       await sim.close()
     }
   })
-
-  // test.concurrent.each(models)('show address', async function (m) {
-  //   const sim = new Zemu(m.path)
-  //   try {
-  //     await sim.start({...defaultOptions, model: m.name,
-  //                      approveKeyword: m.name === 'stax' ? 'QR' : '',
-  //                      approveAction: ButtonKind.ApproveTapButton,})
-  //     const app = new TemplateApp(sim.getTransport())
-
-  //     const respRequest = app.getAddressAndPubKey(accountId, true)
-  //     // Wait until we are not in the main menu
-  //     await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-  //     await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-show_address`)
-
-  //     const resp = await respRequest
-  //     console.log(resp)
-
-  //     expect(resp.return_code).toEqual(0x9000)
-  //     expect(resp.error_message).toEqual('No errors')
-  //   } finally {
-  //     await sim.close()
-  //   }
-  // })
-
-  // test.concurrent.each(models)('show address - reject', async function (m) {
-  //   const sim = new Zemu(m.path)
-  //   try {
-  //     await sim.start({...defaultOptions, model: m.name,
-  //                      rejectKeyword: m.name === 'stax' ? 'QR' : ''})
-  //     const app = new TemplateApp(sim.getTransport())
-
-  //     const respRequest = app.getAddressAndPubKey(accountId, true)
-  //     // Wait until we are not in the main menu
-  //     await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-
-  //     await sim.compareSnapshotsAndReject('.', `${m.prefix.toLowerCase()}-show_address_reject`, 'REJECT')
-
-  //     const resp = await respRequest
-  //     console.log(resp)
-
-  //     expect(resp.return_code).toEqual(0x6986)
-  //     expect(resp.error_message).toEqual('Transaction rejected')
-  //   } finally {
-  //     await sim.close()
-  //   }
-  // })
-
-  // #{TODO} --> Add Zemu tests for different transactions. Include expert mode if needed
-  // test.concurrent.each(models)('sign tx0 normal', async function (m) {
-  //   const sim = new Zemu(m.path)
-  //   try {
-  //     await sim.start({ ...defaultOptions, model: m.name })
-  //     const app = new TemplateApp(sim.getTransport())
-
-  //     const txBlob = Buffer.from(txBlobExample)
-  //     const responseAddr = await app.getAddressAndPubKey(accountId)
-  //     const pubKey = responseAddr.publicKey
-
-  //     // do not wait here.. we need to navigate
-  //     const signatureRequest = app.sign(accountId, txBlob)
-
-  //     // Wait until we are not in the main menu
-  //     await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-  //     await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_asset_freeze`,50000)
-
-  //     const signatureResponse = await signatureRequest
-  //     console.log(signatureResponse)
-
-  //     expect(signatureResponse.return_code).toEqual(0x9000)
-  //     expect(signatureResponse.error_message).toEqual('No errors')
-
-  //     // Now verify the signature
-  //     const prehash = Buffer.concat([Buffer.from('TX'), txBlob]);
-  //     const valid = ed25519.verify(signatureResponse.signature, prehash, pubKey)
-  //     expect(valid).toEqual(true)
-  //   } finally {
-  //     await sim.close()
-  //   }
-  // })
-
-  // test.concurrent.each(models)('sign tx1 normal', async function (m) {
-  //   const sim = new Zemu(m.path)
-  //   try {
-  //     await sim.start({ ...defaultOptions, model: m.name })
-  //     const app = new TemplateApp(sim.getTransport())
-
-  //     const txBlob = Buffer.from(txBlobExample)
-  //     const responseAddr = await app.getAddressAndPubKey(accountId)
-  //     const pubKey = responseAddr.publicKey
-
-  //     // do not wait here.. we need to navigate
-  //     const signatureRequest = app.sign(accountId, txBlob)
-
-  //     // Wait until we are not in the main menu
-  //     await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-  //     await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_asset_freeze`,50000)
-
-  //     const signatureResponse = await signatureRequest
-  //     console.log(signatureResponse)
-
-  //     expect(signatureResponse.return_code).toEqual(0x9000)
-  //     expect(signatureResponse.error_message).toEqual('No errors')
-
-  //     // Now verify the signature
-  //     const prehash = Buffer.concat([Buffer.from('TX'), txBlob]);
-  //     const valid = ed25519.verify(signatureResponse.signature, prehash, pubKey)
-  //     expect(valid).toEqual(true)
-  //   } finally {
-  //     await sim.close()
-  //   }
-  // })
 })
