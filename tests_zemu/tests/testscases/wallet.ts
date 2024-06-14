@@ -1,4 +1,4 @@
-import { PubkeyItem } from '@zondax/ledger-spacemesh/dist/types'
+import { PubkeyItem } from '@zondax/ledger-spacemesh'
 import { PATH, PATH_TESTNET } from '../common'
 
 export function addressToBuffer(stringPubKey: string, index: number): PubkeyItem {

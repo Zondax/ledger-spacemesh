@@ -15,9 +15,8 @@
  ******************************************************************************* */
 
 import Zemu from '@zondax/zemu'
-import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
+import { AccountType, PubkeyItem, SpaceMeshApp, VaultAccount } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
-import { AccountType, PubkeyItem, VaultAccount } from '@zondax/ledger-spacemesh/src/types'
 import { ResponseError } from '@zondax/ledger-js'
 import { addressToBuffer } from './testscases/wallet'
 import { NoCheckAccount, NoCheckVaultAccount } from './testscases/types'

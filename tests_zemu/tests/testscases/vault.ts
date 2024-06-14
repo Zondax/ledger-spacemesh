@@ -1,7 +1,7 @@
 import { PATH, PATH_TESTNET } from '../common'
 import { addressToBuffer, pubKey0, pubKey2, pubKey3 } from './wallet'
 import { TestCase } from './types'
-import { VaultAccount } from '@zondax/ledger-spacemesh/dist/types'
+import { VaultAccount } from '@zondax/ledger-spacemesh'
 
 export const VAULT_TESTCASES: TestCase[] = [
   {
