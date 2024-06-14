@@ -152,7 +152,7 @@ TEST(Keys, VaultAddressEncoding) {
         vaultAccount.vestingEnd = testcase.vestingEnd;
 
         uint8_t address[64] = {0};
-        crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, &vaultAccount, !isTestNet);
+        crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, &vaultAccount);
         char addressBench32[64] = {0};
         const char *hrp = isTestNet ? "stest" : "sm";
         bech32EncodeFromBytes(addressBench32, sizeof(addressBench32), hrp, address, ADDRESS_LENGTH, 1,
