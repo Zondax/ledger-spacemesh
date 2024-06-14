@@ -1,4 +1,4 @@
-import { AccountInterface } from '@zondax/ledger-spacemesh/dist/types'
+import { Account, AccountInterface, VaultAccount } from '@zondax/ledger-spacemesh'
 
 export interface TestCase {
   idx: number
@@ -10,8 +10,6 @@ export interface TestCase {
 
   path: string
 }
-
-import { Account, VaultAccount } from '@zondax/ledger-spacemesh/dist/types'
 
 export class NoCheckAccount extends Account {
   checkSanity() {
