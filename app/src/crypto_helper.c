@@ -168,8 +168,8 @@ zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pu
 
     // first get vesting address without bench32Encode and clean encode buffer
     uint8_t addressVesting[100] = {0};
-    CHECK_ZX_OK(crypto_encodeAccountPubkey(addressVesting, sizeof(addressVesting), internalPubkey,
-                                           &vaultAccount->owner, VESTING));
+    CHECK_ZX_OK(
+        crypto_encodeAccountPubkey(addressVesting, sizeof(addressVesting), internalPubkey, &vaultAccount->owner, VESTING));
 
     CHECK_PARSER_OK(zxblake3_hash_init());
     CHECK_PARSER_OK(zxblake3_hash_update(template, sizeof(template)));
