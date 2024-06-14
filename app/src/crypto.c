@@ -108,38 +108,52 @@ catch_cx_error:
 
 zxerr_t crypto_fillAddress(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen) {
     // Clear up first
+    if (outBuffer == NULL || addrResponseLen == NULL) {
+        return zxerr_out_of_bounds;
+    }
+
     MEMZERO(outBuffer, outBufferLen);
     *addrResponseLen = 0;
 
-    if (outBufferLen < PUB_KEY_LENGTH + MAX_ADDRESS_LENGTH) {
+    if (outBufferLen < sizeof(apdu_address_response_t)) {
         return zxerr_unknown;
     }
+
+    apdu_address_response_t *resp = (apdu_address_response_t *)outBuffer;
 
     // Get pubkey and account
     pubkey_item_t internalPubkey = {.pubkey = {0}, .index = 0};
     CHECK_ZXERR(crypto_extractPublicKey(internalPubkey.pubkey, sizeof(internalPubkey.pubkey)));
+    MEMCPY(resp->pubkey, internalPubkey.pubkey, PUB_KEY_LENGTH);
 
     // Bech32 encoding on account
-    uint8_t address[MAX_ADDRESS_LENGTH] = {0};
-    CHECK_ZXERR(crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, NULL, WALLET));
+    uint8_t address_encoded[MAX_ADDRESS_LENGTH] = {0};
+    CHECK_ZXERR(crypto_encodeAccountPubkey(address_encoded, sizeof(address_encoded), &internalPubkey, NULL, WALLET));
 
     const char *hrp = calculate_hrp();
-    MEMCPY(outBuffer, internalPubkey.pubkey, PUB_KEY_LENGTH);
-    CHECK_ZXERR(bech32EncodeFromBytes((char *)outBuffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
-                                      BECH32_ENCODING_BECH32));
+    CHECK_ZXERR(
+        bech32EncodeFromBytes(resp->address_bech32, 64, hrp, address_encoded, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
 
-    *addrResponseLen = PUB_KEY_LENGTH + strnlen((const char *)address, MAX_ADDRESS_LENGTH);
+    *addrResponseLen = sizeof(resp->pubkey) + strnlen((const char *)resp->address_bech32, MAX_ADDRESS_LENGTH);
+
+    ZEMU_LOGF(50, "addr_len: %d", *addrResponseLen);
     return zxerr_ok;
 }
 
 zxerr_t crypto_fillAddressMultisigOrVesting(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen) {
+    if (outBuffer == NULL || addrResponseLen == NULL) {
+        return zxerr_out_of_bounds;
+    }
+
     // Clear up first in case returned error is ignored
     MEMZERO(outBuffer, outBufferLen);
     *addrResponseLen = 0;
 
-    if (outBuffer == NULL || addrResponseLen == NULL) {
-        return zxerr_out_of_bounds;
+    if (outBufferLen < sizeof(apdu_address_response_t)) {
+        return zxerr_unknown;
     }
+
+    apdu_address_response_t *resp = (apdu_address_response_t *)outBuffer;
 
     if (outBufferLen < PUB_KEY_LENGTH + MAX_ADDRESS_LENGTH) {
         return zxerr_buffer_too_small;
@@ -161,27 +175,28 @@ zxerr_t crypto_fillAddressMultisigOrVesting(uint8_t *outBuffer, uint16_t outBuff
 
     // Copy internal pubkey in the buffer
     const char *hrp = calculate_hrp();
-    MEMCPY(outBuffer, internalPubkey.pubkey, PUB_KEY_LENGTH);
-    CHECK_ZXERR(bech32EncodeFromBytes((char *)outBuffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
-                                      BECH32_ENCODING_BECH32));
+    MEMCPY(resp->pubkey, internalPubkey.pubkey, PUB_KEY_LENGTH);
+    CHECK_ZXERR(bech32EncodeFromBytes(resp->address_bech32, 64, hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
 
-    *addrResponseLen = PUB_KEY_LENGTH + strnlen((const char *)address, MAX_ADDRESS_LENGTH);
+    *addrResponseLen = PUB_KEY_LENGTH + strnlen(resp->address_bech32, sizeof(resp->address_bech32));
 
     return zxerr_ok;
 }
 
 zxerr_t crypto_fillAddressVault(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen) {
-    // Clear up first in case returned error is ignored
-    MEMZERO(outBuffer, outBufferLen);
-    *addrResponseLen = 0;
-
     if (outBuffer == NULL || addrResponseLen == NULL) {
         return zxerr_out_of_bounds;
     }
 
-    if (outBufferLen < PUB_KEY_LENGTH + MAX_ADDRESS_LENGTH) {
-        return zxerr_buffer_too_small;
+    // Clear up first in case returned error is ignored
+    MEMZERO(outBuffer, outBufferLen);
+    *addrResponseLen = 0;
+
+    if (outBufferLen < sizeof(apdu_address_response_t)) {
+        return zxerr_unknown;
     }
+
+    apdu_address_response_t *resp = (apdu_address_response_t *)outBuffer;
 
     if (addr_request.account_type != VAULT) {
         return zxerr_invalid_crypto_settings;
@@ -197,11 +212,10 @@ zxerr_t crypto_fillAddressVault(uint8_t *outBuffer, uint16_t outBufferLen, uint1
     CHECK_ZXERR(crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, addr_request.vault_account));
 
     const char *hrp = calculate_hrp();
-    MEMCPY(G_io_apdu_buffer, internalPubkey.pubkey, PUB_KEY_LENGTH);
-    CHECK_ZXERR(bech32EncodeFromBytes((char *)outBuffer + PUB_KEY_LENGTH, 64, hrp, address, ADDRESS_LENGTH, 1,
-                                      BECH32_ENCODING_BECH32));
+    MEMCPY(resp->pubkey, internalPubkey.pubkey, PUB_KEY_LENGTH);
+    CHECK_ZXERR(bech32EncodeFromBytes(resp->address_bech32, 64, hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
 
-    *addrResponseLen = PUB_KEY_LENGTH + strnlen((const char *)address, MAX_ADDRESS_LENGTH);
+    *addrResponseLen = PUB_KEY_LENGTH + strnlen(resp->address_bech32, sizeof(resp->address_bech32));
 
     return zxerr_ok;
 }
