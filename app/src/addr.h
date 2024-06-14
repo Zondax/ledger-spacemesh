@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+#include "crypto_helper.h"
+
+zxerr_t readAddressRequest(account_type_e account_type);
+
 zxerr_t wallet_getNumItems(uint8_t *num_items);
 zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outValue, uint16_t outValueLen,
                        uint8_t pageIdx, uint8_t *pageCount);

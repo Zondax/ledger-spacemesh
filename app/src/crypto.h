@@ -24,15 +24,14 @@ extern "C" {
 #include <stdbool.h>
 
 #include "coin.h"
+#include "crypto_helper.h"
 #include "zxerror.h"
 
 extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
-zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrResponseLen);
-
-zxerr_t crypto_fillAddressMultisigOrVesting(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen,
-                                            uint8_t accountId);
-zxerr_t crypto_fillAddressVault(const uint8_t *buffer, const uint16_t bufferLen, uint16_t *addrResponseLen);
+zxerr_t crypto_fillAddress(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen);
+zxerr_t crypto_fillAddressMultisigOrVesting(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen);
+zxerr_t crypto_fillAddressVault(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen);
 
 zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
 

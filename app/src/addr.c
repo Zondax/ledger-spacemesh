@@ -29,7 +29,87 @@
 #include "zxformat.h"
 #include "zxmacros.h"
 
-account_type_e addr_review_account_type = 0;
+address_request_t addr_request = {0};
+
+#define BUFF_FIRST_ACCOUNT_INDEX 3
+#define VAULT_INFO_SIZE 24  // TODO: avoid hardcoding sizes
+
+zxerr_t readAddressRequest(account_type_e account_type) {
+    addr_request.account_type = UNKNOWN;
+
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
+
+    switch (account_type) {
+        case MULTISIG:
+        case VESTING: {
+            addr_request.internalIndex = message[0];
+
+            // TODO: misaligned access throw in this CPU. Be careful with misaligned u32
+            addr_request.account = (generic_account_t *)(message + 1);
+
+            uint8_t pubkeysBuffSize = messageLength - BUFF_FIRST_ACCOUNT_INDEX;
+            // Ensure the buffer size is a multiple of pubkey_item_t
+            if (pubkeysBuffSize % sizeof(pubkey_item_t) != 0) {
+                return zxerr_invalid_crypto_settings;
+            }
+
+            // Validate the number of public keys
+            if ((pubkeysBuffSize / sizeof(pubkey_item_t)) + 1 != addr_request.account->participants) {
+                return zxerr_invalid_crypto_settings;
+            }
+
+            // validate account
+            uint8_t indexAux = 0;
+            for (int i = 0; i < addr_request.account->participants; i++) {
+                if (i == addr_request.internalIndex) {
+                    continue;
+                }
+                if (i == addr_request.account->keys[indexAux].index) {
+                    indexAux++;
+                } else {
+                    return zxerr_invalid_crypto_settings;
+                }
+            }
+            break;
+        }
+        case VAULT: {
+            addr_request.internalIndex = message[0];
+            addr_request.vault_account = (vault_account_t *)(message + 1);
+
+            uint8_t pubkeysBuffSize = messageLength - (BUFF_FIRST_ACCOUNT_INDEX + VAULT_INFO_SIZE);
+            // Ensure the buffer size is a multiple of pubkey_item_t s
+            if (pubkeysBuffSize % sizeof(pubkey_item_t) != 0) {
+                return zxerr_invalid_crypto_settings;
+            }
+
+            // Validate the number of public keys
+            if ((pubkeysBuffSize / sizeof(pubkey_item_t)) + 1 != addr_request.vault_account->owner.participants) {
+                return zxerr_invalid_crypto_settings;
+            }
+
+            // create account
+            uint8_t indexAux = 0;
+            for (int i = 0; i < addr_request.vault_account->owner.participants; i++) {
+                if (i == addr_request.internalIndex) {
+                    continue;
+                }
+                if (i == addr_request.vault_account->owner.keys[indexAux].index) {
+                    indexAux++;
+                } else {
+                    return zxerr_invalid_crypto_settings;
+                }
+            }
+            break;
+        }
+        default:
+            return zxerr_encoding_failed;
+    }
+
+    // Only where everything is fine, mark the account type
+    addr_request.account_type = account_type;
+    return zxerr_ok;
+}
 
 zxerr_t wallet_getNumItems(uint8_t *num_items) {
     zemu_log_stack("addr_getNumItems");
@@ -83,7 +163,7 @@ static zxerr_t getPublicKey(const uint8_t index, const uint8_t internalIndex, pu
 zxerr_t multisigVesting_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "multisigVesting_getNumItems\n");
 
-    if (addr_review_account_type != MULTISIG && addr_review_account_type != VESTING) {
+    if (addr_request.account_type != MULTISIG && addr_request.account_type != VESTING) {
         return zxerr_encoding_failed;
     }
 
@@ -106,7 +186,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
         return zxerr_no_data;
     }
 
-    if (addr_review_account_type != MULTISIG && addr_review_account_type != VESTING) {
+    if (addr_request.account_type != MULTISIG && addr_request.account_type != VESTING) {
         return zxerr_invalid_crypto_settings;
     }
 
@@ -118,7 +198,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
     *pageCount = 1;
     switch ((uint8_t)displayIdx) {
         case 0:
-            if (addr_review_account_type == MULTISIG) {
+            if (addr_request.account_type == MULTISIG) {
                 snprintf(outKey, outKeyLen, "Multisig");
             } else {
                 snprintf(outKey, outKeyLen, "Vesting");
@@ -145,7 +225,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
             return zxerr_ok;
 
         case 255:
-            if (addr_review_account_type == MULTISIG) {
+            if (addr_request.account_type == MULTISIG) {
                 snprintf(outVal, outKeyLen, "Review Multisig address");
             } else {
                 snprintf(outVal, outKeyLen, "Review Vesting address");
@@ -168,7 +248,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
 zxerr_t vault_getNumItems(uint8_t *num_items) {
     ZEMU_LOGF(50, "vault_getNumItems\n");
 
-    if (addr_review_account_type != VAULT) {
+    if (addr_request.account_type != VAULT) {
         return zxerr_encoding_failed;
     }
 
