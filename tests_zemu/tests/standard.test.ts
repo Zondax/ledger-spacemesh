@@ -17,16 +17,14 @@
 import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
 import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
-import { EdSigner, Domain } from '@zondax/ledger-spacemesh/src/types'
-
-// @ts-expect-error
-import ed25519 from 'ed25519-supercop'
 
 import { VAULT_TESTCASES } from './testscases/vault'
 import { MULTISIG_TESTCASES } from './testscases/multisig'
 import { VESTING_TESTCASES } from './testscases/vesting'
 import { WALLET_TESTCASES } from './testscases/wallet'
-import { Account, VaultAccount } from '@zondax/ledger-spacemesh/dist/types'
+import { Account, EdSigner, Domain, VaultAccount } from '@zondax/ledger-spacemesh/dist/types'
+
+import { ed25519 } from '@noble/curves/ed25519'
 
 jest.setTimeout(45000)
 
