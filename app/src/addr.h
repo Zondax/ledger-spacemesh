@@ -25,6 +25,7 @@ extern "C" {
 
 #include "crypto_helper.h"
 
+zxerr_t clearAddressRequest();
 zxerr_t readAddressRequest(account_type_e account_type);
 
 zxerr_t wallet_getNumItems(uint8_t *num_items);
