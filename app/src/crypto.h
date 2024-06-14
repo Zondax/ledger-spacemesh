@@ -29,6 +29,11 @@ extern "C" {
 
 extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
+typedef struct {
+    uint8_t pubkey[PUB_KEY_LENGTH];
+    char address_bech32[MAX_ADDRESS_LENGTH];
+} apdu_address_response_t;
+
 zxerr_t crypto_fillAddress(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen);
 zxerr_t crypto_fillAddressMultisigOrVesting(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen);
 zxerr_t crypto_fillAddressVault(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *addrResponseLen);

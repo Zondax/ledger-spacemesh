@@ -197,7 +197,12 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
 }
 
 #if defined(APP_TESTING)
-void handleTest(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) { THROW(APDU_CODE_OK); }
+void handleTest(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    (void)flags;
+    (void)tx;
+    (void)rx;
+    THROW(APDU_CODE_OK);
+}
 #endif
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
