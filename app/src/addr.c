@@ -34,8 +34,15 @@ address_request_t addr_request = {0};
 #define BUFF_FIRST_ACCOUNT_INDEX 3
 #define VAULT_INFO_SIZE 24  // TODO: avoid hardcoding sizes
 
-zxerr_t readAddressRequest(account_type_e account_type) {
+zxerr_t clearAddressRequest() {
     addr_request.account_type = UNKNOWN;
+    return zxerr_ok;
+}
+
+zxerr_t readAddressRequest(account_type_e account_type) {
+    if (addr_request.account_type != UNKNOWN || account_type == UNKNOWN) {
+        return zxerr_unknown;
+    }
 
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();

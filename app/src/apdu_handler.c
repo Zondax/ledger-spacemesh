@@ -140,21 +140,19 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_OK);
     }
 
-    addr_request.account_type = UNKNOWN;
+    clearAddressRequest();
+    CATCH_ZXERR_WITH_MESSAGE(readAddressRequest(account_type));
 
     switch (account_type) {
         case MULTISIG:
-            CATCH_ZXERR_WITH_MESSAGE(readAddressRequest(MULTISIG));
             CATCH_ZXERR_WITH_MESSAGE(app_fill_address_multisig());
             view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
             break;
         case VESTING:
-            CATCH_ZXERR_WITH_MESSAGE(readAddressRequest(VESTING));
             CATCH_ZXERR_WITH_MESSAGE(app_fill_address_vesting());
             view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
             break;
         case VAULT:
-            CATCH_ZXERR_WITH_MESSAGE(readAddressRequest(VAULT));
             CATCH_ZXERR_WITH_MESSAGE(app_fill_address_vault());
             view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
             break;
