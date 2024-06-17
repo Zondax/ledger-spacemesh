@@ -27,7 +27,7 @@
 #include "zxformat.h"
 
 extern uint16_t action_addrResponseLen;
-extern account_type_e addr_review_account_type;
+extern address_request_t addr_request;
 
 __Z_INLINE zxerr_t app_fill_address() {
     // Put data directly in the apdu buffer
@@ -45,42 +45,31 @@ __Z_INLINE zxerr_t app_fill_address() {
 
 __Z_INLINE zxerr_t app_fill_address_multisig() {
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-    addr_review_account_type = UNKNOWN;
-
-    const uint8_t *message = tx_get_buffer();
-    const uint16_t messageLength = tx_get_buffer_length();
-
     action_addrResponseLen = 0;
 
-    CHECK_ZXERR(crypto_fillAddressMultisigOrVesting(message, messageLength, &action_addrResponseLen, MULTISIG));
+    CHECK_ZXERR(crypto_fillAddressMultisigOrVesting(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE, &action_addrResponseLen));
 
-    addr_review_account_type = MULTISIG;
+    addr_request.account_type = MULTISIG;
     return zxerr_ok;
 }
 
 __Z_INLINE zxerr_t app_fill_address_vesting() {
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-    const uint8_t *message = tx_get_buffer();
-    const uint16_t messageLength = tx_get_buffer_length();
-
     action_addrResponseLen = 0;
-    CHECK_ZXERR(crypto_fillAddressMultisigOrVesting(message, messageLength, &action_addrResponseLen, VESTING));
 
-    addr_review_account_type = VESTING;
+    CHECK_ZXERR(crypto_fillAddressMultisigOrVesting(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE, &action_addrResponseLen));
+
+    addr_request.account_type = VESTING;
     return zxerr_ok;
 }
 
 __Z_INLINE zxerr_t app_fill_address_vault() {
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-    addr_review_account_type = UNKNOWN;
-
-    const uint8_t *message = tx_get_buffer();
-    const uint16_t messageLength = tx_get_buffer_length();
-
     action_addrResponseLen = 0;
-    CHECK_ZXERR(crypto_fillAddressVault(message, messageLength, &action_addrResponseLen));
 
-    addr_review_account_type = VAULT;
+    CHECK_ZXERR(crypto_fillAddressVault(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE, &action_addrResponseLen));
+
+    addr_request.account_type = VAULT;
     return zxerr_ok;
 }
 

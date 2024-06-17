@@ -24,7 +24,7 @@ import { VESTING_TESTCASES } from './testscases/vesting'
 import { WALLET_TESTCASES } from './testscases/wallet'
 
 import { ed25519 } from '@noble/curves/ed25519'
-import {Account} from "@zondax/ledger-spacemesh";
+import { Account } from '@zondax/ledger-spacemesh'
 
 jest.setTimeout(45000)
 

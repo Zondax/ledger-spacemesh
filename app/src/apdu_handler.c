@@ -140,7 +140,8 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
         THROW(APDU_CODE_OK);
     }
 
-    addr_review_account_type = UNKNOWN;
+    clearAddressRequest();
+    CATCH_ZXERR_WITH_MESSAGE(readAddressRequest(account_type));
 
     switch (account_type) {
         case MULTISIG:
@@ -196,7 +197,12 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
 }
 
 #if defined(APP_TESTING)
-void handleTest(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) { THROW(APDU_CODE_OK); }
+void handleTest(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    (void)flags;
+    (void)tx;
+    (void)rx;
+    THROW(APDU_CODE_OK);
+}
 #endif
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {

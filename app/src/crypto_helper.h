@@ -25,9 +25,8 @@
 extern "C" {
 #endif
 
+#define MAX_ADDRESS_LENGTH 60
 #define ADDRESS_LENGTH 24
-#define MIN_MAIN_ADDRESS_BUFFER_LEN 48
-#define MIN_TEST_ADDRESS_BUFFER_LEN 51
 #define MAX_MULTISIG_PUB_KEY 10
 
 typedef enum {
@@ -57,10 +56,21 @@ typedef struct {
     generic_account_t owner;
 } __attribute__((packed)) vault_account_t;
 
+////////////
+
+typedef struct {
+    account_type_e account_type;
+    uint8_t internalIndex;
+    union {
+        generic_account_t *account;
+        vault_account_t *vault_account;
+    };
+} address_request_t;
+
 zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
                                    const generic_account_t *account, account_type_e id);
 zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
-                                 const vault_account_t *vaultAccount, bool mainnet);
+                                 const vault_account_t *vaultAccount);
 
 #ifdef __cplusplus
 }
