@@ -174,6 +174,7 @@ zxerr_t multisigVesting_getNumItems(uint8_t *num_items) {
         return zxerr_encoding_failed;
     }
 
+    // FIXME: do not access the buffer, take it from the struct  (addr_request)
     const uint8_t fixedFields = 3;  // Participants, Approvers, internal pubkey
     const uint8_t totalExternalPubkeys = (tx_get_buffer_length() - fixedFields) / sizeof(pubkey_item_t);
 
@@ -197,11 +198,6 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
         return zxerr_invalid_crypto_settings;
     }
 
-    // FIXME: Avoid accessing buffer directly here.. keep context
-    // [internalIndex | approvers | participants [idx|pubkey]]
-    const uint8_t internalIndex = tx_get_buffer()[0];
-    generic_account_t *account = (generic_account_t *)(tx_get_buffer() + 1);
-
     *pageCount = 1;
     switch ((uint8_t)displayIdx) {
         case 0:
@@ -223,12 +219,12 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
 
         case 2:
             snprintf(outKey, outKeyLen, "Participants");
-            snprintf(outVal, outValLen, "%d", account->participants);
+            snprintf(outVal, outValLen, "%d", addr_request.account->participants);
             return zxerr_ok;
 
         case 3:
             snprintf(outKey, outKeyLen, "Validators");
-            snprintf(outVal, outValLen, "%d", account->approvers);
+            snprintf(outVal, outValLen, "%d", addr_request.account->approvers);
             return zxerr_ok;
 
         case 255:
@@ -243,7 +239,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
             const uint8_t tmpDisplayIdx = displayIdx - 4;
             const uint8_t *pubkeyPtr = NULL;
             snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, internalIndex, account->keys, &pubkeyPtr))
+            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, addr_request.internalIndex, addr_request.account->keys, &pubkeyPtr))
             pageStringHex(outVal, outValLen, (const char *)pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
             return zxerr_ok;
         }
@@ -259,6 +255,7 @@ zxerr_t vault_getNumItems(uint8_t *num_items) {
         return zxerr_encoding_failed;
     }
 
+    // FIXME: do not access the buffer, take it from the struct  (addr_request)
     // TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
     const uint8_t fixedFields = 7;
     const uint8_t fixedFieldsBytes = 8 + 8 + 4 + 4 + 3;
@@ -279,16 +276,11 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
     }
     *pageCount = 1;
 
-    // [internalIndex | initialUnlockAmount | vestingStart | vestingEnd
-    // | approvers | participants [idx|pubkey] ]
-    const uint8_t internalIndex = tx_get_buffer()[0];
-    vault_account_t *vault = (vault_account_t *)(tx_get_buffer() + 1);
-
     char tmpBuffer[30] = {0};
     switch ((uint8_t)displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Vault");
-            snprintf(outVal, outValLen, "%d", internalIndex);
+            snprintf(outVal, outValLen, "%d", addr_request.internalIndex);
             pageString(outVal, outValLen, (char *)(G_io_apdu_buffer + PUB_KEY_LENGTH), pageIdx, pageCount);
             break;
 
@@ -302,7 +294,7 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
 
         case 2: {
             snprintf(outKey, outKeyLen, "TotalAmount");
-            if (uint64_to_str(tmpBuffer, sizeof(tmpBuffer), vault->totalAmount) != NULL) {
+            if (uint64_to_str(tmpBuffer, sizeof(tmpBuffer), addr_request.vault_account->totalAmount) != NULL) {
                 return zxerr_unknown;
             }
             pageStringExt(outVal, outValLen, tmpBuffer, sizeof(tmpBuffer), pageIdx, pageCount);
@@ -311,7 +303,7 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
 
         case 3: {
             snprintf(outKey, outKeyLen, "InitialUnlock");
-            if (uint64_to_str(tmpBuffer, sizeof(tmpBuffer), vault->initialUnlockAmount) != NULL) {
+            if (uint64_to_str(tmpBuffer, sizeof(tmpBuffer), addr_request.vault_account->initialUnlockAmount) != NULL) {
                 return zxerr_unknown;
             }
             pageStringExt(outVal, outValLen, tmpBuffer, sizeof(tmpBuffer), pageIdx, pageCount);
@@ -320,22 +312,22 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
 
         case 4:
             snprintf(outKey, outKeyLen, "Start");
-            snprintf(outVal, outValLen, "%d", vault->vestingStart);
+            snprintf(outVal, outValLen, "%d", addr_request.vault_account->vestingStart);
             break;
 
         case 5:
             snprintf(outKey, outKeyLen, "End");
-            snprintf(outVal, outValLen, "%d", vault->vestingEnd);
+            snprintf(outVal, outValLen, "%d", addr_request.vault_account->vestingEnd);
             break;
 
         case 6:
             snprintf(outKey, outKeyLen, "Participants");
-            snprintf(outVal, outValLen, "%d", vault->owner.participants);
+            snprintf(outVal, outValLen, "%d", addr_request.vault_account->owner.participants);
             break;
 
         case 7:
             snprintf(outKey, outKeyLen, "Validators");
-            snprintf(outVal, outValLen, "%d", vault->owner.approvers);
+            snprintf(outVal, outValLen, "%d", addr_request.vault_account->owner.approvers);
             break;
 
         case 255:
@@ -346,7 +338,7 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
             const uint8_t tmpDisplayIdx = displayIdx - 8;
             const uint8_t *pubkeyPtr = NULL;
             snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, internalIndex, vault->owner.keys, &pubkeyPtr))
+            CHECK_ZXERR(getPublicKey(tmpDisplayIdx, addr_request.internalIndex, addr_request.vault_account->owner.keys, &pubkeyPtr))
             pageStringHex(outVal, outValLen, (const char *)pubkeyPtr, PUB_KEY_LENGTH, pageIdx, pageCount);
             break;
         }
