@@ -61,6 +61,8 @@ typedef struct {
 typedef struct {
     account_type_e account_type;
     uint8_t internalIndex;
+
+    uint8_t optional_numberOfPubkeys;
     union {
         generic_account_t *account;
         vault_account_t *vault_account;
