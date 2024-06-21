@@ -15,7 +15,7 @@
  ******************************************************************************* */
 
 import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
-import { Domain, EdSigner, SpaceMeshApp, VaultAccount } from '@zondax/ledger-spacemesh'
+import { SpaceMeshApp, VaultAccount } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
 
 import { VAULT_TESTCASES } from './testscases/vault'
@@ -187,40 +187,5 @@ describe('Standard', function () {
         await sim.close()
       }
     })
-  })
-
-  test.concurrent.each(models)('sign blind', async function (m) {
-    const sim = new Zemu(m.path)
-    try {
-      await sim.start({ ...defaultOptions, model: m.name })
-      const app = new SpaceMeshApp(sim.getTransport())
-
-      const responseAddr = await app.getAddressAndPubKey(PATH)
-      const pubKey = responseAddr.pubkey
-
-      const test = Buffer.from('This is a dummy message that will be signed by Spacemesh app')
-      let singInfo: EdSigner = {
-        prefix: Buffer.from('test'),
-        domain: Domain.HARE,
-        message: test,
-      }
-
-      // do not wait here... we need to navigate
-      const signatureRequest = app.sign(PATH, singInfo)
-
-      // Wait until we are not in the main menu
-      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_blind`)
-
-      const signatureResponse = await signatureRequest
-      console.log(signatureResponse)
-
-      // Now verify the signature
-      const payload = Buffer.concat([singInfo.prefix, Buffer.from([singInfo.domain]), singInfo.message])
-      const valid = ed25519.verify(signatureResponse.signature, payload, pubKey)
-      expect(valid).toEqual(true)
-    } finally {
-      await sim.close()
-    }
   })
 })

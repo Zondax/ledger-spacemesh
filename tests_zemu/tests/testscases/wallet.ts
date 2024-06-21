@@ -22,3 +22,18 @@ export const WALLET_TESTCASES = [
     path: PATH_TESTNET,
   },
 ]
+
+export const WALLET_TRANSACTIONS = [
+  {
+    idx: 0,
+    name: "wallet_spawn_0",
+    blob: '0000000000bde1127a3898a73ef9a0c963f9a62f06e14d83350000000000000000000000000000000000000000000000000100046f6866a1b8317d47fb8adfee9709322a18be9afad837006b5369d724fcdd4c09',
+    path: PATH,
+  },
+  {
+    idx: 1,
+    name: "wallet_spend_0",
+    blob: '00000000003f7f865bfd4d3b29c2cd37d6aecefb72a6dbc574400404000000009eba337d5871329b6cb89d73f6b948cecd8b712a9101',
+    path: PATH,
+  },
+]
