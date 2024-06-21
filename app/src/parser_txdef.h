@@ -22,11 +22,67 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+#include "crypto_helper.h"
+
+#define TX_VERSION 0
+#define METHOD_SPAWN 0
+#define METHOD_SPEND 16
+
 // {TODO}: Placeholder, replace with real txn structure
 typedef struct {
-    uint8_t txn_param_0;
-    uint8_t txn_param_1;
-    uint8_t txn_param_N;
+    uint16_t len;
+    const uint8_t *ptr;
+} Bytes_t;
+
+typedef struct {
+    uint8_t len;
+    const uint8_t *ptr;
+} CompactInt_t;
+
+typedef struct {
+    Bytes_t destination;
+    uint64_t amount;
+} spend_tx_t;
+
+typedef struct {
+    Bytes_t pubkey;
+} spawn_wallet_tx_t;
+
+typedef struct {
+    uint8_t approvers;
+    uint8_t numberOfPubkeys;
+    Bytes_t pubkey[10];
+} spawn_multisig_tx_t;
+
+typedef struct {
+    Bytes_t owner;
+    uint64_t totalAmount;
+    uint64_t initialUnlockAmount;
+    uint32_t vestingStart;
+    uint32_t vestingEnd;
+} spawn_vault_tx_t;
+
+typedef struct {
+    Bytes_t account_template;
+    union {
+        spawn_wallet_tx_t wallet;
+        spawn_multisig_tx_t multisig;
+        spawn_vault_tx_t vault;
+    };
+} spawn_tx_t;
+
+typedef struct {
+    account_type_e account_type;
+    uint8_t tx_version;
+    Bytes_t principal;
+    uint8_t methodSelector;
+    uint64_t nonce;
+    uint64_t gas_price;
+    union {
+        spend_tx_t spend;
+        spawn_tx_t spawn;
+    };
+
 } parser_tx_t;
 
 #ifdef __cplusplus

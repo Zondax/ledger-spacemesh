@@ -40,6 +40,18 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
 parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 
+parser_error_t printTxnFields(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                              char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+
+parser_error_t printSpendTx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
+                            uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+parser_error_t printWalletSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                  char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                               char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+
 #ifdef __cplusplus
 }
 #endif

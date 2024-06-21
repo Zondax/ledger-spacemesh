@@ -43,7 +43,7 @@ parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer,
 }
 
 parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t dataLen, parser_tx_t *tx_obj) {
-    CHECK_ERROR(parser_init_context(ctx, data, dataLen))
+    CHECK_ERROR(parser_init_context(ctx, data, dataLen));
     ctx->tx_obj = tx_obj;
     return _read(ctx, tx_obj);
 }
@@ -51,23 +51,36 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data, size_t d
 parser_error_t parser_validate(parser_context_t *ctx) {
     // Iterate through all items to check that all can be shown and are valid
     uint8_t numItems = 0;
-    CHECK_ERROR(parser_getNumItems(ctx, &numItems))
+    CHECK_ERROR(parser_getNumItems(ctx, &numItems));
 
     char tmpKey[40] = {0};
     char tmpVal[40] = {0};
 
     for (uint8_t idx = 0; idx < numItems; idx++) {
         uint8_t pageCount = 0;
-        CHECK_ERROR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
+        CHECK_ERROR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount));
     }
     return parser_ok;
 }
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
-    // #{TODO} --> function to retrieve num Items
-    // *num_items = _getNumItems();
-    UNUSED(ctx);
-    *num_items = 2;
+    *num_items = 0;
+
+    switch (ctx->tx_obj->account_type) {
+        case WALLET:
+            *num_items = 6;
+            break;
+        case MULTISIG:
+        case VESTING:
+            *num_items = 6 + ctx->tx_obj->spawn.multisig.numberOfPubkeys;
+            break;
+        case VAULT:
+            *num_items = 10;
+            break;
+        default:
+            break;
+    }
+
     if (*num_items == 0) {
         return parser_unexpected_number_items;
     }
@@ -93,27 +106,241 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx, c
     UNUSED(pageIdx);
     *pageCount = 1;
     uint8_t numItems = 0;
-    CHECK_ERROR(parser_getNumItems(ctx, &numItems))
+    CHECK_ERROR(parser_getNumItems(ctx, &numItems));
     CHECK_APP_CANARY()
 
-    CHECK_ERROR(checkSanity(numItems, displayIdx))
+    CHECK_ERROR(checkSanity(numItems, displayIdx));
     cleanOutput(outKey, outKeyLen, outVal, outValLen);
 
-    uint8_t txnHash[32] = {0};
-    CHECK_ERROR(zxblake3_hash(ctx->buffer, ctx->bufferLen, txnHash, sizeof(txnHash)));
+    return printTxnFields(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+}
 
-    switch (displayIdx) {
-        case 0:
-            snprintf(outKey, outKeyLen, "Blind");
-            snprintf(outVal, outValLen, "Signing");
-            return parser_ok;
-        case 1:
-            snprintf(outKey, outKeyLen, "Txn hash");
-            pageStringHex(outVal, outValLen, (char *)txnHash, sizeof(txnHash), pageIdx, pageCount);
-            return parser_ok;
-        default:
-            break;
+parser_error_t printTxnFields(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                              char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    if (ctx->tx_obj->methodSelector == METHOD_SPAWN) {
+        switch (ctx->tx_obj->account_type) {
+            case WALLET:
+                return printWalletSpawn(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+            case MULTISIG:
+            case VESTING:
+                return printMultisigSpawn(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+            case VAULT:
+                return printVaultSpawn(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+            default:
+                return parser_value_out_of_range;
+        }
     }
 
-    return parser_display_idx_out_of_range;
+    return printSpendTx(ctx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+}
+
+parser_error_t printSpendTx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
+                            uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    char buff[50] = {0};
+    switch (displayIdx) {
+        case 0:
+            snprintf(outKey, outKeyLen, "Tx type");
+            snprintf(outVal, outKeyLen, "Spend");
+            break;
+        case 1:
+            snprintf(outKey, outKeyLen, "Principal");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->principal.ptr), ADDRESS_LENGTH, pageIdx, pageCount);
+            break;
+        case 2:
+            snprintf(outKey, outKeyLen, "Destination");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spend.destination.ptr), ADDRESS_LENGTH, pageIdx,
+                          pageCount);
+            break;
+        case 3:
+            snprintf(outKey, outKeyLen, "Amount");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->spend.amount) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+
+        case 4:
+            snprintf(outKey, outKeyLen, "Gas price");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->gas_price) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 5:
+            snprintf(outKey, outKeyLen, "Nonce");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->nonce) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        default:
+            return parser_no_data;
+    }
+
+    return parser_ok;
+}
+
+parser_error_t printWalletSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    char buff[50] = {0};
+    switch (displayIdx) {
+        case 0:
+            snprintf(outKey, outKeyLen, "Tx type");
+            snprintf(outVal, outKeyLen, "Spawn");
+            break;
+        case 1:
+            snprintf(outKey, outKeyLen, "Principal");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->principal.ptr), ADDRESS_LENGTH, pageIdx, pageCount);
+            break;
+        case 2:
+            snprintf(outKey, outKeyLen, "Pubkey");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.wallet.pubkey.ptr), PUB_KEY_LENGTH, pageIdx,
+                          pageCount);
+            break;
+        case 3:
+            snprintf(outKey, outKeyLen, "Account template");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.account_template.ptr), ADDRESS_LENGTH,
+                          pageIdx, pageCount);
+            break;
+
+        case 4:
+            snprintf(outKey, outKeyLen, "Gas price");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->gas_price) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 5:
+            snprintf(outKey, outKeyLen, "Nonce");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->nonce) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        default:
+            return parser_no_data;
+    }
+
+    return parser_ok;
+}
+
+parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                                  char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    char buff[50] = {0};
+    switch (displayIdx) {
+        case 0:
+            snprintf(outKey, outKeyLen, "Tx type");
+            snprintf(outVal, outKeyLen, "Spawn");
+            break;
+        case 1:
+            snprintf(outKey, outKeyLen, "Principal");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->principal.ptr), ADDRESS_LENGTH, pageIdx, pageCount);
+            return parser_ok;
+        case 2:
+            snprintf(outKey, outKeyLen, "Account template");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.account_template.ptr), ADDRESS_LENGTH,
+                          pageIdx, pageCount);
+            break;
+
+        case 3:
+            snprintf(outKey, outKeyLen, "Gas price");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->gas_price) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 4:
+            snprintf(outKey, outKeyLen, "Nonce");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->nonce) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 5:
+            snprintf(outKey, outKeyLen, "Validators");
+            snprintf(outVal, outValLen, "%d", ctx->tx_obj->spawn.multisig.approvers);
+            break;
+        default: {
+            const uint8_t tmpDisplayIdx = displayIdx - 6;
+            snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.multisig.pubkey[tmpDisplayIdx].ptr),
+                          PUB_KEY_LENGTH, pageIdx, pageCount);
+            break;
+        }
+    }
+
+    return parser_ok;
+}
+
+parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
+                               char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+    char buff[50] = {0};
+    switch (displayIdx) {
+        case 0:
+            snprintf(outKey, outKeyLen, "Tx type");
+            snprintf(outVal, outKeyLen, "Spawn");
+            break;
+        case 1:
+            snprintf(outKey, outKeyLen, "Principal");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->principal.ptr), ADDRESS_LENGTH, pageIdx, pageCount);
+            return parser_ok;
+        case 2:
+            snprintf(outKey, outKeyLen, "Account template");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.account_template.ptr), ADDRESS_LENGTH,
+                          pageIdx, pageCount);
+            break;
+
+        case 3:
+            snprintf(outKey, outKeyLen, "Gas price");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->gas_price) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 4:
+            snprintf(outKey, outKeyLen, "Nonce");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->nonce) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 5:
+            snprintf(outKey, outKeyLen, "Owner");
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.vault.owner.ptr), ADDRESS_LENGTH, pageIdx,
+                          pageCount);
+            break;
+        case 6:
+            snprintf(outKey, outKeyLen, "TotalAmount");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->spawn.vault.totalAmount) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 7:
+            snprintf(outKey, outKeyLen, "InitialUnlockAmount");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->spawn.vault.initialUnlockAmount) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 8:
+            snprintf(outKey, outKeyLen, "VestingStart");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->spawn.vault.vestingStart) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 9:
+            snprintf(outKey, outKeyLen, "VestingEnd");
+            if (uint64_to_str(buff, sizeof(buff), ctx->tx_obj->spawn.vault.vestingEnd) != NULL) {
+                return parser_unexpected_error;
+            }
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        default: {
+            return parser_no_data;
+        }
+    }
+
+    return parser_ok;
 }

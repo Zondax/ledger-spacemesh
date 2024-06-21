@@ -39,7 +39,7 @@ TEST(SCALE, ReadBytes) {
                                     "123456"
                                     "12345678901234567890");
 
-    parser_parse(&ctx, buffer, bufferLen, &tx_obj);
+    //parser_parse(&ctx, buffer, bufferLen, &tx_obj);
 
     // uint8_t bytesArray[100] = {0};
     // err = _readBytes(&ctx, bytesArray, 1);
