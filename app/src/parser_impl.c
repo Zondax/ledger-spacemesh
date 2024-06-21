@@ -22,6 +22,9 @@
 
 parser_error_t _read(parser_context_t *c, parser_tx_t *v) {
     // read common params
+    if (c == NULL || v == NULL) {
+        return parser_unexpected_error;
+    }
     CHECK_ERROR(_readTxVersion(c, &v->tx_version));
     CHECK_ERROR(readFixedArray(c, &v->principal, ADDRESS_LENGTH));
     CHECK_ERROR(_readMethodSelector(c, &v->methodSelector));
@@ -32,6 +35,11 @@ parser_error_t _read(parser_context_t *c, parser_tx_t *v) {
         case METHOD_SPEND:
             CHECK_ERROR(_readSpendTx(c, v));
             break;
+        case METHOD_DRAIN_VAULT:
+            CHECK_ERROR(_readDrainTx(c, v));
+            break;
+        default:
+            return parser_unexpected_value;
     }
 
     if (c->offset != c->bufferLen) {
@@ -73,6 +81,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "unexpected unparsed bytes";
         case parser_unexpected_method_selector:
             return "unexpected method selector";
+        case parser_tx_obj_empty:
+            return "tx obj empty";
 
         default:
             return "Unrecognized error code";

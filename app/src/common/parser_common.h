@@ -57,6 +57,7 @@ typedef enum {
     parser_missing_field,
     parser_unknown_transaction,
     parser_unexpected_method_selector,
+    parser_tx_obj_empty,
 } parser_error_t;
 
 typedef struct {

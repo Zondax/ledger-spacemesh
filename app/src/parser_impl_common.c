@@ -19,14 +19,6 @@
 #include "parser_txdef.h"
 #include "scale_helper.h"
 
-// GEN_DEF_READFIX_UNSIGNED(8)
-
-// GEN_DEF_READFIX_UNSIGNED(16)
-
-// GEN_DEF_READFIX_UNSIGNED(32)
-
-// GEN_DEF_READFIX_UNSIGNED(64)
-
 parser_error_t readCompactInt(parser_context_t *ctx, CompactInt_t *val) {
     CHECK_INPUT();
 
@@ -122,7 +114,7 @@ parser_error_t _readTxVersion(parser_context_t *ctx, uint8_t *val) {
 parser_error_t _readMethodSelector(parser_context_t *ctx, uint8_t *val) {
     CHECK_INPUT();
     CHECK_ERROR(readCompactU8(ctx, val));
-    if (*val != METHOD_SPAWN && *val != METHOD_SPEND) {
+    if (*val != METHOD_SPAWN && *val != METHOD_SPEND && *val != METHOD_DRAIN_VAULT) {
         return parser_unexpected_method_selector;
     }
     return parser_ok;
@@ -133,7 +125,8 @@ parser_error_t _readSpawnTx(parser_context_t *ctx, parser_tx_t *val) {
     CHECK_ERROR(readFixedArray(ctx, &val->spawn.account_template, ADDRESS_LENGTH));
     CHECK_ERROR(readCompactU64(ctx, &val->nonce));
     CHECK_ERROR(readCompactU64(ctx, &val->gas_price));
-    switch (val->spawn.account_template.ptr[val->spawn.account_template.len - 1]) {
+    uint8_t accountType = val->spawn.account_template.ptr[val->spawn.account_template.len - 1];
+    switch (accountType) {
         case WALLET:
             val->account_type = WALLET;
             CHECK_ERROR(readFixedArray(ctx, &val->spawn.wallet.pubkey, PUB_KEY_LENGTH));
@@ -141,6 +134,9 @@ parser_error_t _readSpawnTx(parser_context_t *ctx, parser_tx_t *val) {
         case MULTISIG:
         case VESTING:
             val->account_type = MULTISIG;
+            if (accountType == VESTING) {
+                val->account_type = VESTING;
+            }
             CHECK_ERROR(readCompactU8(ctx, &val->spawn.multisig.approvers));
             if (val->spawn.multisig.approvers > MAX_MULTISIG_PUB_KEY) {
                 return parser_unexpected_value;
@@ -174,10 +170,19 @@ parser_error_t _readSpawnTx(parser_context_t *ctx, parser_tx_t *val) {
 
 parser_error_t _readSpendTx(parser_context_t *ctx, parser_tx_t *val) {
     CHECK_INPUT();
-    val->account_type = WALLET;
     CHECK_ERROR(readCompactU64(ctx, &val->nonce));
     CHECK_ERROR(readCompactU64(ctx, &val->gas_price));
     CHECK_ERROR(readFixedArray(ctx, &val->spend.destination, ADDRESS_LENGTH));
     CHECK_ERROR(readCompactU64(ctx, &val->spend.amount));
+    return parser_ok;
+}
+
+parser_error_t _readDrainTx(parser_context_t *ctx, parser_tx_t *val) {
+    CHECK_INPUT();
+    CHECK_ERROR(readCompactU64(ctx, &val->nonce));
+    CHECK_ERROR(readCompactU64(ctx, &val->gas_price));
+    CHECK_ERROR(readFixedArray(ctx, &val->drain.vault, ADDRESS_LENGTH));
+    CHECK_ERROR(readFixedArray(ctx, &val->drain.destination, ADDRESS_LENGTH));
+    CHECK_ERROR(readCompactU64(ctx, &val->drain.amount));
     return parser_ok;
 }
