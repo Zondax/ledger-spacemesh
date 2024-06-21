@@ -27,6 +27,7 @@ extern "C" {
 #define TX_VERSION 0
 #define METHOD_SPAWN 0
 #define METHOD_SPEND 16
+#define METHOD_DRAIN_VAULT 17
 
 // {TODO}: Placeholder, replace with real txn structure
 typedef struct {
@@ -72,6 +73,12 @@ typedef struct {
 } spawn_tx_t;
 
 typedef struct {
+    Bytes_t vault;
+    Bytes_t destination;
+    uint64_t amount;
+} drain_tx_t;
+
+typedef struct {
     account_type_e account_type;
     uint8_t tx_version;
     Bytes_t principal;
@@ -81,6 +88,7 @@ typedef struct {
     union {
         spend_tx_t spend;
         spawn_tx_t spawn;
+        drain_tx_t drain;
     };
 
 } parser_tx_t;

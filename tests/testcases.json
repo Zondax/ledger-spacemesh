@@ -4,7 +4,7 @@
     "name": "SPAWN_WALLET",
     "blob": "0000000000bde1127a3898a73ef9a0c963f9a62f06e14d83350000000000000000000000000000000000000000000000000100046f6866a1b8317d47fb8adfee9709322a18be9afad837006b5369d724fcdd4c09",
     "output": [
-      "0 | Tx type : Spawn",
+      "0 | Tx type : Wallet spawn",
       "1 | Principal [1/2] : 00000000bde1127a3898a73ef9a0c963f9a62f",
       "1 | Principal [2/2] : 06e14d8335",
       "2 | Pubkey [1/2] : 6f6866a1b8317d47fb8adfee9709322a18be9a",
@@ -16,7 +16,7 @@
     ],
     
     "output_expert": [
-      "0 | Tx type : Spawn",
+      "0 | Tx type : Wallet spawn",
       "1 | Principal [1/2] : 00000000bde1127a3898a73ef9a0c963f9a62f",
       "1 | Principal [2/2] : 06e14d8335",
       "2 | Pubkey [1/2] : 6f6866a1b8317d47fb8adfee9709322a18be9a",
@@ -58,7 +58,7 @@
     "name": "SPAWN_MULTISIG_0",
     "blob": "0000000000b1885c09432cb9de46fd1997f452a53843ab1cc70000000000000000000000000000000000000000000000000200040c14218506d35db6a7bab8d3717d55ade4c43ca80f7291883cd549ff8a34b78324bd00b9a50aadc89a95a2a14eb7594664d9910e85b5d6f5abbc5788223d4c16692101fa619348966aaba9c94b22d43c3703e73bd54fa6452112e15febc5b9a6ab1a4242fc8d73581ae4da1f2ec206db38fd1605d7781ce9fb647f4b3049ac8f309dcecf7ee7dda78952c3782c334864ad7c9458e22e0e16733db1d2bc7c8bc9ef61",
     "output": [
-       "0 | Tx type : Spawn",
+       "0 | Tx type : Multisig spawn",
        "1 | Principal [1/2] : 00000000b1885c09432cb9de46fd1997f452a5",
        "1 | Principal [2/2] : 3843ab1cc7",
        "2 | Account template [1/2] : 00000000000000000000000000000000000000",
@@ -79,7 +79,7 @@
     ],
 
     "output_expert": [
-      "0 | Tx type : Spawn",
+      "0 | Tx type : Multisig spawn",
       "1 | Principal [1/2] : 00000000b1885c09432cb9de46fd1997f452a5",
       "1 | Principal [2/2] : 3843ab1cc7",
       "2 | Account template [1/2] : 00000000000000000000000000000000000000",
@@ -130,7 +130,7 @@
     "name": "SPAWN_VESTING_0",
     "blob": "0000000000df9d59520a4e7d96c473ac8a53814b6c9cb9222d0000000000000000000000000000000000000000000000000300040c28416f4ee52b75ea4c44249311a08e59d718687fdb3ed249fb85eb3e15a3e5666ef0f83b12faca1c4abd9684af8df1d501e982252697f7cf23c05f8e2e7de95cb4f9495d6dd982aec2acbf3c933c12d9fd223a8e3804396b6ae493501bdeca214599e87e98b9440ffec65e47c69a6d96e230f57e3c2b42fb571223b2b79a715e3d8e002de81e72ba6aa367fcf24bacfb56414bbf390526ccc222d0b4d3669ef4bb18320a5acd0e745be319b44b1eed1337f4a2ac03a568a5ddbd4326f0e0e0fff901580e263fced9409ec46abd89fd5aaf17a410d30911f8c935294466084f398c381d0355afee4d85036c0dca2850a43e5dee00bbe5c279c51544fc60afb50a110c065ef54dbe55c63f8d1b3f6eb7f01d45077784503fed35473f481c18b73118e9d6e35135d9ef5a949c688aa40969e65dea0d19377af36390e6ed1a9ff21e8e",
     "output": [
-       "0 | Tx type : Spawn",
+       "0 | Tx type : Vesting spawn",
        "1 | Principal [1/2] : 00000000df9d59520a4e7d96c473ac8a53814b",
        "1 | Principal [2/2] : 6c9cb9222d",
        "2 | Account template [1/2] : 00000000000000000000000000000000000000",
@@ -160,7 +160,7 @@
        "15 | Pubkey 9 [2/2] : 19377af36390e6ed1a9ff21e8e"
     ],
     "output_expert": [
-      "0 | Tx type : Spawn",
+      "0 | Tx type : Vesting spawn",
       "1 | Principal [1/2] : 00000000df9d59520a4e7d96c473ac8a53814b",
       "1 | Principal [2/2] : 6c9cb9222d",
       "2 | Account template [1/2] : 00000000000000000000000000000000000000",
@@ -220,7 +220,7 @@
     "name": "SPAWN_VAULT_0",
     "blob": "00000000003161d16912af61f88a972ef9215acb93d36624f7000000000000000000000000000000000000000000000000040404000000003161d16912af61f88a972ef9215acb93d36624f79101280428",
     "output": [
-       "0 | Tx type : Spawn",
+       "0 | Tx type : Vault spawn",
        "1 | Principal [1/2] : 000000003161d16912af61f88a972ef9215acb",
        "1 | Principal [2/2] : 93d36624f7",
        "2 | Account template [1/2] : 00000000000000000000000000000000000000",
@@ -235,7 +235,7 @@
        "9 | VestingEnd : 10"
     ],
     "output_expert": [
-      "0 | Tx type : Spawn",
+      "0 | Tx type : Vault spawn",
       "1 | Principal [1/2] : 000000003161d16912af61f88a972ef9215acb",
       "1 | Principal [2/2] : 93d36624f7",
       "2 | Account template [1/2] : 00000000000000000000000000000000000000",
@@ -255,7 +255,7 @@
     "name": "SPAWN_VAULT_1",
     "blob": "00000000001d68968022c78e97220f0ab85c63702883198e37000000000000000000000000000000000000000000000000040404000000001d68968022c78e97220f0ab85c63702883198e370f008053ee7ba80a0f0080c6a47e8d03826a060002aa1900",
     "output": [
-       "0 | Tx type : Spawn",
+       "0 | Tx type : Vault spawn",
        "1 | Principal [1/2] : 000000001d68968022c78e97220f0ab85c6370",
        "1 | Principal [2/2] : 2883198e37",
        "2 | Account template [1/2] : 00000000000000000000000000000000000000",
@@ -270,7 +270,7 @@
        "9 | VestingEnd : 420480"
     ],
     "output_expert": [
-      "0 | Tx type : Spawn",
+      "0 | Tx type : Vault spawn",
       "1 | Principal [1/2] : 000000001d68968022c78e97220f0ab85c6370",
       "1 | Principal [2/2] : 2883198e37",
       "2 | Account template [1/2] : 00000000000000000000000000000000000000",
@@ -283,6 +283,35 @@
       "7 | InitialUnlockAmount : 1000000000000000",
       "8 | VestingStart : 105120",
       "9 | VestingEnd : 420480"
+   ]
+  },
+  {
+    "index": 8,
+    "name": "DRAIN_VAULT_0",
+    "blob": "00000000001d68968022c78e97220f0ab85c63702883198e3744080400000000fdd044582aef34274679ac50bc263ee0797933e0000000001d68968022c78e97220f0ab85c63702883198e3702093d00",
+    "output": [
+       "0 | Tx type : Vault drain",
+       "1 | Principal [1/2] : 000000001d68968022c78e97220f0ab85c6370",
+       "1 | Principal [2/2] : 2883198e37",
+       "2 | Destination [1/2] : 000000001d68968022c78e97220f0ab85c6370",
+       "2 | Destination [2/2] : 2883198e37",
+       "3 | Vault [1/2] : 00000000fdd044582aef34274679ac50bc263e",
+       "3 | Vault [2/2] : e0797933e0",
+       "4 | Amount : 1000000",
+       "5 | Gas price : 1",
+       "6 | Nonce : 2"
+    ],
+    "output_expert": [
+      "0 | Tx type : Vault drain",
+      "1 | Principal [1/2] : 000000001d68968022c78e97220f0ab85c6370",
+      "1 | Principal [2/2] : 2883198e37",
+      "2 | Destination [1/2] : 000000001d68968022c78e97220f0ab85c6370",
+      "2 | Destination [2/2] : 2883198e37",
+      "3 | Vault [1/2] : 00000000fdd044582aef34274679ac50bc263e",
+      "3 | Vault [2/2] : e0797933e0",
+      "4 | Amount : 1000000",
+      "5 | Gas price : 1",
+      "6 | Nonce : 2"
    ]
   }
 ]

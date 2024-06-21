@@ -64,6 +64,7 @@ parser_error_t _readTxVersion(parser_context_t *ctx, uint8_t *val);
 parser_error_t _readMethodSelector(parser_context_t *ctx, uint8_t *val);
 parser_error_t _readSpawnTx(parser_context_t *ctx, parser_tx_t *val);
 parser_error_t _readSpendTx(parser_context_t *ctx, parser_tx_t *val);
+parser_error_t _readDrainTx(parser_context_t *ctx, parser_tx_t *val);
 
 #ifdef __cplusplus
 }
