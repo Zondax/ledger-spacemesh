@@ -53,6 +53,8 @@ parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, 
                                char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
 parser_error_t printDrainTx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
                             uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount);
+parser_error_t _printAmount(uint64_t amount, uint8_t decimalPlaces, const char *postfix, const char *prefix, char *outValue,
+                            uint16_t outValueLen, uint8_t pageIdx, uint8_t *pageCount);
 
 #ifdef __cplusplus
 }
