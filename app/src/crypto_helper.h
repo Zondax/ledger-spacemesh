@@ -20,6 +20,7 @@
 
 #include "coin.h"
 #include "zxerror.h"
+#include "zxmacros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,6 +29,8 @@ extern "C" {
 #define MAX_ADDRESS_LENGTH 60
 #define ADDRESS_LENGTH 24
 #define MAX_MULTISIG_PUB_KEY 10
+
+extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
 typedef enum {
     UNKNOWN = 0,
@@ -68,6 +71,15 @@ typedef struct {
         vault_account_t *vault_account;
     };
 } address_request_t;
+
+/**
+ * Calculate the human-readable part (hrp) for Bech32 encoding based on the network type.
+ * @returns the appropriate hrp string for the network
+ */
+__Z_INLINE const char *calculate_hrp() {
+    bool mainnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
+    return mainnet ? "sm" : "stest";
+}
 
 zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
                                    const generic_account_t *account, account_type_e id);
