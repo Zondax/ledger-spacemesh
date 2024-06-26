@@ -26,18 +26,6 @@ extern "C" {
 #include "coin.h"
 #include "crypto_helper.h"
 #include "zxerror.h"
-#include "zxmacros.h"
-
-extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
-
-/**
- * Calculate the human-readable part (hrp) for Bech32 encoding based on the network type.
- * @returns the appropriate hrp string for the network
- */
-__Z_INLINE const char *calculate_hrp() {
-    bool mainnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
-    return mainnet ? "sm" : "stest";
-}
 
 typedef struct {
     uint8_t pubkey[PUB_KEY_LENGTH];
