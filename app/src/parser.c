@@ -92,7 +92,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
                     break;
                 case MULTISIG:
                 case VESTING:
-                    *num_items = 3;
+                    *num_items = 5 + ctx->tx_obj->spawn.multisig.numberOfPubkeys;
                     if (app_mode_expert()) {
                         *num_items = 8 + ctx->tx_obj->spawn.multisig.numberOfPubkeys;
                     }
@@ -204,16 +204,16 @@ parser_error_t printSpendTx(const parser_context_t *ctx, uint8_t displayIdx, cha
             break;
         case 3:
             snprintf(outKey, outKeyLen, "Amount");
-            return _printNumber(ctx->tx_obj->spend.amount, 0, "", "SMIDGE ", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->spend.amount, 0, "", "SMIDGE ", outVal, outValLen, pageIdx, pageCount);
         case 4:
             snprintf(outKey, outKeyLen, "Gas price");
-            return _printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 5:
             snprintf(outKey, outKeyLen, "Nonce");
-            return _printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 6:
             snprintf(outKey, outKeyLen, "Method");
-            return _printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         default:
             return parser_no_data;
     }
@@ -238,7 +238,7 @@ parser_error_t printWalletSpawn(const parser_context_t *ctx, uint8_t displayIdx,
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Gas price");
-            return _printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 3:
             snprintf(outKey, outKeyLen, "Template");
             CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, ctx->tx_obj->spawn.account_template.ptr,
@@ -247,10 +247,10 @@ parser_error_t printWalletSpawn(const parser_context_t *ctx, uint8_t displayIdx,
             break;
         case 4:
             snprintf(outKey, outKeyLen, "Nonce");
-            return _printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 5:
             snprintf(outKey, outKeyLen, "Method");
-            return _printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         default:
             return parser_no_data;
     }
@@ -262,7 +262,16 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
                                   char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     char buff[64] = {0};
     const char *hrp = calculate_hrp();
-    switch (displayIdx) {
+    uint8_t adjustedIdx = displayIdx;
+    const uint8_t pubkeysStart = 5;
+
+    if (displayIdx >= pubkeysStart && displayIdx < pubkeysStart + ctx->tx_obj->spawn.multisig.numberOfPubkeys) {
+        adjustedIdx = pubkeysStart;
+    } else if (displayIdx >= pubkeysStart + ctx->tx_obj->spawn.multisig.numberOfPubkeys) {
+        adjustedIdx = displayIdx - ctx->tx_obj->spawn.multisig.numberOfPubkeys + 1;
+    }
+
+    switch (adjustedIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Tx type");
             if (ctx->tx_obj->account_type == MULTISIG) {
@@ -279,35 +288,36 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Gas price");
-            return _printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+
         case 3:
+            snprintf(outKey, outKeyLen, "Participants");
+            snprintf(outVal, outValLen, "%d", ctx->tx_obj->spawn.multisig.numberOfPubkeys);
+            break;
+        case 4:
+            snprintf(outKey, outKeyLen, "Validators");
+            snprintf(outVal, outValLen, "%d", ctx->tx_obj->spawn.multisig.approvers);
+            break;
+        case 5: {
+            const uint8_t tmpDisplayIdx = displayIdx - adjustedIdx;
+            snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
+            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.multisig.pubkey[tmpDisplayIdx].ptr),
+                          PUB_KEY_LENGTH, pageIdx, pageCount);
+            break;
+        }
+        case 6:
             snprintf(outKey, outKeyLen, "Template");
             CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, ctx->tx_obj->spawn.account_template.ptr,
                                               ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
             pageString(outVal, outValLen, buff, pageIdx, pageCount);
             break;
 
-        case 4:
-            snprintf(outKey, outKeyLen, "Nonce");
-            return _printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
-        case 5:
-            snprintf(outKey, outKeyLen, "Method");
-            return _printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
-        case 6:
-            snprintf(outKey, outKeyLen, "Participants");
-            snprintf(outVal, outValLen, "%d", ctx->tx_obj->spawn.multisig.numberOfPubkeys);
-            break;
         case 7:
-            snprintf(outKey, outKeyLen, "Validators");
-            snprintf(outVal, outValLen, "%d", ctx->tx_obj->spawn.multisig.approvers);
-            break;
-        default: {
-            const uint8_t tmpDisplayIdx = displayIdx - 8;
-            snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
-            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.multisig.pubkey[tmpDisplayIdx].ptr),
-                          PUB_KEY_LENGTH, pageIdx, pageCount);
-            break;
-        }
+            snprintf(outKey, outKeyLen, "Nonce");
+            return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+        case 8:
+            snprintf(outKey, outKeyLen, "Method");
+            return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
     }
 
     return parser_ok;
@@ -330,7 +340,7 @@ parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, 
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Gas price");
-            return _printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 3:
             snprintf(outKey, outKeyLen, "Template");
             CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, ctx->tx_obj->spawn.account_template.ptr,
@@ -340,10 +350,10 @@ parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, 
 
         case 4:
             snprintf(outKey, outKeyLen, "Nonce");
-            return _printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 5:
             snprintf(outKey, outKeyLen, "Method");
-            return _printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 6:
             snprintf(outKey, outKeyLen, "Owner");
             CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, ctx->tx_obj->spawn.vault.owner.ptr, ADDRESS_LENGTH, 1,
@@ -353,19 +363,19 @@ parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, 
         case 7:
             // TODO: should we show decimals? same for cases 7, 8 and 9
             snprintf(outKey, outKeyLen, "TotalAmount");
-            return _printNumber(ctx->tx_obj->spawn.vault.totalAmount, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->spawn.vault.totalAmount, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 8:
             snprintf(outKey, outKeyLen, "InitialUnlockAmount");
-            return _printNumber(ctx->tx_obj->spawn.vault.initialUnlockAmount, 0, "", "", outVal, outValLen, pageIdx,
-                                pageCount);
+            return printNumber(ctx->tx_obj->spawn.vault.initialUnlockAmount, 0, "", "", outVal, outValLen, pageIdx,
+                               pageCount);
         case 9:
             snprintf(outKey, outKeyLen, "VestingStart");
-            return _printNumber((uint64_t)ctx->tx_obj->spawn.vault.vestingStart, 0, "", "", outVal, outValLen, pageIdx,
-                                pageCount);
+            return printNumber((uint64_t)ctx->tx_obj->spawn.vault.vestingStart, 0, "", "", outVal, outValLen, pageIdx,
+                               pageCount);
         case 10:
             snprintf(outKey, outKeyLen, "VestingEnd");
-            return _printNumber((uint64_t)ctx->tx_obj->spawn.vault.vestingEnd, 0, "", "", outVal, outValLen, pageIdx,
-                                pageCount);
+            return printNumber((uint64_t)ctx->tx_obj->spawn.vault.vestingEnd, 0, "", "", outVal, outValLen, pageIdx,
+                               pageCount);
         default: {
             return parser_no_data;
         }
@@ -404,16 +414,16 @@ parser_error_t printDrainTx(const parser_context_t *ctx, uint8_t displayIdx, cha
 
         case 4:
             snprintf(outKey, outKeyLen, "Amount");
-            return _printNumber(ctx->tx_obj->drain.amount, 0, "", "SMIDGE ", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->drain.amount, 0, "", "SMIDGE ", outVal, outValLen, pageIdx, pageCount);
         case 5:
             snprintf(outKey, outKeyLen, "Gas price");
-            return _printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 6:
             snprintf(outKey, outKeyLen, "Nonce");
-            return _printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 7:
             snprintf(outKey, outKeyLen, "Method");
-            return _printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
             break;
         default:
             return parser_no_data;
@@ -422,8 +432,8 @@ parser_error_t printDrainTx(const parser_context_t *ctx, uint8_t displayIdx, cha
     return parser_ok;
 }
 
-parser_error_t _printNumber(uint64_t amount, uint8_t decimalPlaces, const char *postfix, const char *prefix, char *outValue,
-                            uint16_t outValueLen, uint8_t pageIdx, uint8_t *pageCount) {
+parser_error_t printNumber(uint64_t amount, uint8_t decimalPlaces, const char *postfix, const char *prefix, char *outValue,
+                           uint16_t outValueLen, uint8_t pageIdx, uint8_t *pageCount) {
     char bufferUI[200] = {0};
     if (uint64_to_str(bufferUI, sizeof(bufferUI), amount) != NULL) {
         return parser_unexpected_value;
