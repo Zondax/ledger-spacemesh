@@ -27,8 +27,6 @@ extern "C" {
 #include "crypto_helper.h"
 #include "zxerror.h"
 
-extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
-
 typedef struct {
     uint8_t pubkey[PUB_KEY_LENGTH];
     char address_bech32[MAX_ADDRESS_LENGTH];

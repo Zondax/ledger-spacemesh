@@ -22,22 +22,9 @@
 #include "zxformat.h"
 #include "zxmacros.h"
 
-uint32_t hdPath[HDPATH_LEN_DEFAULT];
 extern address_request_t addr_request;
 
 void logAccount(generic_account_t *account, pubkey_item_t *internalPubkey);
-
-/**
- * Determine if the current network is mainnet based on the HD path.
- * @returns true if the network is mainnet, false otherwise
- */
-static bool is_mainnet() { return hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT; }
-
-/**
- * Calculate the human-readable part (hrp) for Bech32 encoding based on the network type.
- * @returns the appropriate hrp string for the network
- */
-static const char *calculate_hrp() { return is_mainnet() ? "sm" : "stest"; }
 
 zxerr_t crypto_extractPublicKey(uint8_t *pubKey, uint16_t pubKeyLen) {
     if (pubKey == NULL || pubKeyLen < PUB_KEY_LENGTH) {

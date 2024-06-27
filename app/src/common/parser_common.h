@@ -39,6 +39,7 @@ typedef enum {
     parser_display_idx_out_of_range,
     parser_display_page_out_of_range,
     parser_unexpected_error,
+    parser_unexpected_unparsed_bytes,
 
     // Coin generic
     parser_unexpected_type,
@@ -54,7 +55,9 @@ typedef enum {
     parser_invalid_address,
     parser_unexpected_chain,
     parser_missing_field,
-    paser_unknown_transaction,
+    parser_unknown_transaction,
+    parser_unexpected_method_selector,
+    parser_tx_obj_empty,
 } parser_error_t;
 
 typedef struct {

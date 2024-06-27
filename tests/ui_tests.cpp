@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include "app_mode.h"
+#include "crypto.h"
 #include "gmock/gmock.h"
 #include "parser.h"
 #include "utils/common.h"
@@ -31,6 +32,7 @@ using ::testing::TestWithParam;
 typedef struct {
     uint64_t index;
     std::string name;
+    bool mainnet;
     std::string blob;
     std::vector<std::string> expected;
     std::vector<std::string> expected_expert;
@@ -79,8 +81,8 @@ std::vector<testcase_t> GetJsonTestCases(std::string jsonFile) {
             outputs_expert.push_back(s.asString());
         }
 
-        answer.push_back(testcase_t{obj[i]["index"].asUInt64(), obj[i]["name"].asString(), obj[i]["blob"].asString(),
-                                    outputs, outputs_expert});
+        answer.push_back(testcase_t{obj[i]["index"].asUInt64(), obj[i]["name"].asString(), obj[i]["mainnet"].asBool(),
+                                    obj[i]["blob"].asString(), outputs, outputs_expert});
     }
 
     return answer;
@@ -98,6 +100,12 @@ void check_testcase(const testcase_t &tc, bool expert_mode) {
     parser_tx_t tx_obj;
     memset(&tx_obj, 0, sizeof(tx_obj));
 
+    hdPath[0] = HDPATH_0_DEFAULT;
+    hdPath[1] = HDPATH_1_DEFAULT;
+    if (!tc.mainnet) {
+        hdPath[1] = HDPATH_1_TESTNET;
+    }
+
     err = parser_parse(&ctx, buffer, bufferLen, &tx_obj);
     ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
 
@@ -111,15 +119,12 @@ void check_testcase(const testcase_t &tc, bool expert_mode) {
 
     std::vector<std::string> expected = app_mode_expert() ? tc.expected_expert : tc.expected;
 
-// #{TODO} --> After updating testvector, enable this part
-#if 0
     EXPECT_EQ(output.size(), expected.size());
     for (size_t i = 0; i < expected.size(); i++) {
         if (i < output.size()) {
             EXPECT_THAT(output[i], testing::Eq(expected[i]));
         }
     }
-#endif
 }
 
 INSTANTIATE_TEST_SUITE_P
@@ -127,3 +132,4 @@ INSTANTIATE_TEST_SUITE_P
     (JsonTestCasesCurrentTxVer, JsonTestsA, ::testing::ValuesIn(GetJsonTestCases("testcases.json")),
      JsonTestsA::PrintToStringParamName());
 TEST_P(JsonTestsA, CheckUIOutput_CurrentTX_Expert) { check_testcase(GetParam(), true); }
+TEST_P(JsonTestsA, CheckUIOutput_CurrentTX) { check_testcase(GetParam(), false); }
