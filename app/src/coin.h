@@ -49,9 +49,9 @@ extern "C" {
 #define INS_GET_ADDR_VESTING 0x04
 #define INS_GET_ADDR_VAULT 0x05
 
-// TODO: CHECK decimals
-#define COIN_AMOUNT_DECIMAL_PLACES 6
-#define COIN_TICKER "SMESH "
+#define COIN_AMOUNT_DECIMAL_PLACES 9
+#define COIN_TICKER "SMH "
+#define COIN_BASIC_UNIT "SMIDGE "
 
 #define MENU_MAIN_APP_LINE1 "SpaceMesh"
 #define MENU_MAIN_APP_LINE2 "Ready"

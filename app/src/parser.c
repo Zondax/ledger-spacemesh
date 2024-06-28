@@ -98,7 +98,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
                     }
                     break;
                 case VAULT:
-                    *num_items = 3;
+                    *num_items = 8;
                     if (app_mode_expert()) {
                         *num_items = 11;
                     }
@@ -204,10 +204,11 @@ parser_error_t printSpendTx(const parser_context_t *ctx, uint8_t displayIdx, cha
             break;
         case 3:
             snprintf(outKey, outKeyLen, "Amount");
-            return printNumber(ctx->tx_obj->spend.amount, 0, "", "SMIDGE ", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->spend.amount, COIN_AMOUNT_DECIMAL_PLACES, "", COIN_TICKER, outVal, outValLen,
+                               pageIdx, pageCount);
         case 4:
             snprintf(outKey, outKeyLen, "Gas price");
-            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", COIN_BASIC_UNIT, outVal, outValLen, pageIdx, pageCount);
         case 5:
             snprintf(outKey, outKeyLen, "Nonce");
             return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
@@ -238,7 +239,7 @@ parser_error_t printWalletSpawn(const parser_context_t *ctx, uint8_t displayIdx,
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Gas price");
-            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", COIN_BASIC_UNIT, outVal, outValLen, pageIdx, pageCount);
         case 3:
             snprintf(outKey, outKeyLen, "Template");
             CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, ctx->tx_obj->spawn.account_template.ptr,
@@ -288,8 +289,7 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Gas price");
-            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
-
+            return printNumber(ctx->tx_obj->gas_price, 0, "", COIN_BASIC_UNIT, outVal, outValLen, pageIdx, pageCount);
         case 3:
             snprintf(outKey, outKeyLen, "Participants");
             snprintf(outVal, outValLen, "%d", ctx->tx_obj->spawn.multisig.numberOfPubkeys);
@@ -340,42 +340,42 @@ parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, 
             break;
         case 2:
             snprintf(outKey, outKeyLen, "Gas price");
-            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", COIN_BASIC_UNIT, outVal, outValLen, pageIdx, pageCount);
         case 3:
-            snprintf(outKey, outKeyLen, "Template");
-            CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, ctx->tx_obj->spawn.account_template.ptr,
-                                              ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
-            pageString(outVal, outValLen, buff, pageIdx, pageCount);
-            break;
-
-        case 4:
-            snprintf(outKey, outKeyLen, "Nonce");
-            return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
-        case 5:
-            snprintf(outKey, outKeyLen, "Method");
-            return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
-        case 6:
             snprintf(outKey, outKeyLen, "Owner");
             CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, ctx->tx_obj->spawn.vault.owner.ptr, ADDRESS_LENGTH, 1,
                                               BECH32_ENCODING_BECH32));
             pageString(outVal, outValLen, buff, pageIdx, pageCount);
             break;
-        case 7:
+        case 4:
             // TODO: should we show decimals? same for cases 7, 8 and 9
             snprintf(outKey, outKeyLen, "TotalAmount");
-            return printNumber(ctx->tx_obj->spawn.vault.totalAmount, 0, "", "", outVal, outValLen, pageIdx, pageCount);
-        case 8:
+            return printNumber(ctx->tx_obj->spawn.vault.totalAmount, COIN_AMOUNT_DECIMAL_PLACES, "", COIN_TICKER, outVal,
+                               outValLen, pageIdx, pageCount);
+        case 5:
             snprintf(outKey, outKeyLen, "InitialUnlockAmount");
-            return printNumber(ctx->tx_obj->spawn.vault.initialUnlockAmount, 0, "", "", outVal, outValLen, pageIdx,
-                               pageCount);
-        case 9:
+            return printNumber(ctx->tx_obj->spawn.vault.initialUnlockAmount, COIN_AMOUNT_DECIMAL_PLACES, "", COIN_TICKER,
+                               outVal, outValLen, pageIdx, pageCount);
+        case 6:
             snprintf(outKey, outKeyLen, "VestingStart");
             return printNumber((uint64_t)ctx->tx_obj->spawn.vault.vestingStart, 0, "", "", outVal, outValLen, pageIdx,
                                pageCount);
-        case 10:
+        case 7:
             snprintf(outKey, outKeyLen, "VestingEnd");
             return printNumber((uint64_t)ctx->tx_obj->spawn.vault.vestingEnd, 0, "", "", outVal, outValLen, pageIdx,
                                pageCount);
+        case 8:
+            snprintf(outKey, outKeyLen, "Template");
+            CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, ctx->tx_obj->spawn.account_template.ptr,
+                                              ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
+            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            break;
+        case 9:
+            snprintf(outKey, outKeyLen, "Nonce");
+            return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+        case 10:
+            snprintf(outKey, outKeyLen, "Method");
+            return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         default: {
             return parser_no_data;
         }
@@ -391,7 +391,7 @@ parser_error_t printDrainTx(const parser_context_t *ctx, uint8_t displayIdx, cha
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Tx type");
-            snprintf(outVal, outKeyLen, "Vesting drain");
+            snprintf(outVal, outKeyLen, "Vault drain");
             break;
         case 1:
             snprintf(outKey, outKeyLen, "Principal");
@@ -414,10 +414,11 @@ parser_error_t printDrainTx(const parser_context_t *ctx, uint8_t displayIdx, cha
 
         case 4:
             snprintf(outKey, outKeyLen, "Amount");
-            return printNumber(ctx->tx_obj->drain.amount, 0, "", "SMIDGE ", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->drain.amount, COIN_AMOUNT_DECIMAL_PLACES, "", COIN_TICKER, outVal, outValLen,
+                               pageIdx, pageCount);
         case 5:
             snprintf(outKey, outKeyLen, "Gas price");
-            return printNumber(ctx->tx_obj->gas_price, 0, "", "", outVal, outValLen, pageIdx, pageCount);
+            return printNumber(ctx->tx_obj->gas_price, 0, "", COIN_BASIC_UNIT, outVal, outValLen, pageIdx, pageCount);
         case 6:
             snprintf(outKey, outKeyLen, "Nonce");
             return printNumber(ctx->tx_obj->nonce, 0, "", "", outVal, outValLen, pageIdx, pageCount);
