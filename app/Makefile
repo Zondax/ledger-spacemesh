@@ -53,7 +53,7 @@ $(info COIN  = [$(COIN)])
 
 ifeq ($(COIN),SMESH)
 # Main app configuration
-APPNAME = "SpaceMesh"
+APPNAME = "Spacemesh"
 APPPATH = "44'/540'"
 
 else

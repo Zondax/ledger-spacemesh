@@ -53,9 +53,9 @@ extern "C" {
 #define COIN_TICKER "SMH "
 #define COIN_BASIC_UNIT "SMIDGE "
 
-#define MENU_MAIN_APP_LINE1 "SpaceMesh"
+#define MENU_MAIN_APP_LINE1 "Spacemesh"
 #define MENU_MAIN_APP_LINE2 "Ready"
-#define APPVERSION_LINE1 "SpaceMesh"
+#define APPVERSION_LINE1 "Spacemesh"
 #define APPVERSION_LINE2 "v" APPVERSION
 
 #ifdef __cplusplus
