@@ -7,8 +7,8 @@ export const VESTING_TESTCASES: TestCase[] = [
   {
     idx: 0,
     account: new Account(AccountType.Vesting, 2, 2, [addressToBuffer(pubKey0, 0)]),
-    expected_address: 'sm1qqqqqq8987egzymqzujln6hpvd649zhf4p5mkdclnwtv0',
-    expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
+    expected_address: 'sm1qqqqqq8yewvs5p0hnwfpw8q92j00pw8fq37g8yqr7x4vy',
+    expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
   },
   {
@@ -18,8 +18,8 @@ export const VESTING_TESTCASES: TestCase[] = [
       addressToBuffer(pubKey3, 3),
       addressToBuffer(pubKey2, 2),
     ]),
-    expected_address: 'sm1qqqqqq894p92556zmh22f8ywd2ehx0n06qj36pq47u9ey',
-    expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
+    expected_address: 'sm1qqqqqqplv8uh93hqvfudg09g3khz9l7yhwwlu5qzqgxl6',
+    expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
   },
   {
@@ -29,8 +29,8 @@ export const VESTING_TESTCASES: TestCase[] = [
       addressToBuffer(pubKey3, 3),
       addressToBuffer(pubKey2, 2),
     ]),
-    expected_address: 'stest1qqqqqq9d46ftwap48q3ydg2w58l5fmy4teh7l5gcmumn0',
-    expected_pk: 'fa036e263e3351a1365d0355e2c2ccf79b364f686e621418e12c735f87a9d67a',
+    expected_address: 'stest1qqqqqqyxkc2jdh6sg066xjh0xkaed8w4zlrsehqku8enj',
+    expected_pk: '9cfbee82a799b8497430e8665f23e7b8e5b9345e6bbc6ee3895daa2ab8c00e16',
     path: PATH_TESTNET,
   },
 ]

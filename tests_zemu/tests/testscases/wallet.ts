@@ -12,13 +12,13 @@ export const pubKey3 = '11bba3ed1721948cefb4e50b0a0bb5cad8a6b52dc7b1a40f4f665210
 
 export const WALLET_TESTCASES = [
   {
-    expectedAddress: 'sm1qqqqqqyjdl0e9t6s3cxx3pqgtmxh998w5l74v5syjt6w5',
-    expectedPk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
+    expectedAddress: 'sm1qqqqqqp6qjvvlg7h9z748an72kcx3sjqyjcvrkg0jfst2',
+    expectedPk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
   },
   {
-    expectedAddress: 'stest1qqqqqqr9l92twnvqkjgrmp9p086ekmdzgs79x5q0msfmy',
-    expectedPk: 'fa036e263e3351a1365d0355e2c2ccf79b364f686e621418e12c735f87a9d67a',
+    expectedAddress: 'stest1qqqqqqyt8ps0ze9r7zevlqej3ddu2d8gxl6sp5g8vput3',
+    expectedPk: '9cfbee82a799b8497430e8665f23e7b8e5b9345e6bbc6ee3895daa2ab8c00e16',
     path: PATH_TESTNET,
   },
 ]

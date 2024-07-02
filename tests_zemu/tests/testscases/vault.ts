@@ -7,8 +7,8 @@ export const VAULT_TESTCASES: TestCase[] = [
   {
     idx: 0,
     account: new VaultAccount(2, 2, [addressToBuffer(pubKey0, 0)], BigInt(1000), BigInt(987), 567, 99999),
-    expected_address: 'sm1qqqqqqqrsssxatqkcxflze4eh8c4rngxsmudk7qqapryj',
-    expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
+    expected_address: 'sm1qqqqqqy6gw3ufy6kzutpg03zjr0t9k8xjdagwuccmpd8g',
+    expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
   },
   {
@@ -22,8 +22,8 @@ export const VAULT_TESTCASES: TestCase[] = [
       44,
       567,
     ),
-    expected_address: 'sm1qqqqqqzj5kp6th98s68h05qee99tfxfp25almus50kyvw',
-    expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
+    expected_address: 'sm1qqqqqq8d2nscr9hnvy8khzgxggg2vxg2jtplp0gqnklav',
+    expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
   },
   {
@@ -37,8 +37,8 @@ export const VAULT_TESTCASES: TestCase[] = [
       567,
       99999,
     ),
-    expected_address: 'stest1qqqqqqp5s89ps8dycm8lvghk8tsk0fnk6683jvsqmajgp',
-    expected_pk: 'fa036e263e3351a1365d0355e2c2ccf79b364f686e621418e12c735f87a9d67a',
+    expected_address: 'stest1qqqqqqx3pllnhamat3a4kmwexd39kkgst7p52jqjwx5wl',
+    expected_pk: '9cfbee82a799b8497430e8665f23e7b8e5b9345e6bbc6ee3895daa2ab8c00e16',
     path: PATH_TESTNET,
   },
 ]
