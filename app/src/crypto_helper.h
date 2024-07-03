@@ -29,6 +29,7 @@ extern "C" {
 #define MAX_ADDRESS_LENGTH 60
 #define ADDRESS_LENGTH 24
 #define MAX_MULTISIG_PUB_KEY 10
+#define GENESIS_LENGTH 20
 
 extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
@@ -81,6 +82,7 @@ __Z_INLINE const char *calculate_hrp() {
     return mainnet ? "sm" : "stest";
 }
 
+zxerr_t crypto_encodeWalletPubkey(uint8_t *address, uint16_t addressLen, const uint8_t *pubkey);
 zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
                                    const generic_account_t *account, account_type_e id);
 zxerr_t crypto_encodeVaultPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,

@@ -15,16 +15,13 @@
  ******************************************************************************* */
 
 import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
-import { SpaceMeshApp, VaultAccount } from '@zondax/ledger-spacemesh'
+import { SpaceMeshApp, VaultAccount, Account } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
 
 import { VAULT_TESTCASES } from './testscases/vault'
 import { MULTISIG_TESTCASES } from './testscases/multisig'
 import { VESTING_TESTCASES } from './testscases/vesting'
 import { WALLET_TESTCASES } from './testscases/wallet'
-
-import { ed25519 } from '@noble/curves/ed25519'
-import { Account } from '@zondax/ledger-spacemesh'
 
 jest.setTimeout(45000)
 

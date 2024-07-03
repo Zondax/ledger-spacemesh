@@ -45,7 +45,6 @@ TEST(Keys, WalletAddressEncoding) {
         parseHexString(internalPubkey.pubkey, PUB_KEY_LENGTH, testcase.publicKey.c_str());
 
         uint8_t address[64] = {0};
-        const uint8_t internalIndex = 0;
         crypto_encodeAccountPubkey(address, sizeof(address), &internalPubkey, NULL, WALLET);
         char addressBench32[64] = {0};
         const char *hrp = isTestNet ? "stest" : "sm";

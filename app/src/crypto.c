@@ -123,7 +123,6 @@ zxerr_t crypto_fillAddress(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *
 
     *addrResponseLen = sizeof(resp->pubkey) + strnlen((const char *)resp->address_bech32, MAX_ADDRESS_LENGTH);
 
-    ZEMU_LOGF(50, "addr_len: %d", *addrResponseLen);
     return zxerr_ok;
 }
 

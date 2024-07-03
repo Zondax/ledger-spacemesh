@@ -106,6 +106,26 @@ static zxerr_t updateScaleEncodedNumber(uint64_t num) {
     return zxerr_ok;
 }
 
+zxerr_t crypto_encodeWalletPubkey(uint8_t *address, uint16_t addressLen, const uint8_t *pubkey) {
+    if (address == NULL || pubkey == NULL || addressLen < MAX_ADDRESS_LENGTH) {
+        return zxerr_no_data;
+    }
+
+    uint8_t template[ADDRESS_LENGTH] = {0};
+    template[ADDRESS_LENGTH - 1] = WALLET;
+
+    CHECK_PARSER_OK(zxblake3_hash_init());
+    CHECK_PARSER_OK(zxblake3_hash_update(template, sizeof(template)));
+    CHECK_PARSER_OK(zxblake3_hash_update(pubkey, PUB_KEY_LENGTH));
+    CHECK_PARSER_OK(zxblake3_hash_finalize(address, addressLen));
+
+    const uint8_t hashOffset = PUB_KEY_LENGTH - ADDRESS_LENGTH;
+    MEMSET(address + hashOffset, 0, ADDRESS_RESERVED_SPACE);
+    MEMMOVE(address, address + hashOffset, ADDRESS_LENGTH);
+
+    return zxerr_ok;
+}
+
 zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const pubkey_item_t *internalPubkey,
                                    const generic_account_t *account, account_type_e account_type) {
     if (address == NULL || internalPubkey == NULL || addressLen < MAX_ADDRESS_LENGTH) {
@@ -115,35 +135,36 @@ zxerr_t crypto_encodeAccountPubkey(uint8_t *address, uint16_t addressLen, const 
     uint8_t template[ADDRESS_LENGTH] = {0};
     template[ADDRESS_LENGTH - 1] = account_type;
 
+    if (account_type == WALLET) {
+        return crypto_encodeWalletPubkey(address, addressLen, internalPubkey->pubkey);
+    }
+
+    if (account == NULL) {
+        return zxerr_no_data;
+    }
+
     CHECK_PARSER_OK(zxblake3_hash_init());
     CHECK_PARSER_OK(zxblake3_hash_update(template, sizeof(template)));
 
-    if (account_type == WALLET) {
-        CHECK_PARSER_OK(zxblake3_hash_update(internalPubkey->pubkey, PUB_KEY_LENGTH));
-    } else {
-        if (account == NULL) {
-            return zxerr_no_data;
-        }
-        if (account->approvers > account->participants || account->approvers == 0 ||
-            account->participants > MAX_MULTISIG_PUB_KEY) {
-            return zxerr_invalid_crypto_settings;
-        }
-        // both approvers and participants <= 63, perform inline scale encoding
-        const uint8_t scaleApprovers = account->approvers << 2;
-        CHECK_PARSER_OK(zxblake3_hash_update(&scaleApprovers, 1));
+    if (account->approvers > account->participants || account->approvers == 0 ||
+        account->participants > MAX_MULTISIG_PUB_KEY) {
+        return zxerr_invalid_crypto_settings;
+    }
+    // both approvers and participants <= 63, perform inline scale encoding
+    const uint8_t scaleApprovers = account->approvers << 2;
+    CHECK_PARSER_OK(zxblake3_hash_update(&scaleApprovers, 1));
 
-        const uint8_t scaleParticipants = account->participants << 2;
-        CHECK_PARSER_OK(zxblake3_hash_update(&scaleParticipants, 1));
+    const uint8_t scaleParticipants = account->participants << 2;
+    CHECK_PARSER_OK(zxblake3_hash_update(&scaleParticipants, 1));
 
-        // encode pubkeys
-        uint8_t indexAux = 0;
-        for (uint8_t i = 0; i < account->participants; i++) {
-            if (i == internalPubkey->index) {
-                CHECK_PARSER_OK(zxblake3_hash_update(internalPubkey->pubkey, PUB_KEY_LENGTH));
-            } else {
-                CHECK_PARSER_OK(zxblake3_hash_update(account->keys[indexAux].pubkey, PUB_KEY_LENGTH));
-                indexAux++;
-            }
+    // encode pubkeys
+    uint8_t indexAux = 0;
+    for (uint8_t i = 0; i < account->participants; i++) {
+        if (i == internalPubkey->index) {
+            CHECK_PARSER_OK(zxblake3_hash_update(internalPubkey->pubkey, PUB_KEY_LENGTH));
+        } else {
+            CHECK_PARSER_OK(zxblake3_hash_update(account->keys[indexAux].pubkey, PUB_KEY_LENGTH));
+            indexAux++;
         }
     }
 
