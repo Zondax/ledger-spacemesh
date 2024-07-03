@@ -36,6 +36,8 @@
         }                                   \
     } while (0)
 
+#define MULTISIG_PRINT_FACTOR 2
+
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
 parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
@@ -92,9 +94,9 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
                     break;
                 case MULTISIG:
                 case VESTING:
-                    *num_items = 5 + ctx->tx_obj->spawn.multisig.numberOfPubkeys;
+                    *num_items = 5 + MULTISIG_PRINT_FACTOR * ctx->tx_obj->spawn.multisig.numberOfPubkeys;
                     if (app_mode_expert()) {
-                        *num_items = 9 + ctx->tx_obj->spawn.multisig.numberOfPubkeys;
+                        *num_items = 9 + MULTISIG_PRINT_FACTOR * ctx->tx_obj->spawn.multisig.numberOfPubkeys;
                     }
                     break;
                 case VAULT:
@@ -274,10 +276,11 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
     uint8_t adjustedIdx = displayIdx;
     const uint8_t pubkeysStart = 5;
 
-    if (displayIdx >= pubkeysStart && displayIdx < pubkeysStart + ctx->tx_obj->spawn.multisig.numberOfPubkeys) {
+    if (displayIdx >= pubkeysStart &&
+        displayIdx < pubkeysStart + MULTISIG_PRINT_FACTOR * ctx->tx_obj->spawn.multisig.numberOfPubkeys) {
         adjustedIdx = pubkeysStart;
-    } else if (displayIdx >= pubkeysStart + ctx->tx_obj->spawn.multisig.numberOfPubkeys) {
-        adjustedIdx = displayIdx - ctx->tx_obj->spawn.multisig.numberOfPubkeys + 1;
+    } else if (displayIdx >= pubkeysStart + MULTISIG_PRINT_FACTOR * ctx->tx_obj->spawn.multisig.numberOfPubkeys) {
+        adjustedIdx = displayIdx - MULTISIG_PRINT_FACTOR * ctx->tx_obj->spawn.multisig.numberOfPubkeys + 1;
     }
 
     switch (adjustedIdx) {
@@ -308,12 +311,20 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
             break;
         case 5: {
             const uint8_t tmpDisplayIdx = displayIdx - adjustedIdx;
-            snprintf(outKey, outKeyLen, "Address %d", tmpDisplayIdx);
-            const uint8_t address[64] = {0};
-            CHECK_ZX_OK(crypto_encodeWalletPubkey((uint8_t *)address, sizeof(address),
-                                                  ctx->tx_obj->spawn.multisig.pubkey[tmpDisplayIdx].ptr));
-            CHECK_ZX_OK(bech32EncodeFromBytes(buff, sizeof(buff), hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
-            pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            const uint8_t pubkeyIdx = tmpDisplayIdx / MULTISIG_PRINT_FACTOR;
+            if (tmpDisplayIdx % 2 == 0) {
+                snprintf(outKey, outKeyLen, "Pubkey %d", pubkeyIdx);
+                pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.multisig.pubkey[pubkeyIdx].ptr),
+                              PUB_KEY_LENGTH, pageIdx, pageCount);
+            } else {
+                snprintf(outKey, outKeyLen, "Address %d", pubkeyIdx);
+                const uint8_t address[64] = {0};
+                CHECK_ZX_OK(crypto_encodeWalletPubkey((uint8_t *)address, sizeof(address),
+                                                      ctx->tx_obj->spawn.multisig.pubkey[pubkeyIdx].ptr));
+                CHECK_ZX_OK(
+                    bech32EncodeFromBytes(buff, sizeof(buff), hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
+                pageString(outVal, outValLen, buff, pageIdx, pageCount);
+            }
             break;
         }
         case 6:
@@ -333,6 +344,8 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
             snprintf(outKey, outKeyLen, "Genesis Id");
             pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->genesisId.ptr), GENESIS_LENGTH, pageIdx, pageCount);
             break;
+        default:
+            return parser_no_data;
     }
 
     return parser_ok;
@@ -395,9 +408,8 @@ parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, 
             snprintf(outKey, outKeyLen, "Genesis Id");
             pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->genesisId.ptr), GENESIS_LENGTH, pageIdx, pageCount);
             break;
-        default: {
+        default:
             return parser_no_data;
-        }
     }
 
     return parser_ok;
