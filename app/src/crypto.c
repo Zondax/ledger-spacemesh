@@ -118,8 +118,8 @@ zxerr_t crypto_fillAddress(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *
     CHECK_ZXERR(crypto_encodeAccountPubkey(address_encoded, sizeof(address_encoded), &internalPubkey, NULL, WALLET));
 
     const char *hrp = calculate_hrp();
-    CHECK_ZXERR(
-        bech32EncodeFromBytes(resp->address_bech32, 64, hrp, address_encoded, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
+    CHECK_ZXERR(bech32EncodeFromBytes(resp->address_bech32, sizeof(resp->address_bech32), hrp, address_encoded,
+                                      ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
 
     *addrResponseLen = sizeof(resp->pubkey) + strnlen((const char *)resp->address_bech32, MAX_ADDRESS_LENGTH);
 

@@ -312,18 +312,17 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
         case 5: {
             const uint8_t tmpDisplayIdx = displayIdx - adjustedIdx;
             const uint8_t pubkeyIdx = tmpDisplayIdx / MULTISIG_PRINT_FACTOR;
+            if (pubkeyIdx >= ctx->tx_obj->spawn.multisig.numberOfPubkeys) {
+                return parser_value_out_of_range;
+            }
             if (tmpDisplayIdx % 2 == 0) {
                 snprintf(outKey, outKeyLen, "Pubkey %d", pubkeyIdx);
                 pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->spawn.multisig.pubkey[pubkeyIdx].ptr),
                               PUB_KEY_LENGTH, pageIdx, pageCount);
             } else {
                 snprintf(outKey, outKeyLen, "Address %d", pubkeyIdx);
-                const uint8_t address[64] = {0};
-                CHECK_ZX_OK(crypto_encodeWalletPubkey((uint8_t *)address, sizeof(address),
-                                                      ctx->tx_obj->spawn.multisig.pubkey[pubkeyIdx].ptr));
-                CHECK_ZX_OK(
-                    bech32EncodeFromBytes(buff, sizeof(buff), hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
-                pageString(outVal, outValLen, buff, pageIdx, pageCount);
+                return printAddress(ctx->tx_obj->spawn.multisig.pubkey[pubkeyIdx].ptr, outVal, outValLen, pageIdx,
+                                    pageCount);
             }
             break;
         }
@@ -486,5 +485,18 @@ parser_error_t printNumber(uint64_t amount, uint8_t decimalPlaces, const char *p
     number_inplace_trimming(bufferUI, 1);
 
     pageString(outValue, outValueLen, bufferUI, pageIdx, pageCount);
+    return parser_ok;
+}
+
+parser_error_t printAddress(const uint8_t *pubkey, char *outValue, uint16_t outValueLen, uint8_t pageIdx,
+                            uint8_t *pageCount) {
+    char address[64] = {0};
+    const uint8_t pubkey_encoded[64] = {0};
+    const char *hrp = calculate_hrp();
+
+    CHECK_ZX_OK(crypto_encodeWalletPubkey((uint8_t *)pubkey_encoded, sizeof(pubkey_encoded), pubkey));
+    CHECK_ZX_OK(
+        bech32EncodeFromBytes(address, sizeof(address), hrp, pubkey_encoded, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
+    pageString(outValue, outValueLen, address, pageIdx, pageCount);
     return parser_ok;
 }
