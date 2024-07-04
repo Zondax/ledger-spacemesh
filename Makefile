@@ -41,3 +41,7 @@ test_all:
 	PRODUCTION_BUILD=1 make
 	make zemu_install
 	make zemu_test
+
+test_ledger_try:
+	make zemu_install
+	cd tests_zemu && yarn try

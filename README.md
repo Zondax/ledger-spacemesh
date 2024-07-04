@@ -135,6 +135,15 @@ To run a single specific test:
 
 > At the moment, the recommendation is to run from the IDE. Remember to run `make` if you change the app.
 
+## Quick running
+To build the application and run Zemu tests for all devices, we provide a shortcut.
+
+```bash
+make test_all
+```
+
+This command will build the application for every device with `PRODUCTION_BUILD=1`, install all the JS dependencies, and finally run all the integration tests available in the project.
+
 ## Using a real device
 
 ### How to prepare your DEVELOPMENT! device:

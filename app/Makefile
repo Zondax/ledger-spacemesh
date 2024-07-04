@@ -54,7 +54,7 @@ $(info COIN  = [$(COIN)])
 ifeq ($(COIN),SMESH)
 # Main app configuration
 APPNAME = "Spacemesh"
-APPPATH = "44'/540'"
+APPPATH = "44'/540'" --path "44'/1'"
 
 else
 define error_message

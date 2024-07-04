@@ -16,8 +16,8 @@ export const models: IDeviceModel[] = [
   { name: 'stax', prefix: 'ST', path: APP_PATH_ST },
 ]
 
-export const PATH = "m/44'/540'/0'/0/0"
-export const PATH_TESTNET = "m/44'/1'/0'/0/0"
+export const PATH = "m/44'/540'/0'/0'/0'"
+export const PATH_TESTNET = "m/44'/1'/0'/0'/0'"
 
 export const defaultOptions = {
   ...DEFAULT_START_OPTIONS,

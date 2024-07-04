@@ -7,8 +7,8 @@ export const MULTISIG_TESTCASES: TestCase[] = [
   {
     idx: 0,
     account: new Account(AccountType.Multisig, 2, 2, [addressToBuffer(pubKey0, 0)]),
-    expected_address: 'sm1qqqqqq9yec9x0q84s8eqvsz9z82cfft0el4w2psknxxfl',
-    expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
+    expected_address: 'sm1qqqqqqyyms4sgqlmeggm8pn0qhqr26j2eawzdmsa4ydz5',
+    expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
   },
   {
@@ -18,8 +18,8 @@ export const MULTISIG_TESTCASES: TestCase[] = [
       addressToBuffer(pubKey3, 3),
       addressToBuffer(pubKey2, 2),
     ]),
-    expected_address: 'sm1qqqqqq8wmne37awzvphppdhms9564g9f73rel3c7cvxkl',
-    expected_pk: '136d3aee6442288da85f936f7fe6822186f1d3c63c050721c66bcb7a2095655d',
+    expected_address: 'sm1qqqqqq805rnfrv3d5hr8qy3s954cx7rfd66nc4gjv9hs0',
+    expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
   },
   {
@@ -29,8 +29,8 @@ export const MULTISIG_TESTCASES: TestCase[] = [
       addressToBuffer(pubKey3, 3),
       addressToBuffer(pubKey2, 2),
     ]),
-    expected_address: 'stest1qqqqqq9f7wcn6nm923pm26jar3vnwqdup0exvwsnypstf',
-    expected_pk: 'fa036e263e3351a1365d0355e2c2ccf79b364f686e621418e12c735f87a9d67a',
+    expected_address: 'stest1qqqqqqpeuxeextghddk4jfmgt7g7ynqfshdclng399zkc',
+    expected_pk: '9cfbee82a799b8497430e8665f23e7b8e5b9345e6bbc6ee3895daa2ab8c00e16',
     path: PATH_TESTNET,
   },
 ]
@@ -39,13 +39,13 @@ export const MULTISIG_TRANSACTIONS = [
   {
     idx: 0,
     name: "multisig_spawn_0",
-    blob: '0000000000b1885c09432cb9de46fd1997f452a53843ab1cc70000000000000000000000000000000000000000000000000200040c14218506d35db6a7bab8d3717d55ade4c43ca80f7291883cd549ff8a34b78324bd00b9a50aadc89a95a2a14eb7594664d9910e85b5d6f5abbc5788223d4c16692101fa619348966aaba9c94b22d43c3703e73bd54fa6452112e15febc5b9a6ab1a4242fc8d73581ae4da1f2ec206db38fd1605d7781ce9fb647f4b3049ac8f309dcecf7ee7dda78952c3782c334864ad7c9458e22e0e16733db1d2bc7c8bc9ef61',
+    blob: '9EEBFF023ABB17CCB775C602DAADE8ED708F0A5000000000008E2FFE6A66BDBC0230331A778E10BEFB77A1B7E50000000000000000000000000000000000000000000000000200F12404104E9941A547FD184BB0F2EFA8495E1F9ECC1A2D4B32CE7794EC3533A2EB0B802FA8BF76F261D21BD799524AD54D0AA924ECD6622D48BB0BC5E20926F5E0FE2F68491ADA596A7A53FB6749DE21A2E75FFCF139A3C3B17170678B3278EDCEAA570DC6014D00283780A9E353ED60560EF520206053AAA37D7C50997A36A6AEC5A877',
     path: PATH,
   },
   {
     idx: 1,
     name: "multisig_spend_0",
-    blob: '0000000000b1885c09432cb9de46fd1997f452a53843ab1cc740040400000000b1885c09432cb9de46fd1997f452a53843ab1cc728',
+    blob: '9EEBFF023ABB17CCB775C602DAADE8ED708F0A5000000000008E2FFE6A66BDBC0230331A778E10BEFB77A1B7E54000F12400000000719D58B3F3A1C73BECC9140B07A474DE6F5275EF13416B33AA0E225001',
     path: PATH,
   },
 ]

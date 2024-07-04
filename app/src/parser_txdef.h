@@ -79,6 +79,7 @@ typedef struct {
 } drain_tx_t;
 
 typedef struct {
+    Bytes_t genesisId;
     account_type_e account_type;
     uint8_t tx_version;
     Bytes_t principal;

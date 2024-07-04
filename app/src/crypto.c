@@ -37,7 +37,7 @@ zxerr_t crypto_extractPublicKey(uint8_t *pubKey, uint16_t pubKeyLen) {
     zxerr_t error = zxerr_unknown;
 
     // Generate keys
-    CATCH_CXERROR(os_derive_bip32_with_seed_no_throw(HDW_NORMAL, CX_CURVE_Ed25519, hdPath, HDPATH_LEN_DEFAULT,
+    CATCH_CXERROR(os_derive_bip32_with_seed_no_throw(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, hdPath, HDPATH_LEN_DEFAULT,
                                                      privateKeyData, NULL, NULL, 0));
 
     CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_Ed25519, privateKeyData, 32, &cx_privateKey));
@@ -72,7 +72,7 @@ zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t 
 
     zxerr_t error = zxerr_unknown;
     // Generate keys
-    CATCH_CXERROR(os_derive_bip32_with_seed_no_throw(HDW_NORMAL, CX_CURVE_Ed25519, hdPath, HDPATH_LEN_DEFAULT,
+    CATCH_CXERROR(os_derive_bip32_with_seed_no_throw(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, hdPath, HDPATH_LEN_DEFAULT,
                                                      privateKeyData, NULL, NULL, 0));
 
     CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_Ed25519, privateKeyData, 32, &cx_privateKey));
@@ -118,12 +118,11 @@ zxerr_t crypto_fillAddress(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *
     CHECK_ZXERR(crypto_encodeAccountPubkey(address_encoded, sizeof(address_encoded), &internalPubkey, NULL, WALLET));
 
     const char *hrp = calculate_hrp();
-    CHECK_ZXERR(
-        bech32EncodeFromBytes(resp->address_bech32, 64, hrp, address_encoded, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
+    CHECK_ZXERR(bech32EncodeFromBytes(resp->address_bech32, sizeof(resp->address_bech32), hrp, address_encoded,
+                                      ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
 
     *addrResponseLen = sizeof(resp->pubkey) + strnlen((const char *)resp->address_bech32, MAX_ADDRESS_LENGTH);
 
-    ZEMU_LOGF(50, "addr_len: %d", *addrResponseLen);
     return zxerr_ok;
 }
 
