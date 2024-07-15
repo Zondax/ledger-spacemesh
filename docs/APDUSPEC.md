@@ -28,7 +28,7 @@ The general structure of commands and responses is as follows:
 | Return code | Description             |
 | ----------- | ----------------------- |
 | 0x6400      | Execution Error         |
-| 0x6400      | Wrong buffer length     |
+| 0x6700      | Wrong buffer length     |
 | 0x6982      | Empty buffer            |
 | 0x6983      | Output buffer too small |
 | 0x6984      | Data is invalid         |
@@ -44,6 +44,32 @@ The general structure of commands and responses is as follows:
 ---
 
 ## Command definition
+
+### GET_DEVICE_INFO
+
+#### Command
+
+| Field | Type     | Content                | Expected |
+| ----- | -------- | ---------------------- | -------- |
+| CLA   | byte (1) | Application Identifier | 0xE0     |
+| INS   | byte (1) | Instruction ID         | 0x01     |
+| P1    | byte (1) | Parameter 1            | 0x00     |
+| P2    | byte (1) | Parameter 2            | 0x00     |
+| L     | byte (1) | Bytes in payload       | 0x00     |
+
+#### Response
+
+| Field     | Type     | Content            | Note                     |
+| --------- | -------- | ------------------ | ------------------------ |
+| TARGET_ID | byte (4) | Target Id          |                          |
+| OS_LEN    | byte (1) | OS version length  | 0..64                    |
+| OS        | byte (?) | OS version         | Non terminated string    |
+| FLAGS_LEN | byte (1) | Flags length       | 0                        |
+| MCU_LEN   | byte (1) | MCU version length | 0..64                    |
+| MCU       | byte (?) | MCU version        | Non terminated string    |
+| SW1-SW2   | byte (2) | Return code        | see list of return codes |
+
+---
 
 ### GET_VERSION
 
@@ -78,7 +104,7 @@ The general structure of commands and responses is as follows:
 | ------- | -------- | ------------------------- | ----------------- |
 | CLA     | byte (1) | Application Identifier    | 0x45              |
 | INS     | byte (1) | Instruction ID            | 0x01              |
-| P1      | byte (1) | Request User confirmation | No = 0            |
+| P1      | byte (1) | Request User confirmation | No = 0 / Yes = 1  |
 | P2      | byte (1) | Parameter 2               | ignored           |
 | L       | byte (1) | Bytes in payload          | 20                |
 | Path[0] | byte (4) | Derivation Path Data      | 0x80000000 \| 44  |
@@ -148,7 +174,9 @@ All other packets/chunks contain data chunks that are described below
 | -------------- | ------------- | ------------------------- | ----------------- |
 | CLA            | byte (1)      | Application Identifier    | 0x45              |
 | INS            | byte (1)      | Instruction ID            | 0x03              |
-| P1             | byte (1)      | Request User confirmation | No = 0            |
+| P1             | byte (1)      | Payload desc              | 0 = init          | 
+|                |               |                           | 1 = add           |
+|                |               |                           | 2 = last          |
 | P2             | byte (1)      | Parameter 2               | ignored           |
 | L              | byte (1)      | Bytes in payload          | 20                |
 | Path[0]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 44  |
@@ -164,7 +192,7 @@ All other packets/chunks contain data chunks that are described below
 | Field   | Type      | Content     | Note                     |
 | ------- | --------- | ----------- | ------------------------ |
 | PK      | byte (32) | Public Key  |                          |
-| ADDR    | byte (24) | address     | vault address            |
+| ADDR    | byte (24) | address     | multisig address         |
 | SW1-SW2 | byte (2)  | Return code | see list of return codes |
 
 ---
@@ -175,7 +203,9 @@ All other packets/chunks contain data chunks that are described below
 | -------------- | ------------- | ------------------------- | ----------------- |
 | CLA            | byte (1)      | Application Identifier    | 0x45              |
 | INS            | byte (1)      | Instruction ID            | 0x04              |
-| P1             | byte (1)      | Request User confirmation | No = 0            |
+| P1             | byte (1)      | Payload desc              | 0 = init          | 
+|                |               |                           | 1 = add           |
+|                |               |                           | 2 = last          |
 | P2             | byte (1)      | Parameter 2               | ignored           |
 | L              | byte (1)      | Bytes in payload          | 20                |
 | Path[0]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 44  |
@@ -186,13 +216,23 @@ All other packets/chunks contain data chunks that are described below
 | internal_index | byte (1)      | internal index            |                   |
 | Account        | Account Vault | Account Vault             | ? bytes           |
 
+#### Response
+
+| Field   | Type      | Content     | Note                     |
+| ------- | --------- | ----------- | ------------------------ |
+| PK      | byte (32) | Public Key  |                          |
+| ADDR    | byte (24) | address     | vesting address          |
+| SW1-SW2 | byte (2)  | Return code | see list of return codes |
+
 ### INS_GET_ADDR_VAULT
 
 | Field          | Type          | Content                   | Expected          |
 | -------------- | ------------- | ------------------------- | ----------------- |
 | CLA            | byte (1)      | Application Identifier    | 0x45              |
 | INS            | byte (1)      | Instruction ID            | 0x05              |
-| P1             | byte (1)      | Request User confirmation | No = 0            |
+| P1             | byte (1)      | Payload desc              | 0 = init          | 
+|                |               |                           | 1 = add           |
+|                |               |                           | 2 = last          |
 | P2             | byte (1)      | Parameter 2               | ignored           |
 | L              | byte (1)      | Bytes in payload          | 20                |
 | Path[0]        | byte (4)      | Derivation Path Data      | 0x80000000 \| 44  |
@@ -202,6 +242,14 @@ All other packets/chunks contain data chunks that are described below
 | Path[4]        | byte (4)      | Derivation Path Data      | ?                 |
 | internal_index | byte (1)      | internal index            |                   |
 | AccountVault   | Account Vault | Account Vault             | ? bytes           |
+
+#### Response
+
+| Field   | Type      | Content     | Note                     |
+| ------- | --------- | ----------- | ------------------------ |
+| PK      | byte (32) | Public Key  |                          |
+| ADDR    | byte (24) | address     | vault address            |
+| SW1-SW2 | byte (2)  | Return code | see list of return codes |
 
 ### Other structures
 

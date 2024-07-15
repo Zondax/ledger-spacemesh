@@ -35,7 +35,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     uint8_t num_items;
     rc = parser_getNumItems(&ctx, &num_items);
     if (rc != parser_ok) {
-        fprintf(stderr, "error in parser_getNumItems: %s\n", parser_getErrorDescription(rc));
         assert(false);
     }
 

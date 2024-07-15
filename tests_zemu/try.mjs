@@ -13,6 +13,11 @@ async function main() {
   const pubKey = get_resp.pubkey
   console.log(get_resp)
 
+  let resp = await app.deviceInfo()
+  console.log('Device Info', resp);
+  resp = await app.getVersion()
+  console.log('Version', resp);
+
   const blobSpend = "9EEBFF023ABB17CCB775C602DAADE8ED708F0A500000000000833816A6695F08E9037763CAE46612DED40F9F2D4000D52400000000719D58B3F3A1C73BECC9140B07A474DE6F5275EF02286BEE"
   const messageToSign = Buffer.from(blobSpend, 'hex')
   const signatureRequest = app.sign(PATH, messageToSign)
