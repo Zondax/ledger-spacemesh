@@ -68,7 +68,7 @@ parser_error_t readCompactU32(parser_context_t *ctx, uint32_t *val) {
     return parser_ok;
 }
 
-parser_error_t readCompactU8(parser_context_t *ctx, uint32_t *val) {
+parser_error_t readCompactU8(parser_context_t *ctx, uint8_t *val) {
     CHECK_INPUT();
 
     CompactInt_t tmp = {0};
