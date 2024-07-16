@@ -77,9 +77,9 @@ if(ENABLE_FUZZING)
         endif()
     else()
         message(FATAL_ERROR
-                "You are using an unsupported compiler! Fuzzing only works with Clang 10.\n"
+                "Unsupported compiler! Fuzzing requires Clang 10.\n"
                 "1. Install clang-10 \n"
-                "2. Pass -DCMAKE_C_COMPILER=clang-10 -DCMAKE_CXX_COMPILER=clang++-10")
+                "2. Use -DCMAKE_C_COMPILER=clang-10 -DCMAKE_CXX_COMPILER=clang++-10")
     endif()
 
     string(APPEND CMAKE_C_FLAGS " -fsanitize=fuzzer-no-link")
@@ -128,7 +128,7 @@ add_definitions(
 ##############################################################
 ##{TODO}
 ##############################################################
-#  static libs
+# Static Libraries
 file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE2/ref/blake2b-ref.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/BLAKE3-c/blake3.c
@@ -183,8 +183,6 @@ else()
     target_include_directories(unittests PRIVATE
             ${gtest_SOURCE_DIR}/include
             ${gmock_SOURCE_DIR}/include
-            ${CONAN_INCLUDE_DIRS_FMT}
-            ${CONAN_INCLUDE_DIRS_JSONCPP}
             ${CMAKE_CURRENT_SOURCE_DIR}/app/src
             ${CMAKE_CURRENT_SOURCE_DIR}/app/src/lib
             )

@@ -19,7 +19,7 @@ jobs:
         run: echo "uid_gid=$(id -u):$(id -g)" >> $GITHUB_OUTPUT
 
   build:
-    runs-on: zondax-runners
+    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     steps:
       - name: Install dependencies
         run: |
@@ -50,7 +50,7 @@ jobs:
 
   build_ledger:
     needs: configure
-    runs-on: zondax-runners
+    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     container:
       image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
@@ -72,7 +72,7 @@ jobs:
 
   size_nano_s:
     needs: build_ledger
-    runs-on: zondax-runners
+    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     env:
       NANOS_LIMIT_SIZE: 136
     steps:
@@ -81,7 +81,7 @@ jobs:
           [ ${{needs.build_ledger.outputs.size}} -le $NANOS_LIMIT_SIZE ]
 
   test_zemu:
-    runs-on: zondax-runners
+    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     steps:
       - name: Test
         run: |
@@ -123,7 +123,7 @@ jobs:
   build_package_nanos:
     needs: [configure, build, build_ledger, test_zemu]
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: zondax-runners
+    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     container:
       image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
@@ -159,7 +159,7 @@ jobs:
   build_package_nanosp:
     needs: [configure, build, build_ledger, test_zemu]
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: zondax-runners
+    runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
     container:
       image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
