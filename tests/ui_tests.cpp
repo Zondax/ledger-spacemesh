@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 #include "crypto.h"
 #include "gmock/gmock.h"
 #include "parser.h"
+#include "parser_message.h"
 #include "utils/common.h"
 
 using ::testing::TestWithParam;
@@ -39,6 +40,19 @@ typedef struct {
 } testcase_t;
 
 class JsonTestsA : public ::testing::TestWithParam<testcase_t> {
+   public:
+    struct PrintToStringParamName {
+        template <class ParamType>
+        std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
+            auto p = static_cast<testcase_t>(info.param);
+            std::stringstream ss;
+            ss << p.index << "_" << p.name;
+            return ss.str();
+        }
+    };
+};
+
+class JsonTestsB : public ::testing::TestWithParam<testcase_t> {
    public:
     struct PrintToStringParamName {
         template <class ParamType>
@@ -127,9 +141,53 @@ void check_testcase(const testcase_t &tc, bool expert_mode) {
     }
 }
 
+void check_message_testcase(const testcase_t &tc) {
+    app_mode_set_expert(false);
+
+    parser_context_t ctx;
+    parser_error_t err;
+
+    uint8_t buffer[5000];
+    uint16_t bufferLen = parseHexString(buffer, sizeof(buffer), tc.blob.c_str());
+
+    parser_message_tx_t tx_obj;
+    memset(&tx_obj, 0, sizeof(tx_obj));
+
+    hdPath[0] = HDPATH_0_DEFAULT;
+    hdPath[1] = HDPATH_1_DEFAULT;
+
+    err = parser_message_parse(&ctx, buffer, bufferLen, &tx_obj);
+    ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);
+
+    auto output = dumpRawUI(&ctx, 39, 39);
+
+    std::cout << std::endl;
+    for (const auto &i : output) {
+        std::cout << i << std::endl;
+    }
+    std::cout << std::endl << std::endl;
+
+    std::vector<std::string> expected = app_mode_expert() ? tc.expected_expert : tc.expected;
+
+    EXPECT_EQ(output.size(), expected.size());
+    for (size_t i = 0; i < expected.size(); i++) {
+        if (i < output.size()) {
+            EXPECT_THAT(output[i], testing::Eq(expected[i]));
+        }
+    }
+}
+
 INSTANTIATE_TEST_SUITE_P
 
     (JsonTestCasesCurrentTxVer, JsonTestsA, ::testing::ValuesIn(GetJsonTestCases("testcases.json")),
      JsonTestsA::PrintToStringParamName());
+
+INSTANTIATE_TEST_SUITE_P
+
+    (JsonTestCasesRawTxVer, JsonTestsB, ::testing::ValuesIn(GetJsonTestCases("message_testcases.json")),
+     JsonTestsB::PrintToStringParamName());
+
 TEST_P(JsonTestsA, CheckUIOutput_CurrentTX_Expert) { check_testcase(GetParam(), true); }
 TEST_P(JsonTestsA, CheckUIOutput_CurrentTX) { check_testcase(GetParam(), false); }
+
+TEST_P(JsonTestsB, CheckUIOutput_RawTX) { check_message_testcase(GetParam()); }

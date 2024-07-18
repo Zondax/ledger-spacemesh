@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2018 - 2023 Zondax AG
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -72,18 +72,20 @@ const char *parser_getErrorDescription(parser_error_t err) {
         case parser_unexpected_chain:
             return "Unexpected chain";
         case parser_missing_field:
-            return "missing field";
+            return "Missing field";
 
         case parser_display_idx_out_of_range:
-            return "display index out of range";
+            return "Display index out of range";
         case parser_display_page_out_of_range:
-            return "display page out of range";
+            return "Display page out of range";
         case parser_unexpected_unparsed_bytes:
-            return "unexpected unparsed bytes";
+            return "Unexpected unparsed bytes";
         case parser_unexpected_method_selector:
-            return "unexpected method selector";
+            return "Unexpected method selector";
         case parser_tx_obj_empty:
-            return "tx obj empty";
+            return "Tx obj empty";
+        case parser_unexpected_value:
+            return "Unexpected value";
 
         default:
             return "Unrecognized error code";
@@ -93,7 +95,7 @@ const char *parser_getErrorDescription(parser_error_t err) {
 const char *parser_getZxErrorDescription(zxerr_t err) {
     switch (err) {
         case zxerr_unknown:
-            return "error unknown";
+            return "Error unknown";
         case zxerr_ok:
             return "No error";
         case zxerr_no_data:

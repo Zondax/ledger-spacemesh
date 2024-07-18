@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *   (c) 2016 Ledger
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,6 +119,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
         THROW(APDU_CODE_OK);
     }
 
+    *tx = 0;
     const char *error_msg = tx_parse();
     CHECK_APP_CANARY()
     if (error_msg != NULL) {
@@ -129,6 +130,27 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
     }
 
     view_review_init(tx_getItem, tx_getNumItems, app_sign);
+    view_review_show(REVIEW_TXN);
+    *flags |= IO_ASYNCH_REPLY;
+}
+
+__Z_INLINE void handleSignMessage(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    ZEMU_LOGF(50, "handleSignMessage\n");
+    if (!process_chunk(tx, rx)) {
+        THROW(APDU_CODE_OK);
+    }
+
+    *tx = 0;
+    const char *error_msg = tx_message_parse();
+    CHECK_APP_CANARY()
+    if (error_msg != NULL) {
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
+        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);
+        *tx += (error_msg_length);
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    view_review_init(tx_message_getItem, tx_message_getNumItems, app_message_sign);
     view_review_show(REVIEW_TXN);
     *flags |= IO_ASYNCH_REPLY;
 }
@@ -253,6 +275,13 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     handleMultisig(flags, tx, rx, VAULT);
                     break;
                 }
+
+                case INS_SIGN_MESSAGE: {
+                    CHECK_PIN_VALIDATED()
+                    handleSignMessage(flags, tx, rx);
+                    break;
+                }
+
 #if defined(APP_TESTING)
                 case INS_TEST: {
                     handleTest(flags, tx, rx);

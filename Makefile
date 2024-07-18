@@ -19,7 +19,7 @@
 # BOLOS_SDK NOT DEFINED		We use a containerized build approach
 
 # TESTS_JS_PACKAGE = "@zondax/ledger-spacemesh"
-# TESTS_JS_DIR = $(CURDIR)/js
+# TESTS_JS_DIR = $(CURDIR)/../ledger-spacemesh-js
 
 ifeq ($(BOLOS_SDK),)
 # In this case, there is not predefined SDK and we run dockerized

@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2018 - 2023 Zondax AG
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -64,7 +64,10 @@ typedef struct {
     const uint8_t *buffer;
     uint16_t bufferLen;
     uint16_t offset;
-    parser_tx_t *tx_obj;
+    union {
+        parser_tx_t *tx_obj;
+        parser_message_tx_t *message_tx_obj;
+    };
 } parser_context_t;
 
 #ifdef __cplusplus

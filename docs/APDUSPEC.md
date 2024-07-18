@@ -251,6 +251,49 @@ All other packets/chunks contain data chunks that are described below
 | ADDR    | byte (24) | address     | vault address            |
 | SW1-SW2 | byte (2)  | Return code | see list of return codes |
 
+### INS_SIGN_MESSAGE
+
+#### Command
+
+| Field   | Type     | Content                | Expected |
+| ------- | -------- | ---------------------- | -------- |
+| CLA     | byte (1) | Application Identifier | 0x45     |
+| INS     | byte (1) | Instruction ID         | 0x06     |
+| P1      | byte (1) | Payload desc           | 0 = init  |
+|         |          |                        | 1 = add   |
+|         |          |                        | 2 = last  |
+| P2      | byte (1) | ----                   | not used  |
+| L       | byte (1) | Bytes in payload       | (depends) |
+
+The first packet/chunk includes only the derivation path
+
+All other packets/chunks contain data chunks that are described below
+
+##### First Packet
+
+| Field   | Type     | Content              | Expected |
+| ------- | -------- | -------------------- | -------- |
+| Path[0] | byte (4) | Derivation Path Data | 44       |
+| Path[1] | byte (4) | Derivation Path Data | 540      |
+| Path[2] | byte (4) | Derivation Path Data | ?        |
+| Path[3] | byte (4) | Derivation Path Data | ?        |
+| Path[4] | byte (4) | Derivation Path Data | ?        |
+
+##### Other Chunks/Packets
+
+| Field       | Type          | Content                  | Expected |
+| ----------- | ------------- | ------------------------ | -------- |
+| Prefix len  | byte (2)      | Prefix length            | ?        |
+| Message len | byte (2)      | Message length           | ?        |
+| DataToSign  | Data to sign  | Data that will be signed | ? bytes  |
+
+#### Response
+
+| Field   | Type      | Content     | Note                     |
+| ------- | --------- | ----------- | ------------------------ |
+| SIG     | byte (65) | Signature   |                          |
+| SW1-SW2 | byte (2)  | Return code | see list of return codes |
+
 ### Other structures
 
 #### PubkeyItem
@@ -277,3 +320,23 @@ All other packets/chunks contain data chunks that are described below
 | vestingStart        | u32     | Vesting start time    | 4 bytes |
 | vestingEnd          | u32     | Vesting end time      | 4 bytes |
 | account             | Account | owner account         | ? bytes |
+
+#### Data to sign
+
+| Field         | Type      | Content         | Expected    |
+| ------------- | --------- | --------------- | ----------- |
+| prefix        | bytes...  | Prefix          | bytes...    |
+| domain        | byte (1)  | Domain          | Domain enum |
+| message       | bytes...  | Message         | bytes...    |
+
+#### Domain enum
+
+| Name                | Value |
+| ------------------- | ----- |
+| ATX                 | 0     |
+| PROPOSAL            | 1     |
+| BALLOT              | 2     |
+| HARE                | 3     |
+| POET                | 4     |
+| BEACON FIRST MSG    | 10    |
+| BEACON FOLLOWUP MSG | 11    |

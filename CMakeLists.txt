@@ -145,6 +145,7 @@ file(GLOB_RECURSE LIB_SRC
         ####
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_message.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/crypto_helper.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/zxblake3.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl_common.c
@@ -166,6 +167,7 @@ target_include_directories(app_lib PUBLIC
 if(ENABLE_FUZZING)
     set(FUZZ_TARGETS
         parser_parse
+        parser_message_parse
         )
 
     foreach(target ${FUZZ_TARGETS})

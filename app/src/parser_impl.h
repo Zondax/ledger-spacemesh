@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2018 - 2023 Zondax AG
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -41,6 +41,18 @@ extern "C" {
         return parser_no_data; \
     }                          \
     CTX_CHECK_AVAIL(ctx, 1)  // Checks that there is something available in the buffer
+
+#define GEN_DEC_READFIX_UNSIGNED(BITS) parser_error_t _readUInt##BITS(parser_context_t *ctx, uint##BITS##_t *value)
+#define GEN_DEF_READFIX_UNSIGNED(BITS)                                              \
+    parser_error_t _readUInt##BITS(parser_context_t *ctx, uint##BITS##_t *value) {  \
+        if (value == NULL) return parser_no_data;                                   \
+        *value = 0u;                                                                \
+        for (uint8_t i = 0u; i < (BITS##u >> 3u); i++, ctx->offset++) {             \
+            if (ctx->offset >= ctx->bufferLen) return parser_unexpected_buffer_end; \
+            *value += (uint##BITS##_t) * (ctx->buffer + ctx->offset) << (8u * i);   \
+        }                                                                           \
+        return parser_ok;                                                           \
+    }
 
 parser_error_t _read(parser_context_t *c, parser_tx_t *v);
 
