@@ -38,6 +38,14 @@ else
     $(info ************ PRODUCTION_BUILD  = [INTERNAL USE])
 endif
 
+# Display whether swap functionality is enabled or not
+ifdef HAVE_SWAP
+    $(info ************ HAVE_SWAP  = [ENABLED])
+    DEFINES += HAVE_SWAP=$(HAVE_SWAP)
+else
+    $(info ************ HAVE_SWAP  = [DISABLED])
+endif
+
 # Add the PRODUCTION_BUILD definition to the compiler flags
 DEFINES += PRODUCTION_BUILD=$(PRODUCTION_BUILD)
 
@@ -64,6 +72,8 @@ COIN value not supported: [$(COIN)]
 endef
 $(error "$(error_message)")
 endif
+
+$(info PATHS LIST = $(APPPATH))
 
 APP_LOAD_PARAMS =  --curve ed25519 --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
@@ -111,6 +121,7 @@ include $(BOLOS_SDK)/Makefile.rules
 #add dependency on custom makefile filename
 dep/%.d: %.c Makefile
 
+.PHONY: listvariants
 listvariants:
 	@echo VARIANTS COIN SMESH
 
