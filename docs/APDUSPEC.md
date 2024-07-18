@@ -143,13 +143,13 @@ All other packets/chunks contain data chunks that are described below
 
 ##### First Packet
 
-| Field   | Type     | Content              | Expected |
-| ------- | -------- | -------------------- | -------- |
-| Path[0] | byte (4) | Derivation Path Data | 44       |
-| Path[1] | byte (4) | Derivation Path Data | 540      |
-| Path[2] | byte (4) | Derivation Path Data | ?        |
-| Path[3] | byte (4) | Derivation Path Data | ?        |
-| Path[4] | byte (4) | Derivation Path Data | ?        |
+| Field   | Type     | Content              | Expected          |
+| ------- | -------- | -------------------- | ----------------- |
+| Path[0] | byte (4) | Derivation Path Data | 0x80000000 \| 44  |
+| Path[1] | byte (4) | Derivation Path Data | 0x80000000 \| 540 |
+| Path[2] | byte (4) | Derivation Path Data | ?                 |
+| Path[3] | byte (4) | Derivation Path Data | ?                 |
+| Path[4] | byte (4) | Derivation Path Data | ?                 |
 
 ##### Other Chunks/Packets
 
@@ -271,21 +271,23 @@ All other packets/chunks contain data chunks that are described below
 
 ##### First Packet
 
-| Field   | Type     | Content              | Expected |
-| ------- | -------- | -------------------- | -------- |
-| Path[0] | byte (4) | Derivation Path Data | 44       |
-| Path[1] | byte (4) | Derivation Path Data | 540      |
-| Path[2] | byte (4) | Derivation Path Data | ?        |
-| Path[3] | byte (4) | Derivation Path Data | ?        |
-| Path[4] | byte (4) | Derivation Path Data | ?        |
+
+
+| Field   | Type     | Content              | Expected          |
+| ------- | -------- | -------------------- | ----------------- |
+| Path[0] | byte (4) | Derivation Path Data | 0x80000000 \| 44  |
+| Path[1] | byte (4) | Derivation Path Data | 0x80000000 \| 540 |
+| Path[2] | byte (4) | Derivation Path Data | ?                 |
+| Path[3] | byte (4) | Derivation Path Data | ?                 |
+| Path[4] | byte (4) | Derivation Path Data | ?                 |
 
 ##### Other Chunks/Packets
 
-| Field       | Type          | Content                  | Expected |
-| ----------- | ------------- | ------------------------ | -------- |
-| Prefix len  | byte (2)      | Prefix length            | ?        |
-| Message len | byte (2)      | Message length           | ?        |
-| DataToSign  | Data to sign  | Data that will be signed | ? bytes  |
+| Field       | Type          | Content                   | Expected |
+| ----------- | ------------- | ------------------------- | -------- |
+| Prefix len  | byte (2)      | Prefix length             | ?        |
+| Message len | byte (2)      | Message length            | ?        |
+| DataToSign  | Data to sign  | [prefix, domain, message] | ? bytes  |
 
 #### Response
 

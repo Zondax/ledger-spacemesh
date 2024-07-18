@@ -23,24 +23,30 @@
 GEN_DEF_READFIX_UNSIGNED(8)
 GEN_DEF_READFIX_UNSIGNED(16)
 
-static void _formatOutput(const char *label, uint16_t len, const uint8_t *ptr, char *outKey, uint16_t outKeyLen,
-                          char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
+static parser_error_t _formatOutput(const char *label, uint16_t len, const uint8_t *message, char *outKey,
+                                    uint16_t outKeyLen, char *outVal, uint16_t outValLen, uint8_t pageIdx,
+                                    uint8_t *pageCount) {
+    if (outKey == NULL || outVal == NULL || label == NULL || pageCount == NULL || outKeyLen == 0 || outValLen == 0) {
+        return parser_unexpected_error;
+    }
+
     if (len == 0) {
         snprintf(outKey, outKeyLen, "%s", label);
         snprintf(outVal, outValLen, "Empty");
     } else {
         bool allPrintable = true;
         for (uint16_t i = 0; i < len; i++) {
-            allPrintable &= IS_PRINTABLE(ptr[i]);
+            allPrintable &= IS_PRINTABLE(message[i]);
         }
         if (allPrintable) {
             snprintf(outKey, outKeyLen, "%s", label);
-            pageStringExt(outVal, outValLen, (const char *)ptr, len, pageIdx, pageCount);
+            pageStringExt(outVal, outValLen, (const char *)message, len, pageIdx, pageCount);
         } else {
             snprintf(outKey, outKeyLen, "%s (hex)", label);
-            pageStringHex(outVal, outValLen, (const char *)ptr, len, pageIdx, pageCount);
+            pageStringHex(outVal, outValLen, (const char *)message, len, pageIdx, pageCount);
         }
     }
+    return parser_ok;
 }
 
 static parser_error_t _readDomain(parser_context_t *ctx, uint8_t *val) {
@@ -61,25 +67,41 @@ static parser_error_t _readDomain(parser_context_t *ctx, uint8_t *val) {
     }
 }
 
-static const char *_domainToString(uint8_t val) {
+static parser_error_t _printDomain(char *outVal, uint16_t outValLen, uint8_t val) {
+    if (outVal == NULL || outValLen == 0) {
+        return parser_unexpected_error;
+    }
+
+    const char *domain = NULL;
     switch (val) {
         case ATX:
-            return "ATX";
+            domain = "ATX";
+            break;
         case PROPOSAL:
-            return "PROPOSAL";
+            domain = "PROPOSAL";
+            break;
         case BALLOT:
-            return "BALLOT";
+            domain = "BALLOT";
+            break;
         case HARE:
-            return "HARE";
+            domain = "HARE";
+            break;
         case POET:
-            return "POET";
+            domain = "POET";
+            break;
         case BEACON_FIRST_MSG:
-            return "BEACON FIRST MSG";
+            domain = "BEACON FIRST MSG";
+            break;
         case BEACON_FOLLOWUP_MSG:
-            return "BEACON FOLLOWUP MSG";
+            domain = "BEACON FOLLOWUP MSG";
+            break;
         default:
-            return "UNKNOWN";
+            domain = "UNKNOWN";
     }
+
+    snprintf(outVal, outValLen, "%s", domain);
+
+    return parser_ok;
 }
 
 static parser_error_t parser_message_checkSanity(uint8_t numItems, uint8_t displayIdx) {
@@ -166,17 +188,14 @@ parser_error_t parser_message_getItem(const parser_context_t *ctx, uint8_t displ
             snprintf(outVal, outValLen, "Message");
             break;
         case 1:
-            _formatOutput("Prefix", ctx->message_tx_obj->prefix.len, ctx->message_tx_obj->prefix.ptr, outKey, outKeyLen,
-                          outVal, outValLen, pageIdx, pageCount);
-            break;
+            return _formatOutput("Prefix", ctx->message_tx_obj->prefix.len, ctx->message_tx_obj->prefix.ptr, outKey,
+                                 outKeyLen, outVal, outValLen, pageIdx, pageCount);
         case 2:
             snprintf(outKey, outKeyLen, "Domain");
-            snprintf(outVal, outValLen, "%s", _domainToString(ctx->message_tx_obj->domain));
-            break;
+            return _printDomain(outVal, outValLen, ctx->message_tx_obj->domain);
         case 3:
-            _formatOutput("Msg", ctx->message_tx_obj->message.len, ctx->message_tx_obj->message.ptr, outKey, outKeyLen,
-                          outVal, outValLen, pageIdx, pageCount);
-            break;
+            return _formatOutput("Msg", ctx->message_tx_obj->message.len, ctx->message_tx_obj->message.ptr, outKey,
+                                 outKeyLen, outVal, outValLen, pageIdx, pageCount);
         default:
             return parser_no_data;
     }
