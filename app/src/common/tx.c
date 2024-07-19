@@ -21,6 +21,7 @@
 #include "apdu_codes.h"
 #include "buffering.h"
 #include "parser.h"
+#include "parser_message.h"
 #include "zxmacros.h"
 
 #if defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX)
@@ -45,6 +46,7 @@ storage_t NV_CONST N_appdata_impl __attribute__((aligned(64)));
 #endif
 
 static parser_tx_t tx_obj;
+static parser_message_tx_t message_tx_obj;
 static parser_context_t ctx_parsed_tx;
 
 void tx_initialize() {
@@ -62,7 +64,7 @@ uint8_t *tx_get_buffer() { return buffering_get_buffer()->data; }
 const char *tx_parse() {
     MEMZERO(&tx_obj, sizeof(tx_obj));
 
-    uint8_t err = parser_parse(&ctx_parsed_tx, tx_get_buffer(), tx_get_buffer_length(), &tx_obj);
+    parser_error_t err = parser_parse(&ctx_parsed_tx, tx_get_buffer(), tx_get_buffer_length(), &tx_obj);
 
     CHECK_APP_CANARY()
 
@@ -77,6 +79,18 @@ const char *tx_parse() {
         return parser_getErrorDescription(err);
     }
 
+    return NULL;
+}
+
+const char *tx_message_parse() {
+    const parser_error_t err =
+        parser_message_parse(&ctx_parsed_tx, tx_get_buffer(), tx_get_buffer_length(), &message_tx_obj);
+
+    CHECK_APP_CANARY()
+
+    if (err != parser_ok) {
+        return parser_getErrorDescription(err);
+    }
     return NULL;
 }
 
@@ -104,6 +118,39 @@ zxerr_t tx_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *ou
 
     parser_error_t err =
         parser_getItem(&ctx_parsed_tx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
+
+    // Convert error codes
+    if (err == parser_no_data || err == parser_display_idx_out_of_range || err == parser_display_page_out_of_range)
+        return zxerr_no_data;
+
+    if (err != parser_ok) return zxerr_unknown;
+
+    return zxerr_ok;
+}
+
+zxerr_t tx_message_getNumItems(uint8_t *num_items) {
+    parser_error_t err = parser_message_getNumItems(num_items);
+
+    if (err != parser_ok) {
+        return zxerr_unknown;
+    }
+
+    return zxerr_ok;
+}
+
+zxerr_t tx_message_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal, uint16_t outValLen,
+                           uint8_t pageIdx, uint8_t *pageCount) {
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
+
+    uint8_t numItems = 0;
+    CHECK_ZXERR(tx_message_getNumItems(&numItems))
+    if (displayIdx < 0 || displayIdx >= numItems) {
+        return zxerr_no_data;
+    }
+
+    parser_error_t err =
+        parser_message_getItem(&ctx_parsed_tx, displayIdx, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount);
 
     // Convert error codes
     if (err == parser_no_data || err == parser_display_idx_out_of_range || err == parser_display_page_out_of_range)

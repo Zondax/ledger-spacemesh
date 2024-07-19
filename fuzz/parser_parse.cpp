@@ -38,8 +38,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         assert(false);
     }
 
-    (void)fprintf(stderr, "----------------------------------------------\n");
-
     for (uint8_t i = 0; i < num_items; i += 1) {
         uint8_t page_idx = 0;
         uint8_t page_count = 1;

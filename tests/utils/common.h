@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,3 +19,4 @@
 #include "parser_common.h"
 
 std::vector<std::string> dumpUI(parser_context_t *ctx, uint16_t maxKeyLen, uint16_t maxValueLen);
+std::vector<std::string> dumpRawUI(parser_context_t *ctx, uint16_t maxKeyLen, uint16_t maxValueLen);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2018 - 2023 Zondax AG
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -44,9 +44,16 @@ uint8_t *tx_get_buffer();
 /// \return It returns NULL if data is valid or error message otherwise.
 const char *tx_parse();
 
+const char *tx_message_parse();
+
 /// Return the number of items in the transaction
 zxerr_t tx_getNumItems(uint8_t *num_items);
 
 /// Gets an specific item from the transaction (including paging)
 zxerr_t tx_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outValue, uint16_t outValueLen,
                    uint8_t pageIdx, uint8_t *pageCount);
+
+zxerr_t tx_message_getNumItems(uint8_t *num_items);
+
+zxerr_t tx_message_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outValue, uint16_t outValueLen,
+                           uint8_t pageIdx, uint8_t *pageCount);

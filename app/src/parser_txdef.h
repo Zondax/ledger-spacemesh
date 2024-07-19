@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  (c) 2018 - 2023 Zondax AG
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ extern "C" {
 #define METHOD_SPAWN 0
 #define METHOD_SPEND 16
 #define METHOD_DRAIN_VAULT 17
+#define PARSER_MESSAGE_PREFIX_LEN 2
+#define PARSER_MESSAGE_MESSAGE_LEN 2
 
 // {TODO}: Placeholder, replace with real txn structure
 typedef struct {
@@ -93,6 +95,22 @@ typedef struct {
     };
 
 } parser_tx_t;
+
+typedef enum {
+    ATX = 0,
+    PROPOSAL = 1,
+    BALLOT = 2,
+    HARE = 3,
+    POET = 4,
+    BEACON_FIRST_MSG = 10,
+    BEACON_FOLLOWUP_MSG = 11
+} domain_e;
+
+typedef struct {
+    uint8_t domain;
+    Bytes_t prefix;
+    Bytes_t message;
+} parser_message_tx_t;
 
 #ifdef __cplusplus
 }

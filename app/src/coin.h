@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ extern "C" {
 #define INS_GET_ADDR_MULTISIG 0x03
 #define INS_GET_ADDR_VESTING 0x04
 #define INS_GET_ADDR_VAULT 0x05
+#define INS_SIGN_MESSAGE 0x06
 
 #define COIN_AMOUNT_DECIMAL_PLACES 9
 #define COIN_TICKER "SMH "

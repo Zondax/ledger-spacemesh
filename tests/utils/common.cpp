@@ -1,5 +1,5 @@
 /*******************************************************************************
- *   (c) 2018 - 2023 Zondax AG
+ *   (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 #include "common.h"
 
 #include <parser.h>
+#include <parser_message.h>
 
 #include <sstream>
 #include <string>
@@ -39,6 +40,47 @@ std::vector<std::string> dumpUI(parser_context_t *ctx, uint16_t maxKeyLen, uint1
             std::stringstream ss;
 
             err = parser_getItem(ctx, idx, keyBuffer, maxKeyLen, valueBuffer, maxValueLen, pageIdx, &pageCount);
+
+            ss << idx << " | " << keyBuffer;
+            if (pageCount > 1) {
+                ss << " [" << (int)pageIdx + 1 << "/" << (int)pageCount << "]";
+            }
+            ss << " : ";
+
+            if (err == parser_ok) {
+                ss << valueBuffer;
+            } else {
+                ss << parser_getErrorDescription(err);
+            }
+
+            answer.push_back(ss.str());
+
+            pageIdx++;
+        }
+    }
+
+    return answer;
+}
+
+std::vector<std::string> dumpRawUI(parser_context_t *ctx, uint16_t maxKeyLen, uint16_t maxValueLen) {
+    auto answer = std::vector<std::string>();
+
+    uint8_t numItems;
+    parser_error_t err = parser_message_getNumItems(&numItems);
+    if (err != parser_ok) {
+        return answer;
+    }
+
+    for (uint16_t idx = 0; idx < numItems; idx++) {
+        char keyBuffer[1000];
+        char valueBuffer[1000];
+        uint8_t pageIdx = 0;
+        uint8_t pageCount = 1;
+
+        while (pageIdx < pageCount) {
+            std::stringstream ss;
+
+            err = parser_message_getItem(ctx, idx, keyBuffer, maxKeyLen, valueBuffer, maxValueLen, pageIdx, &pageCount);
 
             ss << idx << " | " << keyBuffer;
             if (pageCount > 1) {
