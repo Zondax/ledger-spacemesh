@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { zondaxMainmenuNavigation } from '@zondax/zemu'
+import Zemu, { zondaxMainmenuNavigation, isTouchDevice, ButtonKind } from '@zondax/zemu'
 import { SpaceMeshApp, VaultAccount, Account } from '@zondax/ledger-spacemesh'
 import { PATH, defaultOptions, models } from './common'
 
@@ -91,7 +91,7 @@ describe('Standard', function () {
       await sim.start({
         ...defaultOptions,
         model: m.name,
-        rejectKeyword: m.name === 'stax' ? 'QR' : '',
+        rejectKeyword: isTouchDevice(m.name) ? 'Confirm' : '',
       })
       const app = new SpaceMeshApp(sim.getTransport())
 
@@ -117,7 +117,14 @@ describe('Standard', function () {
     test.concurrent.each(models)(`Multisig test: ${data.idx}`, async function (m) {
       const sim = new Zemu(m.path)
       try {
-        await sim.start({ ...defaultOptions, model: m.name })
+        // await sim.start({ ...defaultOptions, model: m.name })
+        await sim.start({
+          ...defaultOptions,
+          model: m.name,
+          approveKeyword: isTouchDevice(m.name) ? 'Approve' : '',
+          approveAction: ButtonKind.DynamicTapButton,
+        })
+
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
@@ -141,7 +148,13 @@ describe('Standard', function () {
     test.concurrent.each(models)(`Vesting test: ${data.idx}`, async function (m) {
       const sim = new Zemu(m.path)
       try {
-        await sim.start({ ...defaultOptions, model: m.name })
+        await sim.start({
+          ...defaultOptions,
+          model: m.name,
+          approveKeyword: isTouchDevice(m.name) ? 'Approve' : '',
+          approveAction: ButtonKind.DynamicTapButton,
+        })
+
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
@@ -165,7 +178,13 @@ describe('Standard', function () {
     test.concurrent.each(models)(`Vault test: ${data.idx}`, async function (m) {
       const sim = new Zemu(m.path)
       try {
-        await sim.start({ ...defaultOptions, model: m.name })
+        await sim.start({
+          ...defaultOptions,
+          model: m.name,
+          approveKeyword: isTouchDevice(m.name) ? 'Approve' : '',
+          approveAction: ButtonKind.DynamicTapButton,
+        })
+
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
