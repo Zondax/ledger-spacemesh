@@ -36,6 +36,20 @@ static bool tx_initialized = false;
 static bool requireConfirmation = false;
 extern account_type_e addr_review_account_type;
 
+static const char *MULTISIG_TITLE = "Multisig address";
+static const char *VESTING_TITLE = "Vesting address";
+static const char *VAULT_TITLE = "Vault address";
+static const char *VALIDATE_LABEL = "Tap to validate";
+
+#define CATCH_ZXERR_WITH_MESSAGE(zxerr)                                            \
+    if (zxerr != zxerr_ok) {                                                       \
+        const char *error_msg = parser_getZxErrorDescription(zxerr);               \
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer)); \
+        memcpy(G_io_apdu_buffer, error_msg, error_msg_length);                     \
+        *tx = error_msg_length;                                                    \
+        THROW(APDU_CODE_DATA_INVALID);                                             \
+    }
+
 void extractHDPath(uint32_t rx, uint32_t offset) {
     tx_initialized = false;
 
@@ -165,16 +179,20 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
     clearAddressRequest();
     CATCH_ZXERR_WITH_MESSAGE(readAddressRequest(account_type));
 
+    const char *title = NULL;
     switch (account_type) {
         case MULTISIG:
+            title = PIC(MULTISIG_TITLE);
             CATCH_ZXERR_WITH_MESSAGE(app_fill_address_multisig());
             view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
             break;
         case VESTING:
+            title = PIC(VESTING_TITLE);
             CATCH_ZXERR_WITH_MESSAGE(app_fill_address_vesting());
             view_review_init(multisigVesting_getItem, multisigVesting_getNumItems, app_reply_address);
             break;
         case VAULT:
+            title = PIC(VAULT_TITLE);
             CATCH_ZXERR_WITH_MESSAGE(app_fill_address_vault());
             view_review_init(vault_getItem, vault_getNumItems, app_reply_address);
             break;
@@ -183,11 +201,7 @@ __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, 
             break;
     }
 
-#ifdef TARGET_STAX
-    view_review_show(REVIEW_TXN);
-#else
-    view_review_show(REVIEW_ADDRESS);
-#endif
+    view_review_show_generic(REVIEW_GENERIC, title, PIC(VALIDATE_LABEL));
     *flags |= IO_ASYNCH_REPLY;
 }
 
