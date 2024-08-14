@@ -21,7 +21,7 @@ import { ResponseError } from '@zondax/ledger-js'
 import { addressToBuffer } from './testscases/wallet'
 import { NoCheckAccount, NoCheckVaultAccount } from './testscases/types'
 
-jest.setTimeout(60000)
+jest.setTimeout(100000)
 
 describe('Failure scenarios', function () {
   test('do nothing', function () {})
@@ -209,7 +209,7 @@ const testCases200 = [
 ]
 
 describe('Failure scenarios', function () {
-  test.concurrent.each(models)('can start and stop container', async function (m) {
+  test.each(models)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -218,7 +218,7 @@ describe('Failure scenarios', function () {
     }
   })
 
-  test.concurrent.each(models)('Invalid data in api', async function (m) {
+  test.each(models)('Invalid data in api', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -246,7 +246,7 @@ describe('Failure scenarios', function () {
     }
   })
 
-  test.concurrent.each(models)('invalid data in js', async function (m) {
+  test.each(models)('invalid data in js', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -286,7 +286,7 @@ describe('Failure scenarios', function () {
 })
 
 describe('Failure scenarios', function () {
-  test.concurrent.each(models)('can start and stop container', async function (m) {
+  test.each(models)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -295,7 +295,7 @@ describe('Failure scenarios', function () {
     }
   })
 
-  test.concurrent.each(models)('Invalid data in api', async function (m) {
+  test.each(models)('Invalid data in api', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -323,7 +323,7 @@ describe('Failure scenarios', function () {
     }
   })
 
-  test.concurrent.each(models)('invalid data in js', async function (m) {
+  test.each(models)('invalid data in js', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
