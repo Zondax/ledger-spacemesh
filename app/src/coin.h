@@ -25,6 +25,7 @@ extern "C" {
 #define HDPATH_0_DEFAULT (0x80000000u | 0x2c)   // 44
 #define HDPATH_1_DEFAULT (0x80000000u | 0x21c)  // 540
 #define HDPATH_1_TESTNET (0x80000000u | 0x01)   // 1
+#define GENESIS_BYTES_MAINNET "9eebff023abb17ccb775c602daade8ed708f0a50"
 
 #define HDPATH_2_DEFAULT (0x80000000u | 0u)
 #define HDPATH_3_DEFAULT (0u)
@@ -40,6 +41,7 @@ extern "C" {
 
 #define PUB_KEY_LENGTH 32u
 #define SS58_ADDRESS_MAX_LEN 60u
+#define GENESIS_ID_LENGTH 20
 
 #define MAX_SIGN_SIZE 256u
 #define BLAKE2B_DIGEST_SIZE 32u

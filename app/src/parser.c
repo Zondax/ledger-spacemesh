@@ -39,6 +39,7 @@
 #define MULTISIG_PRINT_FACTOR 2
 
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
+uint8_t genesisId[GENESIS_ID_LENGTH];
 
 parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer, uint16_t bufferSize) {
     ctx->offset = 0;
@@ -186,7 +187,7 @@ parser_error_t printTxnFields(const parser_context_t *ctx, uint8_t displayIdx, c
 parser_error_t printSpendTx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
                             uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     char buff[64] = {0};
-    const char *hrp = calculate_hrp();
+    const char *hrp = calculate_hrp_genesis();
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Tx type");
@@ -219,7 +220,7 @@ parser_error_t printSpendTx(const parser_context_t *ctx, uint8_t displayIdx, cha
             return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 7:
             snprintf(outKey, outKeyLen, "Genesis Id");
-            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->genesisId.ptr), GENESIS_LENGTH, pageIdx, pageCount);
+            pageStringHex(outVal, outValLen, (const char *)(genesisId), GENESIS_ID_LENGTH, pageIdx, pageCount);
             break;
         default:
             return parser_no_data;
@@ -231,7 +232,7 @@ parser_error_t printSpendTx(const parser_context_t *ctx, uint8_t displayIdx, cha
 parser_error_t printWalletSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                                 char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     char buff[64] = {0};
-    const char *hrp = calculate_hrp();
+    const char *hrp = calculate_hrp_genesis();
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Tx type");
@@ -260,7 +261,7 @@ parser_error_t printWalletSpawn(const parser_context_t *ctx, uint8_t displayIdx,
             return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 6:
             snprintf(outKey, outKeyLen, "Genesis Id");
-            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->genesisId.ptr), GENESIS_LENGTH, pageIdx, pageCount);
+            pageStringHex(outVal, outValLen, (const char *)(genesisId), GENESIS_ID_LENGTH, pageIdx, pageCount);
             break;
         default:
             return parser_no_data;
@@ -272,7 +273,7 @@ parser_error_t printWalletSpawn(const parser_context_t *ctx, uint8_t displayIdx,
 parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                                   char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     char buff[64] = {0};
-    const char *hrp = calculate_hrp();
+    const char *hrp = calculate_hrp_genesis();
     uint8_t adjustedIdx = displayIdx;
     const uint8_t pubkeysStart = 5;
 
@@ -321,8 +322,8 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
                               PUB_KEY_LENGTH, pageIdx, pageCount);
             } else {
                 snprintf(outKey, outKeyLen, "Address %d", pubkeyIdx);
-                return printAddress(ctx->tx_obj->spawn.multisig.pubkey[pubkeyIdx].ptr, outVal, outValLen, pageIdx,
-                                    pageCount);
+                return printAddress(ctx->tx_obj->spawn.multisig.pubkey[pubkeyIdx].ptr, outVal, outValLen, pageIdx, pageCount,
+                                    hrp);
             }
             break;
         }
@@ -341,7 +342,7 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
             return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 9:
             snprintf(outKey, outKeyLen, "Genesis Id");
-            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->genesisId.ptr), GENESIS_LENGTH, pageIdx, pageCount);
+            pageStringHex(outVal, outValLen, (const char *)(genesisId), GENESIS_ID_LENGTH, pageIdx, pageCount);
             break;
         default:
             return parser_no_data;
@@ -353,7 +354,7 @@ parser_error_t printMultisigSpawn(const parser_context_t *ctx, uint8_t displayId
 parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen,
                                char *outVal, uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     char buff[64] = {0};
-    const char *hrp = calculate_hrp();
+    const char *hrp = calculate_hrp_genesis();
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Tx type");
@@ -405,7 +406,7 @@ parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, 
             return printNumber(ctx->tx_obj->methodSelector, 0, "", "", outVal, outValLen, pageIdx, pageCount);
         case 11:
             snprintf(outKey, outKeyLen, "Genesis Id");
-            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->genesisId.ptr), GENESIS_LENGTH, pageIdx, pageCount);
+            pageStringHex(outVal, outValLen, (const char *)(genesisId), GENESIS_ID_LENGTH, pageIdx, pageCount);
             break;
         default:
             return parser_no_data;
@@ -417,7 +418,7 @@ parser_error_t printVaultSpawn(const parser_context_t *ctx, uint8_t displayIdx, 
 parser_error_t printDrainTx(const parser_context_t *ctx, uint8_t displayIdx, char *outKey, uint16_t outKeyLen, char *outVal,
                             uint16_t outValLen, uint8_t pageIdx, uint8_t *pageCount) {
     char buff[64] = {0};
-    const char *hrp = calculate_hrp();
+    const char *hrp = calculate_hrp_genesis();
     switch (displayIdx) {
         case 0:
             snprintf(outKey, outKeyLen, "Tx type");
@@ -458,7 +459,7 @@ parser_error_t printDrainTx(const parser_context_t *ctx, uint8_t displayIdx, cha
             break;
         case 8:
             snprintf(outKey, outKeyLen, "Genesis Id");
-            pageStringHex(outVal, outValLen, (const char *)(ctx->tx_obj->genesisId.ptr), GENESIS_LENGTH, pageIdx, pageCount);
+            pageStringHex(outVal, outValLen, (const char *)(genesisId), GENESIS_ID_LENGTH, pageIdx, pageCount);
             break;
         default:
             return parser_no_data;
@@ -488,11 +489,10 @@ parser_error_t printNumber(uint64_t amount, uint8_t decimalPlaces, const char *p
     return parser_ok;
 }
 
-parser_error_t printAddress(const uint8_t *pubkey, char *outValue, uint16_t outValueLen, uint8_t pageIdx,
-                            uint8_t *pageCount) {
+parser_error_t printAddress(const uint8_t *pubkey, char *outValue, uint16_t outValueLen, uint8_t pageIdx, uint8_t *pageCount,
+                            const char *hrp) {
     char address[64] = {0};
     const uint8_t pubkey_encoded[64] = {0};
-    const char *hrp = calculate_hrp();
 
     CHECK_ZX_OK(crypto_encodeWalletPubkey((uint8_t *)pubkey_encoded, sizeof(pubkey_encoded), pubkey));
     CHECK_ZX_OK(

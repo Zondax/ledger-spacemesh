@@ -16,7 +16,7 @@
 
 import Zemu from '@zondax/zemu'
 import { SpaceMeshApp, Domain, MsgSigner } from '@zondax/ledger-spacemesh'
-import { PATH, defaultOptions, models } from './common'
+import { PATH, defaultOptions, models, mainGenesisId } from './common'
 
 import { ed25519 } from '@noble/curves/ed25519'
 
@@ -56,7 +56,7 @@ test.concurrent.each(models)('sign', async function (m) {
         domain: data.domain
       };
 
-      const responseAddr = await app.getAddressAndPubKey(PATH)
+      const responseAddr = await app.getAddressAndPubKey(PATH, Buffer.from(mainGenesisId, 'hex'))
       const pubKey = responseAddr.pubkey
 
       // do not wait here... we need to navigate
@@ -103,7 +103,7 @@ describe.each(TESTS_FAIL)('Raw signing - incorrect', function (data) {
           domain: data.domain
         };
   
-        const responseAddr = await app.getAddressAndPubKey(PATH)
+        const responseAddr = await app.getAddressAndPubKey(PATH, Buffer.from(mainGenesisId, 'hex'))
         const pubKey = responseAddr.pubkey
   
         // do not wait here... we need to navigate

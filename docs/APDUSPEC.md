@@ -100,18 +100,35 @@ The general structure of commands and responses is as follows:
 
 #### Command
 
-| Field   | Type     | Content                   | Expected          |
-| ------- | -------- | ------------------------- | ----------------- |
-| CLA     | byte (1) | Application Identifier    | 0x45              |
-| INS     | byte (1) | Instruction ID            | 0x01              |
-| P1      | byte (1) | Request User confirmation | No = 0 / Yes = 1  |
-| P2      | byte (1) | Parameter 2               | ignored           |
-| L       | byte (1) | Bytes in payload          | 20                |
-| Path[0] | byte (4) | Derivation Path Data      | 0x80000000 \| 44  |
-| Path[1] | byte (4) | Derivation Path Data      | 0x80000000 \| 540 |
-| Path[2] | byte (4) | Derivation Path Data      | ?                 |
-| Path[3] | byte (4) | Derivation Path Data      | ?                 |
-| Path[4] | byte (4) | Derivation Path Data      | ?                 |
+| Field | Type     | Content                   | Expected          |
+| ----- | -------- | ------------------------- | ----------------- |
+| CLA   | byte (1) | Application Identifier    | 0x45              |
+| INS   | byte (1) | Instruction ID            | 0x02              |
+| P1    | byte (1) | Payload desc              | 0 = init          |
+|       |          |                           | 1 = add           |
+|       |          |                           | 2 = last          |
+| P2    | byte (1) | Request User confirmation | No = 0 / Yes = 1  |
+| L     | byte (1) | Bytes in payload          | (depends)         |
+
+The first packet/chunk includes only the derivation path
+
+All other packets/chunks contain data chunks that are described below
+
+##### First Packet
+
+| Field   | Type     | Content              | Expected          |
+| ------- | -------- | -------------------- | ----------------- |
+| Path[0] | byte (4) | Derivation Path Data | 0x80000000 \| 44  |
+| Path[1] | byte (4) | Derivation Path Data | 0x80000000 \| 540 |
+| Path[2] | byte (4) | Derivation Path Data | ?                 |
+| Path[3] | byte (4) | Derivation Path Data | ?                 |
+| Path[4] | byte (4) | Derivation Path Data | ?                 |
+
+##### Other Chunks/Packets
+
+| Field     | Type      | Content     | Expected |
+| --------- | --------- | ----------- | -------- |
+| GenesisId | byte (20) | Genesis ID  | ?        |
 
 #### Response
 
@@ -184,6 +201,7 @@ All other packets/chunks contain data chunks that are described below
 | Path[2]        | byte (4)      | Derivation Path Data      | ?                 |
 | Path[3]        | byte (4)      | Derivation Path Data      | ?                 |
 | Path[4]        | byte (4)      | Derivation Path Data      | ?                 |
+| GenesisId      | byte (20)     | Genesis ID                | ?                 |
 | internal_index | byte (1)      | internal index            |                   |
 | Account        | Account Vault | Account Vault             | ? bytes           |
 
@@ -213,6 +231,7 @@ All other packets/chunks contain data chunks that are described below
 | Path[2]        | byte (4)      | Derivation Path Data      | ?                 |
 | Path[3]        | byte (4)      | Derivation Path Data      | ?                 |
 | Path[4]        | byte (4)      | Derivation Path Data      | ?                 |
+| GenesisId      | byte (20)     | Genesis ID                | ?                 |
 | internal_index | byte (1)      | internal index            |                   |
 | Account        | Account Vault | Account Vault             | ? bytes           |
 
@@ -240,6 +259,7 @@ All other packets/chunks contain data chunks that are described below
 | Path[2]        | byte (4)      | Derivation Path Data      | ?                 |
 | Path[3]        | byte (4)      | Derivation Path Data      | ?                 |
 | Path[4]        | byte (4)      | Derivation Path Data      | ?                 |
+| GenesisId      | byte (20)     | Genesis ID                | ?                 |
 | internal_index | byte (1)      | internal index            |                   |
 | AccountVault   | Account Vault | Account Vault             | ? bytes           |
 
@@ -270,8 +290,6 @@ The first packet/chunk includes only the derivation path
 All other packets/chunks contain data chunks that are described below
 
 ##### First Packet
-
-
 
 | Field   | Type     | Content              | Expected          |
 | ------- | -------- | -------------------- | ----------------- |

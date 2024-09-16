@@ -10,6 +10,7 @@ export const MULTISIG_TESTCASES: TestCase[] = [
     expected_address: 'sm1qqqqqqyyms4sgqlmeggm8pn0qhqr26j2eawzdmsa4ydz5',
     expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
+    genesisId: '9eebff023abb17ccb775c602daade8ed708f0a50',
   },
   {
     idx: 1,
@@ -21,6 +22,7 @@ export const MULTISIG_TESTCASES: TestCase[] = [
     expected_address: 'sm1qqqqqq805rnfrv3d5hr8qy3s954cx7rfd66nc4gjv9hs0',
     expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
+    genesisId: '9eebff023abb17ccb775c602daade8ed708f0a50',
   },
   {
     idx: 2,
@@ -32,6 +34,7 @@ export const MULTISIG_TESTCASES: TestCase[] = [
     expected_address: 'stest1qqqqqqpeuxeextghddk4jfmgt7g7ynqfshdclng399zkc',
     expected_pk: '9cfbee82a799b8497430e8665f23e7b8e5b9345e6bbc6ee3895daa2ab8c00e16',
     path: PATH_TESTNET,
+    genesisId: 'e956eff99be943fb70bd385dd509a3f84e9a75dd',
   },
 ]
 

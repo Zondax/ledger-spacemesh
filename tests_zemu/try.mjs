@@ -7,9 +7,12 @@ async function main() {
 
   const app = new SpaceMeshApp(transport);
 
-  const PATH = "m/44'/540'/0'/0'/0'"
-  //const PATH_TESTNET = "m/44'/1'/0'/0'/0'"
-  const get_resp = await app.getAddressAndPubKey(PATH)
+  const PATH = "m/44'/540'/0'/0'/0'" // mainnet
+  // const PATH = "m/44'/1'/0'/0'/0'" // testnet
+  const genesisId = '9eebff023abb17ccb775c602daade8ed708f0a50' // mainnet
+  //const genesisId = 'e956eff99be943fb70bd385dd509a3f84e9a75dd' // testnet
+  
+  const get_resp = await app.getAddressAndPubKey(PATH, Buffer.from(genesisId, 'hex'))
   const pubKey = get_resp.pubkey
   console.log(get_resp)
 
@@ -18,8 +21,9 @@ async function main() {
   resp = await app.getVersion()
   console.log('Version', resp);
 
-  const blobSpend = "9EEBFF023ABB17CCB775C602DAADE8ED708F0A500000000000833816A6695F08E9037763CAE46612DED40F9F2D4000D52400000000719D58B3F3A1C73BECC9140B07A474DE6F5275EF02286BEE"
-  const messageToSign = Buffer.from(blobSpend, 'hex')
+  const blobSpend = "0000000000833816A6695F08E9037763CAE46612DED40F9F2D4000D52400000000719D58B3F3A1C73BECC9140B07A474DE6F5275EF02286BEE"
+
+  const messageToSign = Buffer.concat([Buffer.from(genesisId, 'hex'), Buffer.from(blobSpend, 'hex')])
   const signatureRequest = app.sign(PATH, messageToSign)
 
   const signatureResponse = await signatureRequest

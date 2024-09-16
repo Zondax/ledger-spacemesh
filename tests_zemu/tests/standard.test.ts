@@ -74,7 +74,7 @@ describe('Standard', function () {
         await sim.start({ ...defaultOptions, model: m.name })
         const app = new SpaceMeshApp(sim.getTransport())
 
-        const resp = await app.getAddressAndPubKey(data.path)
+        const resp = await app.getAddressAndPubKey(data.path, Buffer.from(data.genesisId, 'hex'), false)
         console.log(resp)
 
         expect(resp.pubkey.toString('hex')).toEqual(data.expectedPk)
@@ -95,7 +95,9 @@ describe('Standard', function () {
       })
       const app = new SpaceMeshApp(sim.getTransport())
 
-      const respRequest = app.getAddressAndPubKey(PATH, true)
+      await sim.toggleExpertMode()
+
+      const respRequest = app.getAddressAndPubKey(PATH, Buffer.from('9eebff023abb17ccb775c602daade8ed708f0a50', 'hex'), true)
 
       expect(respRequest).rejects.toMatchObject({
         returnCode: 0x6986,
@@ -128,7 +130,7 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = app.getAddressMultisig(data.path, 1, account as Account)
+        const resp = app.getAddressMultisig(data.path, 1, account as Account, Buffer.from(data.genesisId, 'hex'))
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
         await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-multisig_${data.idx}`)
@@ -158,7 +160,7 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = app.getAddressVesting(data.path, 1, account as Account)
+        const resp = app.getAddressVesting(data.path, 1, account as Account, Buffer.from(data.genesisId, 'hex'))
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
         await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-vesting_${data.idx}`)
@@ -188,7 +190,7 @@ describe('Standard', function () {
         const app = new SpaceMeshApp(sim.getTransport())
         const { account, expected_address, expected_pk } = data
 
-        const resp = app.getAddressVault(data.path, 1, account as VaultAccount)
+        const resp = app.getAddressVault(data.path, 1, account as VaultAccount, Buffer.from(data.genesisId, 'hex'))
 
         // Wait until we are not in the main menu
         await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())

@@ -45,8 +45,8 @@ zxerr_t readAddressRequest(account_type_e account_type) {
         return zxerr_unknown;
     }
 
-    const uint8_t *message = tx_get_buffer();
-    const uint16_t messageLength = tx_get_buffer_length();
+    const uint8_t *message = tx_get_buffer() + sizeof(genesisId);
+    const uint16_t messageLength = tx_get_buffer_length() - sizeof(genesisId);
 
     switch (account_type) {
         case MULTISIG:
@@ -127,7 +127,7 @@ zxerr_t wallet_getNumItems(uint8_t *num_items) {
     zemu_log_stack("wallet_getNumItems");
     *num_items = 1;
     if (app_mode_expert()) {
-        *num_items = 2;
+        *num_items = 3;
     }
     return zxerr_ok;
 }
@@ -149,6 +149,15 @@ zxerr_t wallet_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char
             char buffer[300];
             bip32_to_str(buffer, sizeof(buffer), hdPath, HDPATH_LEN_DEFAULT);
             pageString(outVal, outValLen, buffer, pageIdx, pageCount);
+            return zxerr_ok;
+        }
+        case 2: {
+            if (!app_mode_expert()) {
+                return zxerr_no_data;
+            }
+
+            snprintf(outKey, outKeyLen, "Genesis Id");
+            pageStringHex(outVal, outValLen, (const char *)(genesisId), GENESIS_ID_LENGTH, pageIdx, pageCount);
             return zxerr_ok;
         }
         default:
@@ -179,8 +188,8 @@ zxerr_t multisigVesting_getNumItems(uint8_t *num_items) {
         return zxerr_encoding_failed;
     }
 
-    const uint8_t fixedFields = 5;  // Participants, Approvers, internal pubkey
-                                    // + address + path
+    const uint8_t fixedFields = 6;  // Participants, Approvers, internal pubkey
+                                    // + address + path + genesisId
 
     // Everything from above
     *num_items = addr_request.optional_numberOfPubkeys + fixedFields;
@@ -231,6 +240,11 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
             snprintf(outVal, outValLen, "%d", addr_request.account->approvers);
             return zxerr_ok;
 
+        case 4:
+            snprintf(outKey, outKeyLen, "Genesis Id");
+            pageStringHex(outVal, outValLen, (const char *)(genesisId), GENESIS_ID_LENGTH, pageIdx, pageCount);
+            return zxerr_ok;
+
         case 255:
             if (addr_request.account_type == MULTISIG) {
                 snprintf(outVal, outKeyLen, "Review Multisig address");
@@ -240,7 +254,7 @@ zxerr_t multisigVesting_getItem(int8_t displayIdx, char *outKey, uint16_t outKey
             return zxerr_ok;
 
         default: {
-            const uint8_t tmpDisplayIdx = displayIdx - 4;
+            const uint8_t tmpDisplayIdx = displayIdx - 5;
             const uint8_t *pubkeyPtr = NULL;
             snprintf(outKey, outKeyLen, "Pubkey %d", tmpDisplayIdx);
             CHECK_ZXERR(getPublicKey(tmpDisplayIdx, addr_request.internalIndex, addr_request.account->keys, &pubkeyPtr))
@@ -259,8 +273,8 @@ zxerr_t vault_getNumItems(uint8_t *num_items) {
         return zxerr_encoding_failed;
     }
 
-    // TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey
-    const uint8_t fixedFields = 7;
+    // TotalAmount, InitialUnlockAmount, vestingStart, vestingEnd, Participants, Approvers, internal pubkey, genesisId
+    const uint8_t fixedFields = 8;
 
     // Everything from above + address + path
     *num_items = addr_request.optional_numberOfPubkeys + fixedFields + 2;
@@ -334,6 +348,11 @@ zxerr_t vault_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen, char 
         case 7:
             snprintf(outKey, outKeyLen, "Validators");
             snprintf(outVal, outValLen, "%d", addr_request.vault_account->owner.approvers);
+            break;
+
+        case 8:
+            snprintf(outKey, outKeyLen, "Genesis Id");
+            pageStringHex(outVal, outValLen, (const char *)(genesisId), GENESIS_ID_LENGTH, pageIdx, pageCount);
             break;
 
         case 255:

@@ -9,6 +9,7 @@ export interface TestCase {
   expected_error?: string
 
   path: string
+  genesisId: string
 }
 
 export class NoCheckAccount extends Account {

@@ -10,6 +10,7 @@ export const VAULT_TESTCASES: TestCase[] = [
     expected_address: 'sm1qqqqqqy6gw3ufy6kzutpg03zjr0t9k8xjdagwuccmpd8g',
     expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
+    genesisId: '9eebff023abb17ccb775c602daade8ed708f0a50',
   },
   {
     idx: 1,
@@ -25,6 +26,7 @@ export const VAULT_TESTCASES: TestCase[] = [
     expected_address: 'sm1qqqqqq8d2nscr9hnvy8khzgxggg2vxg2jtplp0gqnklav',
     expected_pk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
+    genesisId: '9eebff023abb17ccb775c602daade8ed708f0a50',
   },
   {
     idx: 2,
@@ -40,6 +42,7 @@ export const VAULT_TESTCASES: TestCase[] = [
     expected_address: 'stest1qqqqqqx3pllnhamat3a4kmwexd39kkgst7p52jqjwx5wl',
     expected_pk: '9cfbee82a799b8497430e8665f23e7b8e5b9345e6bbc6ee3895daa2ab8c00e16',
     path: PATH_TESTNET,
+    genesisId: 'e956eff99be943fb70bd385dd509a3f84e9a75dd',
   },
 ]
 

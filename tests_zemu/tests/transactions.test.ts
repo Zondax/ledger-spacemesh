@@ -16,7 +16,7 @@
 
 import Zemu from '@zondax/zemu'
 import { SpaceMeshApp } from '@zondax/ledger-spacemesh'
-import { PATH, defaultOptions, models } from './common'
+import { PATH, defaultOptions, models, mainGenesisId } from './common'
 
 import { VAULT_TRANSACTIONS } from './testscases/vault'
 import { MULTISIG_TRANSACTIONS } from './testscases/multisig'
@@ -34,7 +34,7 @@ test.concurrent.each(models)('sign', async function (m) {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new SpaceMeshApp(sim.getTransport())
 
-      const responseAddr = await app.getAddressAndPubKey(PATH)
+      const responseAddr = await app.getAddressAndPubKey(PATH, Buffer.from(mainGenesisId, 'hex'))
       const pubKey = responseAddr.pubkey
       const messageToSign = Buffer.from(data.blob, 'hex')
 
@@ -65,7 +65,7 @@ describe.each(MULTISIG_TRANSACTIONS)('Multisig transactions', function (data) {
         await sim.start({ ...defaultOptions, model: m.name })
         const app = new SpaceMeshApp(sim.getTransport())
   
-        const responseAddr = await app.getAddressAndPubKey(PATH)
+        const responseAddr = await app.getAddressAndPubKey(PATH, Buffer.from(mainGenesisId, 'hex'))
         const pubKey = responseAddr.pubkey
         const messageToSign = Buffer.from(data.blob, 'hex')
   
@@ -96,7 +96,7 @@ describe.each(MULTISIG_TRANSACTIONS)('Multisig transactions', function (data) {
           await sim.start({ ...defaultOptions, model: m.name })
           const app = new SpaceMeshApp(sim.getTransport())
     
-          const responseAddr = await app.getAddressAndPubKey(PATH)
+          const responseAddr = await app.getAddressAndPubKey(PATH, Buffer.from(mainGenesisId, 'hex'))
           const pubKey = responseAddr.pubkey
           const messageToSign = Buffer.from(data.blob, 'hex')
     
@@ -127,7 +127,7 @@ describe.each(MULTISIG_TRANSACTIONS)('Multisig transactions', function (data) {
           await sim.start({ ...defaultOptions, model: m.name })
           const app = new SpaceMeshApp(sim.getTransport())
     
-          const responseAddr = await app.getAddressAndPubKey(PATH)
+          const responseAddr = await app.getAddressAndPubKey(PATH, Buffer.from(mainGenesisId, 'hex')  )
           const pubKey = responseAddr.pubkey
           const messageToSign = Buffer.from(data.blob, 'hex')
     

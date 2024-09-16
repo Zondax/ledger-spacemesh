@@ -124,9 +124,6 @@ add_definitions(
     -DLEDGER_MINOR_VERSION=${MINOR_VERSION}
 )
 
-
-##############################################################
-##{TODO}
 ##############################################################
 # Static Libraries
 file(GLOB_RECURSE LIB_SRC

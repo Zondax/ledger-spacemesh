@@ -33,6 +33,7 @@
 #include "zxmacros.h"
 
 static bool tx_initialized = false;
+static bool genesisId_extracted = false;
 static bool requireConfirmation = false;
 extern account_type_e addr_review_account_type;
 
@@ -67,13 +68,32 @@ void extractHDPath(uint32_t rx, uint32_t offset) {
     }
 }
 
-__Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
+void extractGenesisId(uint32_t rx, uint32_t offset) {
+    if ((rx - offset) < sizeof(genesisId)) {
+        THROW(APDU_CODE_WRONG_LENGTH);
+    }
+
+    memcpy(genesisId, G_io_apdu_buffer + offset, sizeof(genesisId));
+
+    bool hdPath_mainnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
+
+    uint8_t genesis_bytes_mainnet[GENESIS_ID_LENGTH];
+    hexstr_to_array(genesis_bytes_mainnet, GENESIS_ID_LENGTH, GENESIS_BYTES_MAINNET, strlen(GENESIS_BYTES_MAINNET));
+    bool genesis_mainnet = memcmp(genesisId, genesis_bytes_mainnet, GENESIS_ID_LENGTH) == 0;
+
+    if (!hdPath_mainnet && genesis_mainnet) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+}
+
+__Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx, bool genesisIdAvailable) {
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
     if (rx < OFFSET_DATA) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
 
     uint32_t added;
+    bool handleGenesisId = !genesisId_extracted && genesisIdAvailable;
     switch (payloadType) {
         case P1_INIT:
             tx_initialize();
@@ -81,8 +101,13 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             extractHDPath(rx, OFFSET_DATA);
             requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
             tx_initialized = true;
+            genesisId_extracted = false;
             return false;
         case P1_ADD:
+            if (handleGenesisId) {
+                extractGenesisId(rx, OFFSET_DATA);
+                genesisId_extracted = true;
+            }
             if (!tx_initialized) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
@@ -93,6 +118,10 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
             }
             return false;
         case P1_LAST:
+            if (handleGenesisId) {
+                extractGenesisId(rx, OFFSET_DATA);
+                genesisId_extracted = true;
+            }
             if (!tx_initialized) {
                 THROW(APDU_CODE_TX_NOT_INITIALIZED);
             }
@@ -111,9 +140,12 @@ __Z_INLINE bool process_chunk(__Z_UNUSED volatile uint32_t *tx, uint32_t rx) {
 
 // Handle Wallet addresses
 __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
-    extractHDPath(rx, OFFSET_DATA);
+    ZEMU_LOGF(50, "handleGetAddr %d\n", rx);
+    if (!process_chunk(tx, rx, true)) {
+        THROW(APDU_CODE_OK);
+    }
 
-    requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
+    requireConfirmation = G_io_apdu_buffer[OFFSET_P2];
 
     CATCH_ZXERR_WITH_MESSAGE(app_fill_address());
 
@@ -129,7 +161,7 @@ __Z_INLINE void handleGetAddr(volatile uint32_t *flags, volatile uint32_t *tx, u
 
 __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     ZEMU_LOGF(50, "handleSign %d\n", rx);
-    if (!process_chunk(tx, rx)) {
+    if (!process_chunk(tx, rx, true)) {
         THROW(APDU_CODE_OK);
     }
 
@@ -150,7 +182,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 
 __Z_INLINE void handleSignMessage(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     ZEMU_LOGF(50, "handleSignMessage\n");
-    if (!process_chunk(tx, rx)) {
+    if (!process_chunk(tx, rx, false)) {
         THROW(APDU_CODE_OK);
     }
 
@@ -172,7 +204,7 @@ __Z_INLINE void handleSignMessage(volatile uint32_t *flags, volatile uint32_t *t
 // Handle Multisig, Vesting and Vault addresses
 __Z_INLINE void handleMultisig(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx, account_type_e account_type) {
     ZEMU_LOGF(50, "handleMultisig %d\n", rx);
-    if (!process_chunk(tx, rx)) {
+    if (!process_chunk(tx, rx, true)) {
         THROW(APDU_CODE_OK);
     }
 

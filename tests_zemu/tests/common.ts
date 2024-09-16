@@ -20,6 +20,7 @@ export const models: IDeviceModel[] = [
 
 export const PATH = "m/44'/540'/0'/0'/0'"
 export const PATH_TESTNET = "m/44'/1'/0'/0'/0'"
+export const mainGenesisId = '9eebff023abb17ccb775c602daade8ed708f0a50'
 
 export const defaultOptions = {
   ...DEFAULT_START_OPTIONS,

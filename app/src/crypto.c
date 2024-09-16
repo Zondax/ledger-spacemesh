@@ -117,7 +117,7 @@ zxerr_t crypto_fillAddress(uint8_t *outBuffer, uint16_t outBufferLen, uint16_t *
     uint8_t address_encoded[MAX_ADDRESS_LENGTH] = {0};
     CHECK_ZXERR(crypto_encodeAccountPubkey(address_encoded, sizeof(address_encoded), &internalPubkey, NULL, WALLET));
 
-    const char *hrp = calculate_hrp();
+    const char *hrp = calculate_hrp_genesis();
     CHECK_ZXERR(bech32EncodeFromBytes(resp->address_bech32, sizeof(resp->address_bech32), hrp, address_encoded,
                                       ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
 
@@ -156,7 +156,7 @@ zxerr_t crypto_fillAddressMultisigOrVesting(uint8_t *outBuffer, uint16_t outBuff
                                            addr_request.account_type));
 
     // Copy internal pubkey in the buffer
-    const char *hrp = calculate_hrp();
+    const char *hrp = calculate_hrp_genesis();
     MEMCPY(resp->pubkey, internalPubkey.pubkey, PUB_KEY_LENGTH);
     CHECK_ZXERR(bech32EncodeFromBytes(resp->address_bech32, 64, hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
 
@@ -193,7 +193,7 @@ zxerr_t crypto_fillAddressVault(uint8_t *outBuffer, uint16_t outBufferLen, uint1
     uint8_t address[MAX_ADDRESS_LENGTH] = {0};
     CHECK_ZXERR(crypto_encodeVaultPubkey(address, sizeof(address), &internalPubkey, addr_request.vault_account));
 
-    const char *hrp = calculate_hrp();
+    const char *hrp = calculate_hrp_genesis();
     MEMCPY(resp->pubkey, internalPubkey.pubkey, PUB_KEY_LENGTH);
     CHECK_ZXERR(bech32EncodeFromBytes(resp->address_bech32, 64, hrp, address, ADDRESS_LENGTH, 1, BECH32_ENCODING_BECH32));
 

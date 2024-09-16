@@ -20,6 +20,7 @@
 
 #include "coin.h"
 #include "zxerror.h"
+#include "zxformat.h"
 #include "zxmacros.h"
 
 #ifdef __cplusplus
@@ -29,9 +30,9 @@ extern "C" {
 #define MAX_ADDRESS_LENGTH 60
 #define ADDRESS_LENGTH 24
 #define MAX_MULTISIG_PUB_KEY 10
-#define GENESIS_LENGTH 20
 
 extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
+extern uint8_t genesisId[GENESIS_ID_LENGTH];
 
 typedef enum {
     UNKNOWN = 0,
@@ -43,7 +44,7 @@ typedef enum {
 
 typedef struct {
     uint8_t index;
-    uint8_t pubkey[32];
+    uint8_t pubkey[PUB_KEY_LENGTH];
 } __attribute__((packed)) pubkey_item_t;
 
 typedef struct {
@@ -79,6 +80,17 @@ typedef struct {
  */
 __Z_INLINE const char *calculate_hrp() {
     bool mainnet = hdPath[0] == HDPATH_0_DEFAULT && hdPath[1] == HDPATH_1_DEFAULT;
+    return mainnet ? "sm" : "stest";
+}
+
+/**
+ * Calculate the human-readable part (hrp) for Bech32 encoding based on the genesisId.
+ * @returns the appropriate hrp string for the network
+ */
+__Z_INLINE const char *calculate_hrp_genesis() {
+    uint8_t genesis_bytes_mainnet[GENESIS_ID_LENGTH];
+    hexstr_to_array(genesis_bytes_mainnet, GENESIS_ID_LENGTH, GENESIS_BYTES_MAINNET, strlen(GENESIS_BYTES_MAINNET));
+    bool mainnet = memcmp(genesisId, genesis_bytes_mainnet, GENESIS_ID_LENGTH) == 0;
     return mainnet ? "sm" : "stest";
 }
 

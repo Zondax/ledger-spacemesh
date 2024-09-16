@@ -65,6 +65,9 @@ class JsonTestsB : public ::testing::TestWithParam<testcase_t> {
     };
 };
 
+std::string mainGenesisId = "9eebff023abb17ccb775c602daade8ed708f0a50";
+std::string testGenesisId = "e956eff99be943fb70bd385dd509a3f84e9a75dd";
+
 // Retrieve testcases from json file
 std::vector<testcase_t> GetJsonTestCases(std::string jsonFile) {
     auto answer = std::vector<testcase_t>();
@@ -115,10 +118,8 @@ void check_testcase(const testcase_t &tc, bool expert_mode) {
     memset(&tx_obj, 0, sizeof(tx_obj));
 
     hdPath[0] = HDPATH_0_DEFAULT;
-    hdPath[1] = HDPATH_1_DEFAULT;
-    if (!tc.mainnet) {
-        hdPath[1] = HDPATH_1_TESTNET;
-    }
+    hdPath[1] = tc.mainnet ? HDPATH_1_DEFAULT : HDPATH_1_TESTNET;
+    parseHexString(genesisId, sizeof(genesisId), tc.mainnet ? mainGenesisId.c_str() : testGenesisId.c_str());
 
     err = parser_parse(&ctx, buffer, bufferLen, &tx_obj);
     ASSERT_EQ(err, parser_ok) << parser_getErrorDescription(err);

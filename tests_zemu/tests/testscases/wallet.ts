@@ -15,11 +15,19 @@ export const WALLET_TESTCASES = [
     expectedAddress: 'sm1qqqqqqp6qjvvlg7h9z748an72kcx3sjqyjcvrkg0jfst2',
     expectedPk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
     path: PATH,
+    genesisId: '9eebff023abb17ccb775c602daade8ed708f0a50',
+  },
+  {
+    expectedAddress: 'stest1qqqqqqp6qjvvlg7h9z748an72kcx3sjqyjcvrkgj8sg9n',
+    expectedPk: 'b7ec1a92bf5fd19cff888c2b7a278ceb6d649f5b678b89fb5c29bb1546f4a594',
+    path: PATH,
+    genesisId: 'e956eff99be943fb70bd385dd509a3f84e9a75dd',
   },
   {
     expectedAddress: 'stest1qqqqqqyt8ps0ze9r7zevlqej3ddu2d8gxl6sp5g8vput3',
     expectedPk: '9cfbee82a799b8497430e8665f23e7b8e5b9345e6bbc6ee3895daa2ab8c00e16',
     path: PATH_TESTNET,
+    genesisId: 'e956eff99be943fb70bd385dd509a3f84e9a75dd',
   },
 ]
 

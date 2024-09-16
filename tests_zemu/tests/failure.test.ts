@@ -16,7 +16,7 @@
 
 import Zemu from '@zondax/zemu'
 import { AccountType, PubkeyItem, SpaceMeshApp, VaultAccount } from '@zondax/ledger-spacemesh'
-import { PATH, defaultOptions, models } from './common'
+import { PATH, defaultOptions, models, mainGenesisId } from './common'
 import { ResponseError } from '@zondax/ledger-js'
 import { addressToBuffer } from './testscases/wallet'
 import { NoCheckAccount, NoCheckVaultAccount } from './testscases/types'
@@ -237,7 +237,7 @@ describe('Failure scenarios', function () {
         )
 
         console.log('testing: ', testCase.scenario)
-        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, Buffer.from(mainGenesisId, 'hex'))).rejects.toThrow(
           new ResponseError(0x6984, 'Data is invalid : Invalid crypto settings'),
         )
       }
@@ -257,7 +257,7 @@ describe('Failure scenarios', function () {
         const vaultAccount = new VaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
 
         console.log('Testing: ', test.scenario)
-        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, Buffer.from(mainGenesisId, 'hex'))).rejects.toThrow(new Error(test.expectedError))
       }
 
       for (const test of testCases200) {
@@ -272,7 +272,7 @@ describe('Failure scenarios', function () {
         )
 
         console.log('Testing: ', test.scenario)
-        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, Buffer.from(mainGenesisId, 'hex'))).rejects.toThrow(new Error(test.expectedError))
       }
     } finally {
       await sim.close()
@@ -314,7 +314,7 @@ describe('Failure scenarios', function () {
         )
 
         console.log('testing: ', testCase.scenario)
-        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, Buffer.from(mainGenesisId, 'hex'))).rejects.toThrow(
           new ResponseError(0x6984, 'Data is invalid : Invalid crypto settings'),
         )
       }
@@ -334,7 +334,7 @@ describe('Failure scenarios', function () {
         const vaultAccount = new VaultAccount(owner.approvers, owner.participants, owner.pubkeys, BigInt(1000), BigInt(987), 567, 99999)
 
         console.log('Testing: ', test.scenario)
-        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, Buffer.from(mainGenesisId, 'hex'))).rejects.toThrow(new Error(test.expectedError))
       }
 
       for (const test of testCases200) {
@@ -349,7 +349,7 @@ describe('Failure scenarios', function () {
         )
 
         console.log('Testing: ', test.scenario)
-        await expect(app.getAddressVault(PATH, 1, vaultAccount)).rejects.toThrow(new Error(test.expectedError))
+        await expect(app.getAddressVault(PATH, 1, vaultAccount, Buffer.from(mainGenesisId, 'hex'))).rejects.toThrow(new Error(test.expectedError))
       }
     } finally {
       await sim.close()

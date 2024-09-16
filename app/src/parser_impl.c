@@ -25,7 +25,7 @@ parser_error_t _read(parser_context_t *c, parser_tx_t *v) {
     if (c == NULL || v == NULL) {
         return parser_unexpected_error;
     }
-    CHECK_ERROR(readFixedArray(c, &v->genesisId, GENESIS_LENGTH));
+    CHECK_ERROR(readFixedArray(c, &v->genesisId, GENESIS_ID_LENGTH));
     CHECK_ERROR(_readTxVersion(c, &v->tx_version));
     CHECK_ERROR(readFixedArray(c, &v->principal, ADDRESS_LENGTH));
     CHECK_ERROR(_readMethodSelector(c, &v->methodSelector));

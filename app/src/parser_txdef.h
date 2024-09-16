@@ -31,7 +31,6 @@ extern "C" {
 #define PARSER_MESSAGE_PREFIX_LEN 2
 #define PARSER_MESSAGE_MESSAGE_LEN 2
 
-// {TODO}: Placeholder, replace with real txn structure
 typedef struct {
     uint16_t len;
     const uint8_t *ptr;
